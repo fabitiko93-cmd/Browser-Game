@@ -1,0 +1,28 @@
+const paths = {
+  map: '<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Z"/><path d="M9 3v16M15 5v16"/>',
+  build: '<path d="m4 20 7-7M10 4l4-2 7 7-2 4-4-4-4 4-4-4 4-4Z"/>',
+  economy: '<path d="M4 20V10h4v10M10 20V4h4v16M16 20v-8h4v8"/>',
+  politics: '<path d="m3 8 9-5 9 5M4 21h16M5 9v9M10 9v9M14 9v9M19 9v9M3 8h18"/>',
+  fleet: '<path d="m12 2 7 17-7-4-7 4Z"/><path d="M12 15v7"/>',
+  science: '<path d="M9 2h6M10 2v8L4 20c-.6 1 .1 2 1 2h14c1 0 1.6-1 1-2l-6-10V2M7 16h10"/>',
+  close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  arrow: '<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  chevron: '<path d="m8 5 7 7-7 7"/>',
+  pause: '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
+  play: '<path d="m8 4 12 8-12 8Z"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="m9 3-1 3-3 1-2 3 2 3 1 3 3 1 3 2 3-2 3-1 1-3 2-3-2-3-3-1-1-3Z"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+  star: '<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/>',
+  people: '<circle cx="9" cy="7" r="3"/><path d="M3 20v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2"/>',
+  energy: '<path d="m13 2-8 12h6l-1 8 9-12h-6Z"/>',
+  food: '<path d="M12 22V8m0 9c-8 0-9-6-9-6 7-1 9 6 9 6Zm0-5s0-8 8-8c1 7-8 8-8 8Z"/>',
+  alloy: '<path d="m12 3 9 5v9l-9 5-9-5V8Zm0 10 9-5M3 8l9 5v9"/>',
+  credits: '<circle cx="12" cy="12" r="9"/><path d="M15 8c-5-3-8 0-8 4s3 7 8 4M5 12h9"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  warning: '<path d="m12 3 10 18H2Z"/><path d="M12 9v5m0 3v1"/>',
+  back: '<path d="M19 12H5m6-6-6 6 6 6"/>',
+  target: '<circle cx="12" cy="12" r="7"/><path d="M12 2v5m0 10v5M2 12h5m10 0h5"/>',
+  trade: '<path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/>',
+  save: '<path d="M4 3h13l4 4v14H3V3Zm3 0v7h9V3M7 21v-7h10v7"/>'
+};
+export function icon(name, size = 20) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? paths.star}</svg>`; }

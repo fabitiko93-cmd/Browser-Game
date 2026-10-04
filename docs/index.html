@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101c24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="ORBIT 3077 — Baue Welten. Verbinde Sterne. Eine planetare Wirtschafts- und Kriegssimulation für dein iPhone.">
+  <title>ORBIT 3077</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="app">
+    <header id="header" class="topbar"></header>
+    <div id="resources" class="resources" aria-label="Ressourcen"></div>
+    <section class="map-area" aria-label="Spielkarte">
+      <canvas id="map" aria-label="Planetenkarte: Mit einem Finger verschieben, mit zwei Fingern zoomen. Objekte antippen." role="img"></canvas>
+      <div id="map-head" class="map-head"></div>
+      <div id="map-foot" class="map-foot"></div>
+      <button id="recenter" class="icon-button recenter" data-action="recenter" aria-label="Karte zentrieren"></button>
+    </section>
+    <section id="sheet" class="sheet" aria-label="Verwaltung" hidden></section>
+    <nav id="navigation" class="navigation" aria-label="Hauptnavigation"></nav>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="welcome" class="welcome" hidden></div>
+  </main>
+  <noscript>Zum Spielen muss JavaScript im Browser eingeschaltet sein.</noscript>
+  <script type="module" src="./build/main.js"></script>
+</body>
+</html>
