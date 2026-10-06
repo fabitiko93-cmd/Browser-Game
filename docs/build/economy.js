@@ -1,11 +1,11 @@
+import { policyEffects } from './governance.js';
 import { BUILDINGS, IDEOLOGIES, FACTIONS, GRID, RESOURCE_KEYS } from './data.js';
 import { canAfford, pay, uid, terrainAt, log } from './state.js';
 
 export function housing(state, planet) { return planet.buildings.filter(b => b.type === 'habitat' && b.remaining <= 0 && b.enabled).reduce((n, b) => n + BUILDINGS[b.type].housing * (state.tech.includes('habitats') && planet.owner === 'player' ? 1.25 : 1), 0); }
 export function workforce(state, planet) {
   const regime = IDEOLOGIES[planet.owner === 'player' ? state.player.ideology : FACTIONS[planet.owner]?.ideology ?? 'democracy'];
-  const exclusion = regime.affinity === 'supremacist' ? (1 - planet.aliens) : 1;
-  return Math.floor(planet.population * .7 * regime.workers * exclusion);
+  return Math.floor(planet.population * .7 * regime.workers * policyEffects(state, planet.owner).workers);
 }
 export function placeBuilding(state, planet, type, x, y) {
   const def = BUILDINGS[type];
@@ -32,6 +32,7 @@ export function demolish(state, planet, id) {
 export function simulatePlanet(state, planet, options = {}) {
   if (!planet.owner) return;
   const regime = IDEOLOGIES[planet.owner === 'player' ? state.player.ideology : FACTIONS[planet.owner].ideology];
+  const effects = policyEffects(state, planet.owner);
   const before = { ...planet.stock };
   const owned = planet.owner === 'player';
   let workers = workforce(state, planet), used = 0, science = 0, upkeep = 0;
@@ -42,7 +43,7 @@ export function simulatePlanet(state, planet, options = {}) {
     }
     if (!b.enabled) { b.status = 'pausiert'; continue; }
     const def = BUILDINGS[b.type];
-    upkeep += def.upkeep;
+    upkeep += def.upkeep * effects.upkeep;
     if (workers < def.workers) { b.status = 'Arbeitskräfte fehlen'; continue; }
     if (!Object.entries(def.input ?? {}).every(([k, v]) => planet.stock[k] >= v)) { b.status = 'Rohstoffe fehlen'; continue; }
     workers -= def.workers; used += def.workers;
@@ -50,23 +51,23 @@ export function simulatePlanet(state, planet, options = {}) {
     for (const [k, v] of Object.entries(def.output ?? {})) {
       let factor = k === 'ore' ? planet.oreFactor : k === 'energy' ? planet.solarFactor : 1;
       if (k === 'energy' && owned && state.tech.includes('fusion')) factor *= 1.3;
-      planet.stock[k] += v * factor;
+      planet.stock[k] += v * factor * effects.production;
     }
-    science += (def.science ?? 0) * regime.science;
+    science += (def.science ?? 0) * regime.science * effects.science;
     b.status = 'aktiv';
   }
-  const demand = planet.population * .05;
+  const demand = planet.population * .05 * effects.foodDemand;
   const fed = Math.min(demand, planet.stock.food);
   planet.stock.food = Math.max(0, planet.stock.food - demand);
   const crowded = planet.population > housing(state, planet);
   const tax = owned ? state.player.tax : .16;
-  const target = Math.max(5, Math.min(95, 72 + regime.happiness - (tax - .16) * 160 - (fed < demand ? 35 : 0) - (crowded ? 18 : 0)));
+  const target = Math.max(5, Math.min(95, 72 + regime.happiness + effects.happiness - (tax - .16) * 160 - (fed < demand ? 35 : 0) - (crowded ? 18 : 0)));
   if (!options.forecast) {
     planet.happiness += (target - planet.happiness) * .08;
-    if (!crowded && fed >= demand && planet.happiness > 50) planet.population = Math.min(housing(state, planet), planet.population + (owned && state.tech.includes('habitats') ? .65 : .45));
+    if (!crowded && fed >= demand && planet.happiness > 50) planet.population = Math.min(housing(state, planet), planet.population + (owned && state.tech.includes('habitats') ? .65 : .45) * effects.growth);
     if (fed < demand) planet.population = Math.max(1, planet.population - .3);
   }
-  let income = planet.population * tax * regime.tax;
+  let income = planet.population * tax * regime.tax * effects.tax;
   if (owned) {
     const delta = income - upkeep;
     state.credits = Math.max(0, state.credits + delta);

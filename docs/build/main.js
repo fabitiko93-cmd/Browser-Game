@@ -1,3 +1,4 @@
+import { enactLaw, decide } from './governance.js';
 import { createGame, getPlanet, ownedPlanets, log } from './state.js';
 import { placeBuilding, demolish } from './economy.js';
 import { changeGovernment, diplomaticAction } from './politics.js';
@@ -104,6 +105,8 @@ document.addEventListener('click', e => {
   else if (action === 'research') { ensureOwned(); panel('economy'); ui.economyMode = 'research'; }
   else if (action === 'research-start') return act(startResearch(state, el.dataset.tech), 'Forschungsprojekt gestartet.');
   else if (action === 'tax') { state.player.tax = Number(el.dataset.tax); persist(); }
+  else if (action === 'law-enact') return act(enactLaw(state, el.dataset.category, el.dataset.choice), 'Gesetz verabschiedet.');
+  else if (action === 'government-decision') return act(decide(state, el.dataset.id), 'Regierungsbeschluss erlassen.');
   else if (action === 'government-change') return act(changeGovernment(state, ui.government), 'Neue Regierung eingesetzt.');
   else if (action === 'diplomacy-open') { panel('politics'); ui.politicsMode = 'diplomacy'; }
   else if (action === 'diplomacy') return act(diplomaticAction(state, el.dataset.faction, el.dataset.kind), 'Diplomatische Aktion ausgeführt.');
@@ -116,7 +119,7 @@ document.addEventListener('click', e => {
     const error = orderFleet(state, ui.fleetIds, selectedTarget('fleetTarget'), el.dataset.kind);
     if (!error) ui.fleetIds = [];
     return act(error, 'Flottenbefehl erteilt.');
-  } else if (action === 'route-start') return act(orderFleet(state, [selectedTarget('routeFleet')], selectedTarget('routeTarget'), 'transport', { resource: ui.cargo, amount: ui.amount, repeat: ui.repeat }), 'Transport gestartet.');
+  } else if (action === 'route-start') return act(orderFleet(state, [selectedTarget('routeFleet')], selectedTarget('routeTarget'), 'transport', { resource: ui.cargo, amount: Number(document.querySelector('[data-field="amount"]')?.value ?? ui.amount), repeat: ui.repeat }), 'Transport gestartet.');
   else if (action === 'route-stop') { const f = state.fleets.find(f => f.id === el.dataset.id); if (f) f.route = null; persist(); toast('Route beendet. Eine laufende Lieferung wird noch abgeschlossen.'); }
   else if (action === 'event') panel('event');
   else if (action === 'event-resolve') { const error = resolveEvent(state, el.dataset.choice); if (!error) panel(null); return act(error, 'Entscheidung übermittelt.'); }

@@ -1,3 +1,4 @@
+import { initialGovernance } from './governance.js';
 import { PLANET_SEEDS, FACTIONS, GRID, SAVE_VERSION, RESOURCE_KEYS } from './data.js';
 
 export const makeStock = (overrides = {}) => Object.assign(Object.fromEntries(RESOURCE_KEYS.map(k => [k, 0])), overrides);
@@ -13,7 +14,7 @@ export function initialBuildings(prefix) {
 export function createGame() {
   const planets = PLANET_SEEDS.map(p => ({ ...p, stock: makeStock(p.owner ? { food: 180, ore: 160, alloy: 200, energy: 180, crystal: 30, optics: 60, weapons: 45 } : {}), buildings: p.owner ? initialBuildings(p.id) : [], queues: [], happiness: 72, defense: p.owner && p.owner !== 'player' ? (p.owner === 'aster' ? 35 : 24) : 0, garrison: p.owner && p.owner !== 'player' ? 30 : 0, net: {}, lastReport: null }));
   return {
-    version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
+    governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
     player: { name: FACTIONS.player.name, ideology: 'democracy', tax: .16, stability: 75, term: 60, rulingSupport: 55 },
     planets, tech: [], research: null,
     relations: { ilyri: { score: 25, war: false, trade: false }, khepri: { score: -10, war: false, trade: false }, aster: { score: -55, war: false, trade: false } },

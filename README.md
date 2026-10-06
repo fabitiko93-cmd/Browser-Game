@@ -68,3 +68,12 @@ npm run build:check
 ```
 
 Quellen und erzeugtes `docs/` zusammen committen. Modulkarte: [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Erweiterung 0.2
+
+- Sechs politische Spielprofile mit Vorteilen und Kosten: Handel, Industrie, Verwaltung, Militär, Forschung und Mobilisierung. Keine pauschale Abwertung einer Regierungsform; Gesetze sind für alle Formen verfügbar.
+- Sechs Gesetzesbereiche mit jeweils drei Optionen: Wirtschaft, Arbeit, Militärdienst, Einwanderung, Forschung und Verwaltung. Gesetzeswechsel kosten 60 Credits und 3 Stabilität, mit fünf Tagen Verwaltungszeit bis zum nächsten Wechsel.
+- Sechs befristete Regierungsprogramme mit sichtbaren Auswirkungen, Kosten und Sperrfristen.
+- Neun Schiffstypen: zusätzlich Aufklärer, Laserzerstörer, Schlachtkreuzer, Großfrachter und Versorgungsschiff. Erkundung bringt einmal pro Planet 45 Forschung, Großfrachter transportieren 200 Waren, Panzerung mindert Schäden.
+- Schiffsgeschwindigkeit, täglicher Flottenunterhalt, Versorgungstransfers und Forschungsbonus für alle bewaffneten Schiffe. Werftboni gelten für neu erteilte Aufträge.
+- Bestehende v1-Spielstände werden automatisch übernommen. Zum Laden eines neuen Service-Worker-Caches alle offenen Spieltabs schließen und das Spiel neu öffnen.

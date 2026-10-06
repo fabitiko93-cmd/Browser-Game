@@ -1,3 +1,4 @@
+import { tickGovernance } from './governance.js';
 import { simulatePlanet } from './economy.js';
 import { tickPolitics } from './politics.js';
 import { tickShipyards, tickFleets, tickOpponents } from './fleets.js';
@@ -8,6 +9,7 @@ export function stepDay(state) {
   state.day++;
   for (const planet of state.planets) simulatePlanet(state, planet);
   tickShipyards(state); tickResearch(state); tickFleets(state); tickOpponents(state); tickPolitics(state);
+  tickGovernance(state);
   if (state.day % 24 === 0 && !state.event) {
     const kinds = ['signal', 'storm', 'migration'];
     state.event = { kind: kinds[Math.floor(state.day / 24 - 1) % kinds.length], planet: state.planets.find(p => p.owner === 'player')?.id };

@@ -1,4 +1,4 @@
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {
@@ -24,19 +24,24 @@ export const BUILDINGS = {
 };
 export const IDEOLOGIES = {
   democracy: { name: 'Demokratie', description: 'Gewählte Regierung, politische Opposition und gleiche Bürgerrechte für alle Spezies.', science: 1, workers: 1, tax: 1, happiness: 8, affinity: 'open', citizenship: 'Gleiche Bürgerrechte', leadership: 'Gewählte Regierung', repression: 'Gering', term: 60 },
-  communism: { name: 'Kommunismus', description: 'Staatliche Produktion und zentral gelenkte Versorgung. Politischer Wettbewerb ist eingeschränkt.', science: .95, workers: 1.08, tax: .9, happiness: 2, affinity: 'collective', citizenship: 'Gleiche wirtschaftliche Rechte', leadership: 'Zentralrat', repression: 'Hoch' },
-  monarchy: { name: 'Monarchie', description: 'Erbliche Herrschaft mit ständischer Ordnung und begrenzter politischer Beteiligung.', science: .9, workers: 1, tax: 1.08, happiness: 0, affinity: 'traditional', citizenship: 'Untertanenstatus', leadership: 'Erbliches Staatsoberhaupt', repression: 'Mittel' },
-  military: { name: 'Militärdiktatur', description: 'Eine militärische Führung kontrolliert Regierung und Opposition. Mobilisierung hat Vorrang.', science: .85, workers: .96, tax: 1.08, happiness: -5, affinity: 'authoritarian', citizenship: 'Militärisch verwaltet', leadership: 'Militärrat', repression: 'Hoch' },
-  technocracy: { name: 'Technokratie', description: 'Fachgremien bestimmen Forschung und Ressourcenverteilung. Direkte Mitbestimmung ist begrenzt.', science: 1.25, workers: 1, tax: 1, happiness: -2, affinity: 'technical', citizenship: 'Leistungsbezogener Zugang', leadership: 'Fachgremien', repression: 'Mittel' },
-  nationalSocialism: { name: 'Nationalsozialismus', description: 'Führerprinzip, politische Repression, expansionistische Ziele und eine rassistische Spezieshierarchie.', science: .75, workers: .86, tax: 1.08, happiness: -12, affinity: 'supremacist', citizenship: 'Andere Spezies ausgeschlossen', leadership: 'Führerprinzip', repression: 'Sehr hoch' }
+  communism: { name: 'Kommunismus', description: 'Staatliche Produktion und zentral gelenkte Versorgung. Politischer Wettbewerb ist eingeschränkt.', science: 1, workers: 1, tax: 1, happiness: 2, affinity: 'collective', citizenship: 'Gleiche wirtschaftliche Rechte', leadership: 'Zentralrat', repression: 'Hoch' },
+  monarchy: { name: 'Monarchie', description: 'Erbliche Herrschaft mit ständischer Ordnung und begrenzter politischer Beteiligung.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'traditional', citizenship: 'Untertanenstatus', leadership: 'Erbliches Staatsoberhaupt', repression: 'Mittel' },
+  military: { name: 'Militärdiktatur', description: 'Eine militärische Führung kontrolliert Regierung und Opposition. Mobilisierung hat Vorrang.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'authoritarian', citizenship: 'Militärisch verwaltet', leadership: 'Militärrat', repression: 'Hoch' },
+  technocracy: { name: 'Technokratie', description: 'Fachgremien bestimmen Forschung und Ressourcenverteilung. Direkte Mitbestimmung ist begrenzt.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'technical', citizenship: 'Leistungsbezogener Zugang', leadership: 'Fachgremien', repression: 'Mittel' },
+  nationalSocialism: { name: 'Nationalsozialismus', description: 'Führerprinzip, politische Repression, expansionistische Ziele und eine rassistische Spezieshierarchie.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'supremacist', citizenship: 'Hierarchischer Bürgerstatus', leadership: 'Führerprinzip', repression: 'Sehr hoch' }
 };
 export const TECHNOLOGIES = {
   fusion: { name: 'Fusionsregelung', cost: 90, description: 'Energieertrag aller Solarfelder +30 %.' },
-  lasers: { name: 'Kohärente Laser', cost: 120, description: 'Kampfstärke deiner Korvetten +30 %.' },
+  lasers: { name: 'Kohärente Laser', cost: 120, description: 'Kampfstärke deiner bewaffneten Schiffe +30 %.' },
   propulsion: { name: 'Sprungantrieb II', cost: 140, description: 'Reisezeiten zwischen Planeten −30 %.' },
   habitats: { name: 'Adaptive Habitate', cost: 100, description: 'Wohnkapazität +25 %, Bevölkerungswachstum +40 %.' }
 };
 export const SHIPS = {
+  scout: { name: 'Aufklärer', color: '#a9dce1', cost: { credits: 65, alloy: 20, optics: 8, energy: 10 }, days: 3, strength: 3, armor: 0, speed: 1.5, upkeep: 1, troops: 0, cargo: 0, description: 'Schnelles Forschungsschiff. Erkundung liefert einmalig 45 Forschung pro Zielplanet.' },
+  destroyer: { name: 'Laserzerstörer', color: '#e1a38b', cost: { credits: 230, alloy: 80, optics: 20, weapons: 30, energy: 30 }, days: 7, strength: 36, armor: .2, speed: 1, upkeep: 3, troops: 0, cargo: 0, description: 'Schwerer Begleitschutz mit 20 % Schadensreduktion und 36 Grundstärke.' },
+  cruiser: { name: 'Schlachtkreuzer', color: '#bd9cdc', cost: { credits: 420, alloy: 140, optics: 35, weapons: 55, energy: 50 }, days: 10, strength: 65, armor: .35, speed: .8, upkeep: 6, troops: 0, cargo: 0, description: '65 Grundstärke und 35 % Schadensreduktion. Langsam und teuer im Unterhalt.' },
+  heavyFreighter: { name: 'Großfrachter', color: '#e4c893', cost: { credits: 190, alloy: 65, energy: 25 }, days: 6, strength: 0, armor: .1, speed: .8, upkeep: 2, troops: 0, cargo: 200, description: 'Transportiert 200 Waren pro Reise. Größere Lieferung bei längerer Reisezeit.' },
+  support: { name: 'Versorgungsschiff', color: '#9dc9a4', cost: { credits: 140, alloy: 45, optics: 8, energy: 35 }, days: 5, strength: 0, speed: 1, upkeep: 2, troops: 0, cargo: 0, description: 'Überträgt täglich bis zu 12 eigene Versorgung auf andere stationäre Schiffe im selben Orbit.' },
   corvette: { name: 'Laserkorvette', color: '#82c4ca', cost: { credits: 130, alloy: 45, optics: 12, weapons: 12, energy: 20 }, days: 5, strength: 18, troops: 0, cargo: 0, description: 'Sichert den Orbit und bekämpft gegnerische Flotten.' },
   freighter: { name: 'Frachter', color: '#d7b78e', cost: { credits: 80, alloy: 28, energy: 12 }, days: 4, strength: 0, troops: 0, cargo: 80, description: 'Transportiert bis zu 80 Waren und kann eine feste Route bedienen.' },
   colony: { name: 'Kolonieschiff', color: '#acd39f', cost: { credits: 150, alloy: 55, food: 40, energy: 20 }, days: 6, strength: 0, troops: 0, cargo: 0, settlers: 40, description: 'Gründet mit 40 Einwohnern eine Siedlung auf einem unbewohnten Planeten.' },

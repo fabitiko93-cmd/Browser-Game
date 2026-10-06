@@ -1,0 +1,11 @@
+import { LAWS, DECISIONS, PROFILES, effectText, policyEffects } from './governance.js';
+export const profileMarkup = id => `<p class="note">${effectText(PROFILES[id])}</p>`;
+export function governancePanel(state, mode) {
+  const g = state.governance;
+  const overview = `<div class="detail-card"><strong>Aktuelle Gesamtwirkung</strong><p>${effectText(Object.fromEntries(Object.entries(policyEffects(state)).filter(([k, v]) => v !== (k === 'happiness' ? 0 : 1))))}</p></div>`;
+  if (mode === 'laws') return `<p class="lede">Jede Regierungsform kann alle Gesetze erlassen. Änderungen kosten 60 ¢ und 3 Stabilität. Zwischen Änderungen liegen fünf Tage.</p>${g.lawReady > state.day ? `<div class="alert">Verwaltung beschäftigt: noch ${g.lawReady - state.day} Tage.</div>` : ''}${overview}${Object.entries(LAWS).map(([id, law]) => `<div class="section-title">${law.name}</div>${Object.entries(law.options).map(([choice, option]) => `<div class="detail-card"><div class="card-heading"><strong>${option.name}</strong>${g.laws[id] === choice ? '<span class="status-badge">Gilt</span>' : ''}</div><p>${effectText(option.effects)}</p><button class="button secondary" data-action="law-enact" data-category="${id}" data-choice="${choice}" ${g.laws[id] === choice || g.lawReady > state.day || state.credits < 60 ? 'disabled' : ''}>Gesetz erlassen · 60 ¢</button></div>`).join('')}`).join('')}`;
+  return `<p class="lede">Zeitlich begrenzte Programme wirken auf alle eigenen Planeten. Unterschiedliche Programme lassen sich kombinieren; derselbe Beschluss hat eine Sperrfrist.</p>${overview}${Object.entries(DECISIONS).map(([id, d]) => {
+    const active = g.decisions.find(a => a.id === id), wait = Math.max(0, (g.cooldowns[id] ?? 0) - state.day);
+    return `<div class="detail-card"><div class="card-heading"><strong>${d.name}</strong>${active ? `<span class="status-badge">${active.until - state.day} Tage</span>` : ''}</div><p>${d.description}</p><p class="note">${effectText(d.effects)}<br>${d.duration} Tage Laufzeit · ${d.cooldown} Tage bis erneut verfügbar</p><button class="button secondary" data-action="government-decision" data-id="${id}" ${wait || state.credits < d.cost ? 'disabled' : ''}>${wait ? `Erneut in ${wait} Tagen` : `Beschließen · ${d.cost} ¢`}</button></div>`;
+  }).join('')}`;
+}

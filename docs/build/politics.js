@@ -1,3 +1,4 @@
+import { policyEffects } from './governance.js';
 import { IDEOLOGIES, FACTIONS } from './data.js';
 import { ownedPlanets, log } from './state.js';
 
@@ -32,7 +33,7 @@ export function diplomaticAction(state, faction, action) {
   } else if (action === 'envoy') {
     if (rel.war) return 'Während eines Krieges sind Gesandtschaften nicht möglich.';
     if (state.credits < 60) return 'Für eine Gesandtschaft fehlen 60 Credits.';
-    state.credits -= 60; rel.score = Math.min(100, rel.score + 15);
+    state.credits -= 60; rel.score = Math.min(100, rel.score + 15 * policyEffects(state).envoy);
     log(state, `Gesandtschaft zur ${FACTIONS[faction].name}: Beziehungen verbessert.`, 'politics');
   } else if (action === 'trade') {
     if (rel.trade) return 'Das Handelsabkommen besteht bereits.';

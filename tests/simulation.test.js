@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createGame, getPlanet } from '../src/state.js';
 import { placeBuilding, forecast, workforce } from '../src/economy.js';
 import { changeGovernment, diplomaticAction } from '../src/politics.js';
-import { buildShip, orderFleet, travelDays } from '../src/fleets.js';
+import { buildShip, orderFleet, travelDays, shipBuildDays } from '../src/fleets.js';
 import { stepDay } from '../src/simulation.js';
 import { startResearch } from '../src/research.js';
 import { parseImport, exportGame } from '../src/save.js';
@@ -50,7 +50,7 @@ test('research has a real delay and changes output after completion', () => {
 test('a colony ship costs resources and settlers, travels, and is consumed into a functional colony', () => {
   const s = createGame(), p = home(s);
   assert.equal(buildShip(s, p, 'colony'), null); assert.equal(p.population, 140);
-  days(s, 6);
+  days(s, shipBuildDays(s, 'colony'));
   const f = s.fleets.find(f => f.type === 'colony'); assert.ok(f);
   assert.equal(orderFleet(s, [f.id], 'cinder', 'settle'), null);
   const eta = f.mission.remaining;
@@ -111,10 +111,10 @@ test('war, fleet combat and landers combine to capture a planet', () => {
   assert.equal(getPlanet(s, 'veyra').owner, 'player');
   assert.equal(s.fleets.some(f => f.id === 'landing'), false);
 });
-test('government affects workforce and diplomacy, taxes affect happiness, and elections advance', () => {
+test('government transition has costs without excluding population by ideology, taxes affect happiness, and elections advance', () => {
   const s = createGame(), p = home(s), before = workforce(s, p);
   assert.equal(changeGovernment(s, 'nationalSocialism'), null);
-  assert.ok(workforce(s, p) < before); assert.ok(s.player.stability < 75);
+  assert.equal(workforce(s, p), before); assert.ok(s.player.stability < 75);
   assert.equal(changeGovernment(s, 'democracy'), null);
   const lowTax = structuredClone(s); lowTax.player.tax = .12;
   s.player.tax = .22;

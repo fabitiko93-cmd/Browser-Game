@@ -1,9 +1,12 @@
+import { policyEffects } from './governance.js';
 import { SHIPS, FACTIONS } from './data.js';
 import { canAfford, pay, uid, getPlanet, log, makeStock } from './state.js';
 import { workforce } from './economy.js';
 
-export function fleetStrength(state, fleet) { return SHIPS[fleet.type].strength * fleet.hp / 100 * Math.max(.3, fleet.supply / 100) * (fleet.owner === 'player' && fleet.type === 'corvette' && state.tech.includes('lasers') ? 1.3 : 1); }
+export function fleetStrength(state, fleet) { return SHIPS[fleet.type].strength * fleet.hp / 100 * Math.max(.3, fleet.supply / 100) * (fleet.owner === 'player' && SHIPS[fleet.type].strength > 0 && state.tech.includes('lasers') ? 1.3 : 1) * policyEffects(state, fleet.owner).combat; }
 export function travelDays(state, source, target) { return Math.max(2, Math.ceil((source.system === target.system ? 5 + Math.abs(source.orbit - target.orbit) : 14) * (state.tech.includes('propulsion') ? .7 : 1))); }
+export function shipBuildDays(state, type) { return Math.max(1, Math.ceil(SHIPS[type].days * policyEffects(state).shipTime)); }
+export function fleetTravelDays(state, source, target, fleets) { return Math.max(2, Math.ceil(travelDays(state, source, target) / Math.min(...fleets.map(f => SHIPS[f.type].speed ?? 1)))); }
 export function buildShip(state, planet, type) {
   const def = SHIPS[type];
   if (!Object.hasOwn(SHIPS, type) || !planet || planet.owner !== 'player') return 'Hier kannst du keine Schiffe bauen.';
@@ -14,7 +17,7 @@ export function buildShip(state, planet, type) {
   if (def.settlers && (planet.population - def.settlers < 60 || workforce(state, planet) < 30)) return 'Es fehlen Einwohner für die Besatzung. Mindestens 60 müssen auf dem Planeten bleiben.';
   pay(state, planet, def.cost);
   if (def.settlers) planet.population -= def.settlers;
-  planet.queues.push({ id: uid(state, 'q'), type, remaining: def.days });
+  planet.queues.push({ id: uid(state, 'q'), type, remaining: shipBuildDays(state, type) });
   log(state, `${planet.name}: ${def.name} in Auftrag gegeben.`);
   return null;
 }
@@ -30,7 +33,7 @@ export function tickShipyards(state) {
   }
 }
 export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {}) {
-  if (!['move', 'settle', 'attack', 'transport'].includes(kind)) return 'Unbekannter Flottenbefehl.';
+  if (!['move', 'settle', 'attack', 'transport', 'survey'].includes(kind)) return 'Unbekannter Flottenbefehl.';
   const target = getPlanet(state, targetId);
   const ids = new Set(fleetIds);
   const fleets = state.fleets.filter(f => ids.has(f.id) && f.owner === 'player');
@@ -40,9 +43,10 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
   if (fleets.some(f => f.planetId !== source.id)) return 'Die Schiffe müssen am selben Planeten stehen.';
   if (source.id === target.id) return 'Die Flotte ist bereits am Ziel.';
   if (kind === 'settle' && (target.owner || !fleets.some(f => f.type === 'colony'))) return 'Kolonisierung benötigt ein Kolonieschiff und einen unbewohnten Planeten.';
+  if (kind === 'survey' && (!fleets.some(f => f.type === 'scout') || state.surveys.includes(target.id))) return 'Erkundung benötigt einen Aufklärer und ein noch nicht erkundetes Ziel.';
   if (kind === 'attack' && (!target.owner || target.owner === 'player' || !state.relations[target.owner]?.war)) return 'Ein Angriff setzt eine Kriegserklärung voraus.';
   if (kind === 'attack' && !fleets.some(f => fleetStrength(state, f) > 0)) return 'Diese Schiffe besitzen keine Bewaffnung.';
-  if (kind === 'transport' && (fleets.length !== 1 || fleets[0].type !== 'freighter')) return 'Für eine Route muss genau ein Frachter ausgewählt sein.';
+  if (kind === 'transport' && (fleets.length !== 1 || !SHIPS[fleets[0].type].cargo)) return 'Für eine Route muss genau ein Frachter ausgewählt sein.';
   if (kind !== 'attack' && target.owner && target.owner !== 'player' && state.relations[target.owner]?.war) return 'Das Ziel gehört einer feindlichen Macht.';
   const fuel = fleets.length * (source.system === target.system ? 8 : 18);
   const docked = source.owner === 'player' || state.relations[source.owner]?.trade && !state.relations[source.owner]?.war;
@@ -53,7 +57,7 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
     if (!target.owner || (target.owner !== 'player' && !state.relations[target.owner]?.trade)) return 'Transport braucht eine eigene Kolonie oder ein Handelsabkommen.';
     const resource = options.resource;
     const amount = Number(options.amount);
-    if (!Object.hasOwn(source.stock, resource) || !Number.isFinite(amount) || amount <= 0 || amount > 80) return 'Wähle eine Ware und eine Menge zwischen 1 und 80.';
+    if (!Object.hasOwn(source.stock, resource) || !Number.isFinite(amount) || amount <= 0 || amount > SHIPS[fleets[0].type].cargo) return `Wähle eine Menge zwischen 1 und ${SHIPS[fleets[0].type].cargo}.`;
     if (source.owner !== 'player') return 'Waren können nur auf deinen eigenen Planeten geladen werden.';
     const afterFuel = source.stock[resource] - (resource === 'energy' && docked ? fuel : 0);
     if (afterFuel < amount) return 'Die Ware ist am Abflugplaneten nicht in ausreichender Menge verfügbar.';
@@ -64,7 +68,7 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
   if (cargo) source.stock[cargo.resource] -= cargo.amount;
   const group = uid(state, 'm');
   for (const f of fleets) {
-    f.mission = { group, kind, source: source.id, target: target.id, remaining: travelDays(state, source, target), total: travelDays(state, source, target), cargo };
+    f.mission = { group, kind, source: source.id, target: target.id, remaining: fleetTravelDays(state, source, target, fleets), total: fleetTravelDays(state, source, target, fleets), cargo };
     if (kind === 'transport' && options.repeat) f.route = { source: source.id, target: target.id, resource: cargo.resource, amount: cargo.amount };
   }
   log(state, `${fleets.length === 1 ? fleets[0].name : `${fleets.length} Schiffe`} unterwegs nach ${target.name}.`);
@@ -86,7 +90,7 @@ export function resolveBattle(state, fleets, target) {
   const victory = attack >= defense;
   target.defense = Math.max(0, target.defense - attack * (victory ? 1 : .55));
   const damage = victory ? Math.min(65, defense / attack * 55) : Math.min(100, defense / attack * 65);
-  for (const f of fleets) { f.hp = Math.max(0, f.hp - damage); f.supply = Math.max(0, f.supply - 25); }
+  for (const f of fleets) { f.hp = Math.max(0, f.hp - damage * (1 - (SHIPS[f.type].armor ?? 0))); f.supply = Math.max(0, f.supply - 25); }
   const survivors = fleets.filter(f => f.hp > 0);
   state.fleets = state.fleets.filter(f => f.hp > 0);
   if (victory) {
@@ -105,7 +109,7 @@ export function resolveBattle(state, fleets, target) {
   } else {
     for (const f of survivors) {
       const home = state.planets.find(p => p.owner === 'player');
-      if (home) f.mission = { group: uid(state, 'retreat'), kind: 'move', source: target.id, target: home.id, remaining: travelDays(state, target, home), total: travelDays(state, target, home), cargo: null };
+      if (home) f.mission = { group: uid(state, 'retreat'), kind: 'move', source: target.id, target: home.id, remaining: fleetTravelDays(state, target, home, [f]), total: fleetTravelDays(state, target, home, [f]), cargo: null };
     }
     log(state, `Angriff auf ${target.name} gescheitert. ${fleets.length - survivors.length} Schiffe verloren; Überlebende ziehen sich zurück.`, 'war');
   }
@@ -121,7 +125,7 @@ function restartRoute(state, fleet) {
     const fuel = origin.system === target.system ? 8 : 18;
     if (target.stock.energy < fuel) return;
     target.stock.energy -= fuel;
-    fleet.mission = { group: uid(state, 'route'), kind: 'move', source: target.id, target: origin.id, remaining: travelDays(state, target, origin), total: travelDays(state, target, origin), cargo: null };
+    fleet.mission = { group: uid(state, 'route'), kind: 'move', source: target.id, target: origin.id, remaining: fleetTravelDays(state, target, origin, [fleet]), total: fleetTravelDays(state, target, origin, [fleet]), cargo: null };
   } else if (fleet.planetId === route.source) {
     fleet.route = null;
     const error = orderFleet(state, [fleet.id], route.target, 'transport', { resource: route.resource, amount: route.amount, repeat: true });
@@ -129,6 +133,19 @@ function restartRoute(state, fleet) {
   }
 }
 export function tickFleets(state) {
+  const upkeep = state.fleets.filter(f => f.owner === 'player').reduce((n, f) => n + (SHIPS[f.type].upkeep ?? 1), 0) * policyEffects(state).fleetUpkeep;
+  const funded = state.credits >= upkeep;
+  state.credits = Math.max(0, state.credits - upkeep);
+  if (!funded) for (const f of state.fleets.filter(f => f.owner === 'player')) f.supply = Math.max(0, f.supply - 3);
+  // Supply transfers consume the support ship's stores, even outside friendly ports.
+  for (const support of state.fleets.filter(f => f.type === 'support' && f.owner === 'player' && !f.mission)) {
+    let budget = Math.min(12, support.supply);
+    for (const other of state.fleets.filter(f => f.owner === support.owner && f.id !== support.id && f.type !== 'support' && !f.mission && f.planetId === support.planetId)) {
+      const amount = Math.min(budget, 100 - other.supply);
+      other.supply += amount; support.supply -= amount; budget -= amount;
+      if (!budget) break;
+    }
+  }
   const arrivals = new Map();
   for (const fleet of [...state.fleets]) {
     if (!fleet.mission) {
@@ -149,18 +166,20 @@ export function tickFleets(state) {
   }
   for (const { m, fleets } of arrivals.values()) {
     const target = getPlanet(state, m.target);
-    if (m.kind === 'settle') {
+    if (m.kind === 'survey') {
+      if (!state.surveys.includes(target.id) && fleets.some(f => f.type === 'scout')) { state.surveys.push(target.id); state.science += 45; log(state, `${target.name} erkundet: +45 Forschung.`, 'success'); }
+    } else if (m.kind === 'settle') {
       const colony = fleets.find(f => f.type === 'colony'); if (colony) settle(state, colony, target);
     } else if (m.kind === 'attack') resolveBattle(state, fleets, target);
     else if (m.kind === 'transport' && m.cargo) {
       if (target.owner === 'player') { target.stock[m.cargo.resource] += m.cargo.amount; log(state, `${target.name}: ${m.cargo.amount} Einheiten Fracht eingetroffen.`); }
       else if (state.relations[target.owner]?.trade && !state.relations[target.owner]?.war) {
         target.stock[m.cargo.resource] += m.cargo.amount;
-        state.credits += m.cargo.amount * (m.cargo.resource === 'weapons' ? 6 : m.cargo.resource === 'alloy' ? 4 : 2);
+        state.credits += m.cargo.amount * (m.cargo.resource === 'weapons' ? 6 : m.cargo.resource === 'alloy' ? 4 : 2) * policyEffects(state).trade;
         log(state, `${fleets[0].name}: Fracht auf ${target.name} verkauft.`, 'success');
       } else {
         const home = getPlanet(state, m.source);
-        fleets[0].mission = { group: uid(state, 'cargo-return'), kind: 'return-cargo', source: target.id, target: home.id, remaining: travelDays(state, target, home), total: travelDays(state, target, home), cargo: m.cargo };
+        fleets[0].mission = { group: uid(state, 'cargo-return'), kind: 'return-cargo', source: target.id, target: home.id, remaining: fleetTravelDays(state, target, home, fleets), total: fleetTravelDays(state, target, home, fleets), cargo: m.cargo };
         fleets[0].route = null;
         log(state, `${fleets[0].name}: Lieferung abgebrochen, Fracht kehrt zurück.`, 'warning');
       }
@@ -187,7 +206,7 @@ export function tickOpponents(state) {
   const strength = 20 + state.day / 20;
   if (guards + target.defense >= strength) {
     log(state, `${target.name}: Ein Angriff der ${FACTIONS[foe[0]].name} wurde abgewehrt.`, 'war');
-    for (const f of state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player')) f.hp = Math.max(5, f.hp - 12);
+    for (const f of state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player')) f.hp = Math.max(5, f.hp - 12 * (1 - (SHIPS[f.type].armor ?? 0)));
   } else {
     target.stock.alloy = Math.max(0, target.stock.alloy - 25);
     target.stock.energy = Math.max(0, target.stock.energy - 30);
