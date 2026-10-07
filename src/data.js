@@ -1,5 +1,5 @@
 import { MILITARY_BUILDINGS } from './military-data.js';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {

@@ -1,3 +1,4 @@
+import { diplomacyScience, sanctionUpkeep } from './diplomacy.js';
 import { tickShields } from './strategic.js';
 import { RESOURCE_KEYS } from './data.js';
 import { simulatePlanet } from './economy.js';
@@ -13,7 +14,8 @@ export function runDailyEconomy(state) {
     if (p.owner === 'player') { income += p.lastReport.income; buildings += p.lastReport.upkeep; science += p.lastReport.science; }
   }
   tickShields(state);
-  const fleets = fleetUpkeep(state), net = income - buildings - fleets;
+  science *= diplomacyScience(state);
+  const sanctions = sanctionUpkeep(state), fleets = fleetUpkeep(state), net = income - buildings - fleets - sanctions;
   const funded = openingCredits + net >= 0;
   state.credits = Math.max(0, openingCredits + net);
   state.science += science;
@@ -26,7 +28,7 @@ export function runDailyEconomy(state) {
       if (!funded) p.happiness = Math.max(0, p.happiness - 1);
     }
   }
-  return { day: state.day, income, buildings, fleets, science, net, actual: state.credits - openingCredits, unfunded: Math.max(0, -(openingCredits + net)) };
+  return { day: state.day, income, buildings, fleets, sanctions, science, net, actual: state.credits - openingCredits, unfunded: Math.max(0, -(openingCredits + net)) };
 }
 export function forecastDay(state) {
   const copy = structuredClone(state);

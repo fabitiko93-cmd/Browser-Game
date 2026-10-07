@@ -43,6 +43,7 @@ export function simulatePlanet(state, planet, options = {}) {
     if (b.remaining > 0) {
       b.remaining = Math.max(0, b.remaining - 1);
       if (b.remaining > 0) { b.status = 'Bau'; continue; }
+      if (planet.owner === 'player') log(state, `${planet.name}: ${BUILDINGS[b.type].name} fertiggestellt.`, 'success', 'build');
     }
     if (!b.enabled) { b.status = 'pausiert'; continue; }
     const def = BUILDINGS[b.type];
@@ -54,6 +55,8 @@ export function simulatePlanet(state, planet, options = {}) {
     for (const [k, v] of Object.entries(inputs)) planet.stock[k] -= v;
     for (const [k, v] of Object.entries(def.output ?? {})) {
       let factor = k === 'ore' ? planet.oreFactor : k === 'energy' && b.type === 'solar' ? planet.solarFactor : 1;
+      factor *= (state.relations[planet.owner]?.embargo ? .85 : 1);
+      for (const e of state.effects ?? []) if (e.planet === planet.id && e.until > state.day && (e.id === 'energyHarvest' && k === 'energy' || e.id === 'factoryUpgrade' && k === 'alloy')) factor *= e.id === 'energyHarvest' ? 1.2 : 1.15;
       factor *= tech[k] * (k === 'weapons' ? effects.militaryProduction : effects.civilianProduction);
       planet.stock[k] += v * factor * effects.production;
     }

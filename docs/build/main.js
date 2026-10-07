@@ -1,3 +1,5 @@
+import { SpaceAudio } from './audio.js';
+import { routeSelection } from './trade-ui.js';
 import { launchStrike, cancelStrike } from './strategic.js';
 import { STRATEGIC_WEAPONS } from './military-data.js';
 import { TECHNOLOGIES } from './technology-data.js';
@@ -16,7 +18,9 @@ import { renderHeader, renderResources, renderMapHead, renderMapFoot, renderNavi
 
 let state, storageError = false;
 try { state = loadGame() ?? createGame(); } catch (e) { state = createGame(); storageError = true; }
+const audio = new SpaceAudio();
 const ui = {
+  audioSettings: audio.settings, resourcePage: 0, buildCategory: null,
   view: 'planet', planetId: 'nereid', systemId: 'helios', panel: null, expanded: false, speed: 0, lastSpeed: 1,
   buildType: null, buildTile: null, detailType: 'farm', selectedBuilding: null, fleetIds: [],
   fleetTarget: 'cinder', routeTarget: 'thalassa', routeFleet: 'starter-f', cargo: 'ore', amount: 40, repeat: true,
@@ -47,16 +51,18 @@ function persist() {
   try { saveGame(state); }
   catch { if (!storageError) { storageError = true; toast('Automatisches Speichern ist in diesem Browser nicht verfügbar. Sichere deinen Spielstand als Datei.', true); } }
 }
-function act(result, success) { if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
+function act(result, success) { audio.play(result?'error':'confirm'); if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
 function render() {
   if (currentPlanet().destroyed) {
     ui.buildType = null; ui.buildTile = null;
     if (['build', 'build-detail', 'building', 'economy', 'fleet'].includes(ui.panel)) ensureOwned();
   }
+  ui.audioSettings = audio.settings;
   ui.projection = forecastDay(state);
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
   $('resources').innerHTML = renderResources(state, ui);
+  $('resources').setAttribute('aria-label',`${ui.resourcePage===1?'Industrie':'Standard'}: antippen für ${ui.resourcePage===1?'Standard':'Industrie'}`);
   $('map-head').innerHTML = renderMapHead(state, ui);
   $('map-foot').innerHTML = renderMapFoot(state, ui);
   $('navigation').innerHTML = renderNavigation(ui);
@@ -83,8 +89,15 @@ function ensureOwned() { if (currentPlanet().owner !== 'player') { ui.planetId =
 function selectedTarget(field) { const el = document.querySelector(`[data-field="${field}"]`); return el?.value ?? ui[field]; }
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
+  void audio.unlock();
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
+  else if (action === 'resource-toggle') { ui.resourcePage = ui.resourcePage === 1 ? 0 : 1; }
+  else if (action === 'audio-test') { void audio.unlock().then(()=>audio.play('research')); }
+  else if (action === 'build-category') { ui.buildCategory = el.dataset.category; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
+  else if (action === 'build-categories') { ui.buildCategory = null; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
+  else if (action === 'trade-open') { ensureOwned(); panel('economy'); ui.economyMode='routes'; ui.routeTarget=state.planets.find(q=>q.owner===el.dataset.faction)?.id; ui.expanded=true; }
+  else if (action === 'shipyard-open') { ensureOwned(); panel('fleet'); ui.fleetMode='shipyard'; }
   else if (action === 'speed-toggle') { if (ui.speed) { ui.lastSpeed = ui.speed; ui.speed = 0; } else ui.speed = ui.lastSpeed; accumulator = 0; }
   else if (action === 'speed') { ui.lastSpeed = ({ 1: 2, 2: 4, 4: 1 })[ui.speed || ui.lastSpeed]; if (ui.speed) ui.speed = ui.lastSpeed; accumulator = 0; }
   else if (action === 'nav') { if (['build', 'economy'].includes(el.dataset.panel) || el.dataset.panel === 'fleet' && ['shipyard', 'bases', 'arsenal'].includes(ui.fleetMode)) ensureOwned(); panel(el.dataset.panel === 'map' || ui.panel === el.dataset.panel ? null : el.dataset.panel); if (ui.panel === 'build') ui.view = 'planet'; }
@@ -139,7 +152,7 @@ document.addEventListener('click', e => {
     const error = orderFleet(state, ui.fleetIds, selectedTarget('fleetTarget'), el.dataset.kind);
     if (!error) ui.fleetIds = [];
     return act(error, 'Flottenbefehl erteilt.');
-  } else if (action === 'route-start') return act(orderFleet(state, [selectedTarget('routeFleet')], selectedTarget('routeTarget'), 'transport', { resource: ui.cargo, amount: Number(document.querySelector('[data-field="amount"]')?.value ?? ui.amount), repeat: ui.repeat }), 'Transport gestartet.');
+  } else if (action === 'route-start') { const q=routeSelection(state,ui,p); return act(orderFleet(state,[q.f?.id],q.target?.id,'transport',{resource:q.resource,amount:q.amount,repeat:ui.repeat}),'Transport gestartet.'); }
   else if (action === 'route-stop') { const f = state.fleets.find(f => f.id === el.dataset.id); if (f) f.route = null; persist(); toast('Route beendet. Eine laufende Lieferung wird noch abgeschlossen.'); }
   else if (action === 'event') panel('event');
   else if (action === 'event-resolve') { const error = resolveEvent(state, el.dataset.choice); if (!error) panel(null); return act(error, 'Entscheidung übermittelt.'); }
@@ -163,6 +176,7 @@ document.addEventListener('change', async e => {
     return;
   }
   const field = e.target.dataset.field; if (!field) return;
+  if (field.startsWith('audio-')) { audio.update(field.slice(6),e.target.type==='checkbox'?e.target.checked:Number(e.target.value)/100); void audio.unlock(); render(); return; }
   ui.strikeConfirm = null;
   if (field === 'ownPlanet') { ui.planetId = e.target.value; ui.systemId = currentPlanet().system; }
   else if (field === 'fleet') { if (e.target.checked) ui.fleetIds.push(e.target.value); else ui.fleetIds = ui.fleetIds.filter(id => id !== e.target.value); }
@@ -174,16 +188,19 @@ document.addEventListener('change', async e => {
 });
 document.addEventListener('input', e => {
   if (e.target.dataset.field === 'amount') { ui.amount = Number(e.target.value); e.target.parentNode.querySelector('output').textContent = ui.amount; }
+  if (e.target.dataset.field?.startsWith('audio-') && e.target.type==='range') { audio.update(e.target.dataset.field.slice(6),Number(e.target.value)/100); e.target.parentNode.querySelector('output').textContent=`${e.target.value} %`; }
   if (e.target.dataset.field === 'empireName') state.player.name = e.target.value.trim().slice(0, 32) || 'Nereid-Union';
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { ui.speed = 0; accumulator = 0; persist(); render(); } });
-window.addEventListener('pagehide', persist);
+document.addEventListener('keydown', e=>{if(e.target.id==='resources'&&['Enter',' '].includes(e.key)){e.preventDefault();e.target.click();}});
+document.addEventListener('visibilitychange', () => { audio.setHidden(document.hidden); if (document.hidden) { ui.speed = 0; accumulator = 0; persist(); render(); } });
+window.addEventListener('pageshow',()=>audio.setHidden(document.hidden));
+window.addEventListener('pagehide', ()=>{audio.setHidden(true);persist();});
 let previousTime = performance.now(), accumulator = 0;
 function frame(now) {
   const delta = Math.min(500, now - previousTime); previousTime = now;
   if (state.started && ui.speed && !document.hidden) {
     accumulator += delta * ui.speed;
-    if (accumulator >= 3000) { accumulator -= 3000; stepDay(state); persist(); render(); }
+    if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state); audio.notify(state.logs.filter(e=>!previous.has(e))); persist(); render(); }
   }
   map.render(now); requestAnimationFrame(frame);
 }

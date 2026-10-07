@@ -25,3 +25,13 @@
 
 /* Five military tabs remain touchable on narrow portrait screens. */
 .subnav{flex-wrap:wrap}.subnav button{min-width:48px;min-height:44px}.detail-card,.card-heading strong,.cost-line{overflow-wrap:anywhere}.card-heading strong{min-width:0}.card-heading .status-badge{flex-shrink:0}
+/* A single tappable resource row; both banks keep the same footprint. */
+.resources{position:relative;display:block;padding:5px 30px 5px 10px;cursor:pointer;touch-action:manipulation;user-select:none}
+.resource-bank{height:100%;display:flex;align-items:center;gap:4px}.resource-bank>.resource-pill{flex:1;min-width:0}.resource-bank.industry>.resource-pill{flex:1}
+.resource-switch{position:absolute;right:4px;top:27px;font-size:8px;color:#a1b3e9;line-height:14px}.resource-switch.warning{color:#ff879f}.resources:focus-visible{outline:2px solid #a4bfff;outline-offset:-3px}
+.research-condition{line-height:1.5;margin-top:8px!important;letter-spacing:0}.research-condition.met{color:#a6c8fa}.research-condition.unmet{color:#edb59f}.building-card.unavailable{opacity:.9}.category-card{min-height:126px}
+.trade-steps{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.trade-steps span{font-size:9px;background:#1c2850;color:#aec3f4;border-radius:7px;padding:6px 8px}
+.event-title{font-size:22px;font-weight:400;margin:6px 0 12px}.detail-card>.button{width:100%;text-align:center}.building-card small{overflow-wrap:anywhere}
+@media(max-width:360px){.resources{padding-inline:7px 27px}.resource-top{gap:2px}.resource-top svg{width:13px;height:13px}.resource-value{font-size:11px}.resource-label{font-size:8px;letter-spacing:0}.resource-trend{font-size:9px}.resource-switch{font-size:7px}}
+.sheet-content{min-width:0;width:100%}.select{min-width:0;max-width:100%}
+.building-card,.building-card small,.research-condition{white-space:normal;overflow-wrap:anywhere}

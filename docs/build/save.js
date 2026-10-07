@@ -1,3 +1,6 @@
+import { SOUND_CUES } from './audio.js';
+import { EVENTS, initialEventSchedule } from './events.js';
+import { initialRelationExtras } from './diplomacy.js';
 import { makePlanet } from './state.js';
 import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
@@ -22,7 +25,12 @@ export function validateSave(value) {
     if (!Array.isArray(value.planets) || ![7, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
     for (const p of value.planets) { p.shield = 0; p.destroyed = false; }
     for (const seed of PLANET_SEEDS) if (!value.planets.some(p=>p.id===seed.id)) value.planets.push(makePlanet(seed));
-    value.strikes = []; value.destroyedSystems = []; value.milestones = []; value.version = SAVE_VERSION;
+    value.strikes = []; value.destroyedSystems = []; value.milestones = []; value.version = 4;
+  }
+  if (value?.version === 4) {
+    value = structuredClone(value); value.eventSchedule = initialEventSchedule(value.day); value.effects = [];
+    for (const r of Object.values(value.relations ?? {})) Object.assign(r, initialRelationExtras());
+    value.version = SAVE_VERSION;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
   const text = (v, max = 100) => typeof v === 'string' && v.length > 0 && v.length <= max;
@@ -38,9 +46,9 @@ export function validateSave(value) {
   if (value.research && (!known(TECHNOLOGIES, value.research.id) || !Number.isInteger(value.research.total) || !finite(value.research.total, 2, 30) || !Number.isInteger(value.research.remaining) || !finite(value.research.remaining, 1, value.research.total) || value.tech.includes(value.research.id) || TECHNOLOGIES[value.research.id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[value.research.id].requiresAny && !TECHNOLOGIES[value.research.id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[value.research.id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültiger Forschungsauftrag.');
   for (const id of Object.keys(FACTIONS).filter(id => id !== 'player')) {
     const rel = value.relations?.[id];
-    if (!rel || !finite(rel.score, -100, 100) || typeof rel.war !== 'boolean' || typeof rel.trade !== 'boolean' || rel.war && rel.trade) throw new Error('Ungültige diplomatische Beziehungen.');
+    if (!rel || !finite(rel.score, -100, 100) || typeof rel.war !== 'boolean' || typeof rel.trade !== 'boolean' || typeof rel.cooperation !== 'boolean' || typeof rel.embargo !== 'boolean' || !finite(rel.pactUntil,0,value.day+180) || !finite(rel.envoyReady,0,value.day+10) || !finite(rel.aidReady,0,value.day+60) || rel.war && (rel.trade || rel.cooperation || rel.pactUntil>value.day) || rel.embargo && (rel.trade || rel.cooperation) || rel.cooperation && !rel.trade) throw new Error('Ungültige diplomatische Beziehungen.');
   }
-  if (Object.keys(value.relations).length !== 3 || !Array.isArray(value.logs) || value.logs.length > 60 || value.logs.some(e => !finite(e.day, 0, value.day) || !text(e.text, 600) || !text(e.type, 24))) throw new Error('Ungültiges Kommandoprotokoll.');
+  if (Object.keys(value.relations).length !== 3 || !Array.isArray(value.logs) || value.logs.length > 60 || value.logs.some(e => !finite(e.day, 0, value.day) || !text(e.text, 600) || !text(e.type, 24) || e.sound != null && !SOUND_CUES.includes(e.sound))) throw new Error('Ungültiges Kommandoprotokoll.');
   const ids = new Set();
   for (const p of value.planets) {
     if (!finite(p.shield) || typeof p.destroyed !== 'boolean' || p.destroyed && (p.owner !== null || p.population !== 0 || p.buildings?.length || p.queues?.length || p.shield !== 0) || !PLANET_SEEDS.some(seed => seed.id === p.id) || ids.has(p.id) || !text(p.name, 64) || !SYSTEMS.some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
@@ -65,7 +73,10 @@ export function validateSave(value) {
     if (r && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || !finite(r.amount, 1, Math.floor(SHIPS[f.type].cargo * technologyEffects(value).cargoCapacity)))) throw new Error('Ungültige Handelsroute.');
   }
   if (!value.planets.some(p => p.owner === 'player')) throw new Error('Der Spielstand enthält keinen eigenen Planeten.');
-  if (value.event && (!['signal', 'storm', 'migration'].includes(value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
+  if (value.event && (!known(EVENTS,value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
+  const schedule = value.eventSchedule;
+  if (!schedule || !Number.isInteger(schedule.nextDay) || !finite(schedule.nextDay,0,value.day+145) || !Number.isInteger(schedule.counter) || !finite(schedule.counter,0,1e6) || !Array.isArray(schedule.history) || schedule.history.length>4 || new Set(schedule.history).size!==schedule.history.length || schedule.history.some(id=>!known(EVENTS,id))) throw new Error('Ungültiger Ereignisplan.');
+  if (!Array.isArray(value.effects) || value.effects.length>value.planets.length*2 || new Set(value.effects.map(e=>`${e.id}:${e.planet}`)).size!==value.effects.length || value.effects.some(e=>!['energyHarvest','factoryUpgrade'].includes(e.id) || !ids.has(e.planet) || !Number.isInteger(e.until) || !finite(e.until,value.day,value.day+45))) throw new Error('Ungültiger Ereigniseffekt.');
   if (value.lastDayReport != null) {
     const b = value.lastDayReport;
     if (!finite(b.day, 0, value.day) || !['income', 'buildings', 'fleets', 'science', 'unfunded'].every(k => finite(b[k])) || !['net', 'actual', 'oneOff'].every(k => finite(b[k], -1e12, 1e12)) || !b.resources || Object.entries(b.resources).some(([id, rates]) => !ids.has(id) || RESOURCE_KEYS.some(k => !finite(rates[k]?.recurring, -1e12, 1e12) || !finite(rates[k]?.oneOff, -1e12, 1e12)))) throw new Error('Ungültige Haushaltsabrechnung.');

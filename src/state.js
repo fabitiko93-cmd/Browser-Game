@@ -1,3 +1,5 @@
+import { initialRelationExtras } from './diplomacy.js';
+import { initialEventSchedule } from './events.js';
 import { initialGovernance } from './governance.js';
 import { PLANET_SEEDS, FACTIONS, GRID, SAVE_VERSION, RESOURCE_KEYS } from './data.js';
 
@@ -17,17 +19,17 @@ export function makePlanet(p) {
 export function createGame() {
   const planets = PLANET_SEEDS.map(makePlanet);
   return {
-    strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
+    effects: [], eventSchedule: initialEventSchedule(0), strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
     player: { name: FACTIONS.player.name, ideology: 'democracy', tax: .16, stability: 75, term: 60, rulingSupport: 55 },
     planets, tech: [], research: null,
-    relations: { ilyri: { score: 25, war: false, trade: false }, khepri: { score: -10, war: false, trade: false }, aster: { score: -55, war: false, trade: false } },
+    relations: { ilyri: { ...initialRelationExtras(), score: 25, war: false, trade: false }, khepri: { ...initialRelationExtras(), score: -10, war: false, trade: false }, aster: { ...initialRelationExtras(), score: -55, war: false, trade: false } },
     fleets: [ { id: 'starter-c', name: 'NU Vigil', type: 'corvette', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, mission: null, route: null }, { id: 'starter-f', name: 'NU Meridian', type: 'freighter', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, mission: null, route: null } ],
     logs: [{ day: 0, text: 'Nereid ist bereit. Baue deine Wirtschaft auf und erschließe die Sterne.', type: 'info' }], event: null, aiNext: 45
   };
 }
 export function uid(state, prefix) { return `${prefix}-${state.nextId++}`; }
-export function log(state, text, type = 'info') {
-  state.logs.unshift({ day: state.day, text, type });
+export function log(state, text, type = 'info', sound = null) {
+  state.logs.unshift({ day: state.day, text, type, ...(sound ? {sound} : {}) });
   state.logs = state.logs.slice(0, 60);
 }
 export const getPlanet = (state, id) => state.planets.find(p => p.id === id);

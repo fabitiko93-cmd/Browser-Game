@@ -1,3 +1,4 @@
+import { treatyAction, cancelForeignRoutes } from './diplomacy.js';
 import { technologyEffects } from './technology.js';
 import { policyEffects, governmentChangeCost } from './governance.js';
 import { IDEOLOGIES, FACTIONS } from './data.js';
@@ -23,9 +24,11 @@ export function changeGovernment(state, ideology) {
 export function diplomaticAction(state, faction, action) {
   const rel = state.relations[faction];
   if (!rel) return 'Keine diplomatische Verbindung.';
+  if (['pact','cooperation','cancel-pact','cancel-cooperation','embargo','lift-embargo'].includes(action)) return treatyAction(state,faction,action);
   if (action === 'war') {
     if (rel.war) return 'Ihr befindet euch bereits im Krieg.';
-    rel.war = true; rel.trade = false; rel.score = Math.max(-100, rel.score - 40);
+    if (rel.pactUntil > state.day) return 'Kündige zuerst den aktiven Nichtangriffspakt.';
+    rel.war = true; rel.trade = false; rel.cooperation = false; cancelForeignRoutes(state,faction); rel.score = Math.max(-100, rel.score - 40);
     log(state, `Krieg erklärt: ${FACTIONS[faction].name}. Frachtrouten in dieses Gebiet werden beendet.`, 'war');
   } else if (action === 'peace') {
     if (!rel.war) return 'Es besteht kein Krieg.';
@@ -34,11 +37,13 @@ export function diplomaticAction(state, faction, action) {
     log(state, `Waffenstillstand mit ${FACTIONS[faction].name}.`, 'politics');
   } else if (action === 'envoy') {
     if (rel.war) return 'Während eines Krieges sind Gesandtschaften nicht möglich.';
+    if (rel.envoyReady > state.day) return `Die nächste Gesandtschaft ist in ${rel.envoyReady-state.day} Tagen möglich.`;
     if (state.credits < 60) return 'Für eine Gesandtschaft fehlen 60 Credits.';
-    state.credits -= 60; rel.score = Math.min(100, rel.score + 15 * policyEffects(state).envoy * technologyEffects(state).envoy);
+    state.credits -= 60; rel.envoyReady = state.day + 10; rel.score = Math.min(100, rel.score + 15 * policyEffects(state).envoy * technologyEffects(state).envoy);
     log(state, `Gesandtschaft zur ${FACTIONS[faction].name}: Beziehungen verbessert.`, 'politics');
   } else if (action === 'trade') {
     if (rel.trade) return 'Das Handelsabkommen besteht bereits.';
+    if (rel.embargo) return 'Hebe zuerst die Sanktionen auf.';
     if (rel.war || rel.score < 0) return 'Ein Handelsabkommen braucht Frieden und Beziehungen von mindestens 0.';
     if (state.credits < 50) return 'Für das Handelsabkommen fehlen 50 Credits.';
     state.credits -= 50; rel.trade = true;

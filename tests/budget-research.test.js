@@ -116,7 +116,7 @@ test('technocracy has visible and actual science, development and energy-efficie
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 4);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 5);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};

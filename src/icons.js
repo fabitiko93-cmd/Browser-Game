@@ -1,4 +1,9 @@
 const paths = {
+  ore: '<path d="m4 17 2-10 7-4 7 7-2 9-8 2Z"/><path d="m6 7 7 3 5 9M13 10l7-0"/>',
+  crystal: '<path d="m12 2 7 6-3 12-4 2-4-2L5 8Z"/><path d="M12 2v20M5 8h14"/>',
+  optics: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m5 5 4 4m6 6 4 4"/>',
+  weapons: '<path d="m4 20 10-10M12 6l6-3 3 3-3 6-3-3-3 3-3-3Z"/><path d="m3 4 3 2m10 12 2 3"/>',
+
   map: '<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Z"/><path d="M9 3v16M15 5v16"/>',
   build: '<path d="m4 20 7-7M10 4l4-2 7 7-2 4-4-4-4 4-4-4 4-4Z"/>',
   economy: '<path d="M4 20V10h4v10M10 20V4h4v16M16 20v-8h4v8"/>',

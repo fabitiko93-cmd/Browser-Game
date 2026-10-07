@@ -1,3 +1,4 @@
+import { exportPrice } from './trade.js';
 import { baseStats, absorbShield } from './strategic.js';
 import { technologyEffects } from './technology.js';
 import { policyEffects } from './governance.js';
@@ -31,7 +32,7 @@ export function tickShipyards(state) {
     p.queues.shift();
     const id = uid(state, 'f');
     state.fleets.push({ id, name: `NU ${SHIPS[q.type].name} ${state.nextId}`, type: q.type, owner: 'player', planetId: p.id, hp: 100, supply: 100, mission: null, route: null });
-    log(state, `${p.name}: ${SHIPS[q.type].name} einsatzbereit.`, 'success');
+    log(state, `${p.name}: ${SHIPS[q.type].name} einsatzbereit.`, 'success', 'ship');
   }
 }
 export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {}) {
@@ -82,7 +83,7 @@ function settle(state, fleet, target) {
   target.stock = makeStock({ food: 60, ore: 40, alloy: 60, energy: 70, crystal: 5 });
   target.buildings = [ { id: uid(state, 'b'), type: 'habitat', x: 5, y: 7, remaining: 0, enabled: true, status: 'aktiv' }, { id: uid(state, 'b'), type: 'solar', x: 5, y: 6, remaining: 0, enabled: true, status: 'aktiv' }, { id: uid(state, 'b'), type: 'farm', x: 4, y: 7, remaining: 0, enabled: true, status: 'aktiv' } ];
   state.fleets = state.fleets.filter(f => f.id !== fleet.id);
-  log(state, `Neue Kolonie auf ${target.name}. Das Kolonieschiff wurde zur Siedlung umgebaut.`, 'success');
+  log(state, `Neue Kolonie auf ${target.name}. Das Kolonieschiff wurde zur Siedlung umgebaut.`, 'success', 'colony');
 }
 export function resolveBattle(state, fleets, target) {
   if (!target.owner || target.owner === 'player' || !state.relations[target.owner]?.war) { log(state, `Angriff auf ${target.name} abgebrochen: Es besteht kein Krieg.`, 'warning'); return; }
@@ -111,13 +112,13 @@ export function resolveBattle(state, fleets, target) {
       state.fleets = state.fleets.filter(f => !consumed.has(f.id));
       state.relations[previous].score = -100;
       log(state, `${target.name} besetzt. Die Landungstruppen bilden die neue Garnison.`, 'success');
-    } else log(state, `Orbit von ${target.name} gesichert. Für die Besetzung werden mindestens ${target.garrison} Landungstruppen benötigt.`, 'war');
+    } else log(state, `Orbit von ${target.name} gesichert. Für die Besetzung werden mindestens ${target.garrison} Landungstruppen benötigt.`, 'war', 'attack');
   } else {
     for (const f of survivors) {
       const home = state.planets.find(p => p.owner === 'player');
       if (home) f.mission = { group: uid(state, 'retreat'), kind: 'move', source: target.id, target: home.id, remaining: fleetTravelDays(state, target, home, [f]), total: fleetTravelDays(state, target, home, [f]), cargo: null };
     }
-    log(state, `Angriff auf ${target.name} gescheitert. ${fleets.length - survivors.length} Schiffe verloren; Überlebende ziehen sich zurück.`, 'war');
+    log(state, `Angriff auf ${target.name} gescheitert. ${fleets.length - survivors.length} Schiffe verloren; Überlebende ziehen sich zurück.`, 'war', 'attack');
   }
 }
 function restartRoute(state, fleet) {
@@ -187,11 +188,11 @@ export function tickFleets(state, options = {}) {
       const colony = fleets.find(f => f.type === 'colony'); if (colony) settle(state, colony, target);
     } else if (m.kind === 'attack') resolveBattle(state, fleets, target);
     else if (m.kind === 'transport' && m.cargo) {
-      if (target.owner === 'player') { target.stock[m.cargo.resource] += m.cargo.amount; log(state, `${target.name}: ${m.cargo.amount} Einheiten Fracht eingetroffen.`); }
+      if (target.owner === 'player') { target.stock[m.cargo.resource] += m.cargo.amount; log(state, `${target.name}: ${m.cargo.amount} Einheiten Fracht eingetroffen.`, 'success', 'delivery'); }
       else if (state.relations[target.owner]?.trade && !state.relations[target.owner]?.war) {
         target.stock[m.cargo.resource] += m.cargo.amount;
-        state.credits += m.cargo.amount * (m.cargo.resource === 'weapons' ? 6 : m.cargo.resource === 'alloy' ? 4 : 2) * policyEffects(state).trade * technologyEffects(state).trade;
-        log(state, `${fleets[0].name}: Fracht auf ${target.name} verkauft.`, 'success');
+        state.credits += m.cargo.amount * exportPrice(state, m.cargo.resource, target.owner);
+        log(state, `${fleets[0].name}: Fracht auf ${target.name} verkauft.`, 'success', 'delivery');
       } else {
         const home = getPlanet(state, m.source);
         fleets[0].mission = { group: uid(state, 'cargo-return'), kind: 'return-cargo', source: target.id, target: home.id, remaining: fleetTravelDays(state, target, home, fleets), total: fleetTravelDays(state, target, home, fleets), cargo: m.cargo };
@@ -220,12 +221,12 @@ export function tickOpponents(state) {
   const guards = state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player').reduce((sum, f) => sum + fleetStrength(state, f), 0);
   const strength = 20 + state.day / 20;
   if (guards + target.defense + baseStats(state, target).orbital + baseStats(state, target).fortification >= absorbShield(target, strength)) {
-    log(state, `${target.name}: Ein Angriff der ${FACTIONS[foe[0]].name} wurde abgewehrt.`, 'war');
+    log(state, `${target.name}: Ein Angriff der ${FACTIONS[foe[0]].name} wurde abgewehrt.`, 'war', 'attack');
     for (const f of state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player')) f.hp = Math.max(5, f.hp - 12 * (1 - shipArmor(state, f)));
   } else {
     target.stock.alloy = Math.max(0, target.stock.alloy - 25);
     target.stock.energy = Math.max(0, target.stock.energy - 30);
     target.happiness = Math.max(5, target.happiness - 8);
-    log(state, `${target.name}: Feindlicher Überfall. Industrie und Versorgung beschädigt.`, 'war');
+    log(state, `${target.name}: Feindlicher Überfall. Industrie und Versorgung beschädigt.`, 'war', 'attack');
   }
 }

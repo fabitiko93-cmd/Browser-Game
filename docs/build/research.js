@@ -21,7 +21,7 @@ export function tickResearch(state) {
   if (--state.research.remaining <= 0) {
     const id = state.research.id;
     state.tech.push(id); state.research = null;
-    log(state, `Forschung abgeschlossen: ${TECHNOLOGIES[id].name}.`, 'success');
+    log(state, `Forschung abgeschlossen: ${TECHNOLOGIES[id].name}.`, 'success', 'research');
   }
 }
 
