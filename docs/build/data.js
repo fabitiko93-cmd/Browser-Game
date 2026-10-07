@@ -1,4 +1,5 @@
-export const SAVE_VERSION = 3;
+import { MILITARY_BUILDINGS } from './military-data.js';
+export const SAVE_VERSION = 4;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {
@@ -11,6 +12,7 @@ export const RESOURCES = {
   weapons: { name: 'Laserwaffen', short: 'LAS', color: '#e58c8b' }
 };
 export const BUILDINGS = {
+  ...MILITARY_BUILDINGS,
   habitat: { name: 'Wohnquartier', group: 'Bevölkerung', glyph: 'H', color: '#a1c7d2', cost: { credits: 60, alloy: 18 }, days: 3, workers: 0, upkeep: 1, housing: 80, description: 'Wohnraum für 80 Einwohner. Versorgte Städte ziehen neue Bewohner an.' },
   farm: { name: 'Hydroponik', group: 'Versorgung', glyph: 'F', color: '#a8c885', cost: { credits: 45, alloy: 12 }, days: 2, workers: 12, upkeep: 2, input: { energy: 2 }, output: { food: 16 }, description: 'Energie wird zu Nahrung. Jeder Einwohner benötigt täglich 0,05 Einheiten.' },
   solar: { name: 'Solarfeld', group: 'Versorgung', glyph: 'E', color: '#ecc27f', cost: { credits: 50, alloy: 15 }, days: 2, workers: 6, upkeep: 1, output: { energy: 26 }, description: 'Versorgt Fabriken und Schiffe mit Energie. Der Ertrag hängt vom Planeten ab.' },
@@ -43,10 +45,15 @@ export const SHIPS = {
   lander: { name: 'Landungsschiff', color: '#d49791', cost: { credits: 120, alloy: 35, weapons: 18, food: 20, energy: 15 }, days: 5, strength: 2, troops: 40, cargo: 0, settlers: 40, description: 'Besetzt einen feindlichen Planeten, wenn seine Orbitalverteidigung besiegt ist.' }
 };
 export const SYSTEMS = [
-  { id: 'helios', name: 'Helios', x: .28, y: .43, color: '#e6bc78', description: 'Die Wiege deiner Zivilisation.' },
-  { id: 'vesper', name: 'Vesper', x: .74, y: .28, color: '#aba1e3', description: 'Kristallreiche Welten und fremde Gesellschaften.' },
-  { id: 'umbra', name: 'Umbra', x: .68, y: .76, color: '#da8e72', description: 'Eine umkämpfte industrielle Grenzregion.' }
+  { id: 'helios', name: 'Helios', x: .18, y: .14, color: '#e6bc78', description: 'Die Wiege deiner Zivilisation.' },
+  { id: 'vesper', name: 'Vesper', x: .5, y: .14, color: '#aba1e3', description: 'Kristallreiche Welten und fremde Gesellschaften.' },
+  { id: 'umbra', name: 'Umbra', x: .82, y: .14, color: '#da8e72', description: 'Eine umkämpfte industrielle Grenzregion.' }
 ];
+const frontierSystems = [
+  ['aurora','Aurora',.18,.44,'#96b8fa'],['lyra','Lyra',.5,.44,'#e6a8dc'],['draco','Draco',.82,.44,'#ffac91'],
+  ['orion','Orion',.18,.74,'#b7a3fc'],['caelum','Caelum',.5,.74,'#a8d3eb'],['erebus','Erebus',.82,.74,'#eece8e']
+].map(([id,name,x,y,color])=>({id,name,x,y,color,description:'Grenzsystem mit neuen Kolonien und befestigten Außenposten.'}));
+SYSTEMS.push(...frontierSystems);
 export const PLANET_SEEDS = [
   { id: 'nereid', name: 'Nereid', system: 'helios', owner: 'player', kind: 'Temperiert', color: '#7892d9', seed: 31, oreFactor: 1, solarFactor: 1, population: 180, aliens: .12, orbit: 0 },
   { id: 'cinder', name: 'Cinder', system: 'helios', owner: null, kind: 'Vulkanisch', color: '#d98d63', seed: 72, oreFactor: 1.6, solarFactor: 1.15, population: 0, aliens: 0, orbit: 1 },
@@ -56,6 +63,10 @@ export const PLANET_SEEDS = [
   { id: 'aster', name: 'Aster', system: 'umbra', owner: 'aster', kind: 'Industriewelt', color: '#b49a81', seed: 84, oreFactor: 1.4, solarFactor: .85, population: 240, aliens: .18, orbit: 0 },
   { id: 'nox', name: 'Nox', system: 'umbra', owner: null, kind: 'Eiswelt', color: '#95b4c1', seed: 65, oreFactor: 1.3, solarFactor: .65, population: 0, aliens: 0, orbit: 1 }
 ];
+const frontierNames = [['Solace','Ember','Pelagos'],['Lumen','Aeris','Iris'],['Ferrum','Pyra','Dusk'],['Arcadia','Rime','Halo'],['Cobalt','Verdant','Haven'],['Obsidian','Ash','Zenith']];
+frontierSystems.forEach((s,i)=>{
+  for(let orbit=0;orbit<3;orbit++) PLANET_SEEDS.push({id:`${s.id}-${orbit}`,name:frontierNames[i][orbit],system:s.id,owner:orbit===0?['ilyri','khepri','aster'][i%3]:null,kind:['Temperiert','Vulkanisch','Kristallwelt'][orbit],color:['#82a0d4','#d69a7b','#b19cd9'][orbit],seed:110+i*13+orbit*7,oreFactor:.8+(i%3)*.25+orbit*.2,solarFactor:.75+(i%2)*.25+orbit*.15,population:orbit===0?180+i*15:0,aliens:orbit===0?.6:0,orbit,frontier:true});
+});
 export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const FACTIONS = {
   player: { name: 'Nereid-Union', species: 'Menschen / Ilyri', color: '#9aaeff', ideology: 'democracy' },

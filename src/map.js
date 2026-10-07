@@ -80,6 +80,7 @@ export class MapRenderer {
   }
   surface(ctx, w, h, time) {
     const p = this.state.planets.find(p => p.id === this.ui.planetId);
+    if (p.destroyed) { ctx.fillStyle = '#c8a7c7'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('TRÜMMERFELD', w/2, h/2); return; }
     const size = Math.min((w - 28) / GRID.width, (h - 40) / GRID.height) * this.camera.zoom;
     const ox = w / 2 - GRID.width * size / 2 + this.camera.x, oy = h / 2 - GRID.height * size / 2 + this.camera.y;
     this.tileSize = size; this.origin = { x: ox, y: oy };
@@ -138,6 +139,8 @@ export class MapRenderer {
     }
   }
   planetBody(ctx, x, y, r, p, time) {
+    if (p.destroyed) { ctx.fillStyle = '#806d89'; for(let i=0;i<9;i++) ctx.fillRect(x+Math.cos(i*2.4)*r,y+Math.sin(i*2.4)*r,4,4); ctx.font='11px system-ui'; ctx.textAlign='center'; ctx.fillText(`${p.name} · zerstört`,x,y+r+24); this.hits.push({kind:'planet',x,y,r:25,id:p.id}); return; }
+    if (p.shield > 0) { ctx.strokeStyle='#7abbff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,r+10,0,Math.PI*2); ctx.stroke(); }
     const owner = p.owner ? FACTIONS[p.owner].color : '#879ca4';
     ctx.save();
     ctx.shadowColor = `${p.color}88`; ctx.shadowBlur = r * .5;
@@ -161,7 +164,7 @@ export class MapRenderer {
       ctx.strokeStyle = '#94b6c415'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy, orbitRadius * (.6 + i * .4), orbitRadius * (.85 + i * .42), -.2, 0, Math.PI * 2); ctx.stroke();
     }
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 78 * zoom); glow.addColorStop(0, `${system.color}65`); glow.addColorStop(1, `${system.color}00`); ctx.fillStyle = glow; ctx.fillRect(cx - 78 * zoom, cy - 78 * zoom, 156 * zoom, 156 * zoom);
-    ctx.shadowColor = system.color; ctx.shadowBlur = 20; ctx.fillStyle = system.color; ctx.beginPath(); ctx.arc(cx, cy, 14 * zoom, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.shadowColor = system.color; ctx.shadowBlur = 20; ctx.fillStyle = this.state.destroyedSystems.includes(system.id) ? '#473954' : system.color; ctx.beginPath(); ctx.arc(cx, cy, 14 * zoom, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#ddc99e'; ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(system.name.toUpperCase(), cx, cy + 33 * zoom);
     const positions = [ [-.9, -.65], [.82, .35], [-.37, 1.6] ];
     for (let i = 0; i < planets.length; i++) {
@@ -189,15 +192,15 @@ export class MapRenderer {
   galaxy(ctx, w, h, time) {
     const points = SYSTEMS.map(s => ({ ...s, px: w / 2 + w * (s.x - .5) * this.camera.zoom + this.camera.x, py: h / 2 + h * (s.y - .5) * this.camera.zoom + this.camera.y }));
     ctx.strokeStyle = '#85b3c329'; ctx.setLineDash([2, 7]);
-    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { ctx.beginPath(); ctx.moveTo(points[i].px, points[i].py); ctx.lineTo(points[j].px, points[j].py); ctx.stroke(); }
+    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { if (Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y)>.46) continue; ctx.beginPath(); ctx.moveTo(points[i].px, points[i].py); ctx.lineTo(points[j].px, points[j].py); ctx.stroke(); }
     ctx.setLineDash([]);
     for (const s of points) {
       const glow = ctx.createRadialGradient(s.px, s.py, 0, s.px, s.py, 60); glow.addColorStop(0, `${s.color}45`); glow.addColorStop(1, `${s.color}00`); ctx.fillStyle = glow; ctx.fillRect(s.px - 60, s.py - 60, 120, 120);
       ctx.strokeStyle = '#878dcc45'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.px, s.py, 27, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(s.px, s.py, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = this.state.destroyedSystems.includes(s.id) ? '#473954' : s.color; ctx.beginPath(); ctx.arc(s.px, s.py, 9, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#e3e6ff'; ctx.font = '600 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText(s.name, s.px, s.py + 48);
       const planets = this.state.planets.filter(p => p.system === s.id); const count = planets.filter(p => p.owner === 'player').length;
-      ctx.font = '10px system-ui'; ctx.fillStyle = '#8e9cc7'; ctx.fillText(`${planets.length} Planeten${count ? ` · ${count} eigene` : ''}`, s.px, s.py + 65);
+      ctx.font = '10px system-ui'; ctx.fillStyle = '#8e9cc7'; ctx.fillText(`${planets.filter(p=>!p.destroyed).length} Planeten${count ? ` · ${count} eigene` : ''}`, s.px, s.py + 65);
       this.hits.push({ kind: 'system', x: s.px, y: s.py, r: 32, id: s.id });
     }
   }

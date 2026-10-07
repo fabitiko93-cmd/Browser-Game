@@ -11,10 +11,13 @@ export function terrainAt(planet, x, y) {
 export function initialBuildings(prefix) {
   return [ ['habitat', 4, 7], ['habitat', 5, 7], ['habitat', 6, 7], ['farm', 4, 6], ['solar', 5, 6], ['mine', 6, 6], ['foundry', 4, 5], ['optics', 5, 5], ['lab', 6, 5], ['shipyard', 6, 8] ].map(([type, x, y], i) => ({ id: `${prefix}-b${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' }));
 }
+export function makePlanet(p) {
+  return { ...p, stock: makeStock(p.owner ? { food: 180, ore: 160, alloy: 200, energy: 180, crystal: 30, optics: 60, weapons: 45 } : {}), buildings: p.owner ? [...initialBuildings(p.id), ...(p.frontier ? [['solar', 7, 5], ['shield', 7, 7], ['missileSilo', 7, 6], ['crystal', 8, 5], ['laser', 8, 6]].map(([type, x, y], i) => ({ id: `${p.id}-base${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' })) : [])] : [], queues: [], happiness: 72, defense: p.owner && p.owner !== 'player' ? (p.owner === 'aster' ? 35 : 24) : 0, garrison: p.owner && p.owner !== 'player' ? 30 : 0, net: {}, lastReport: null, shield: 0, destroyed: false };
+}
 export function createGame() {
-  const planets = PLANET_SEEDS.map(p => ({ ...p, stock: makeStock(p.owner ? { food: 180, ore: 160, alloy: 200, energy: 180, crystal: 30, optics: 60, weapons: 45 } : {}), buildings: p.owner ? initialBuildings(p.id) : [], queues: [], happiness: 72, defense: p.owner && p.owner !== 'player' ? (p.owner === 'aster' ? 35 : 24) : 0, garrison: p.owner && p.owner !== 'player' ? 30 : 0, net: {}, lastReport: null }));
+  const planets = PLANET_SEEDS.map(makePlanet);
   return {
-    governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
+    strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
     player: { name: FACTIONS.player.name, ideology: 'democracy', tax: .16, stability: 75, term: 60, rulingSupport: 55 },
     planets, tech: [], research: null,
     relations: { ilyri: { score: 25, war: false, trade: false }, khepri: { score: -10, war: false, trade: false }, aster: { score: -55, war: false, trade: false } },

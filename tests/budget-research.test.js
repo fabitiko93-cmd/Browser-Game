@@ -63,8 +63,8 @@ test('trade deliveries appear as single bookings instead of a misleading permane
   const panel = renderSheet(s, {panel:'economy',economyMode:'production',planetId:'nereid'});
   assert.ok(panel.includes('Einzelbuchungen')); assert.deepEqual(parseImport(exportGame(s)), s);
 });
-test('42 technology nodes form an acyclic dependency graph with seven exclusive specializations', () => {
-  assert.equal(Object.keys(TECHNOLOGIES).length, 42); assert.equal(Object.keys(RESEARCH_BRANCHES).length, 7);
+test('60 technology nodes form an acyclic dependency graph with seven exclusive specializations', () => {
+  assert.equal(Object.keys(TECHNOLOGIES).length, 60); assert.equal(Object.keys(RESEARCH_BRANCHES).length, 10);
   const visited = new Set(), visiting = new Set();
   function visit(id) {
     assert.ok(TECHNOLOGIES[id], id); if (visited.has(id)) return; assert.ok(!visiting.has(id), `Cycle: ${id}`); visiting.add(id);
@@ -73,7 +73,7 @@ test('42 technology nodes form an acyclic dependency graph with seven exclusive 
     visiting.delete(id); visited.add(id);
   }
   for (const id of Object.keys(TECHNOLOGIES)) visit(id);
-  assert.equal(visited.size, 42);
+  assert.equal(visited.size, 60);
 });
 test('both directions in every specialization remain playable through advanced cross-branch research', () => {
   for (const reverse of [false, true]) {
@@ -83,7 +83,7 @@ test('both directions in every specialization remain playable through advanced c
       for (const id of entries) if (!researchBlock(s, id)) { s.science = 10000; assert.equal(startResearch(s, id), null); progress(s, s.research.remaining); advanced = true; }
       if (!advanced) break;
     }
-    assert.equal(s.tech.length, 35); assert.equal(Object.keys(TECHNOLOGIES).filter(id => !s.tech.includes(id)).length, 7);
+    assert.equal(s.tech.length, 53); assert.equal(Object.keys(TECHNOLOGIES).filter(id => !s.tech.includes(id)).length, 7);
     assert.deepEqual(parseImport(exportGame(s)), s);
   }
 });
@@ -116,7 +116,7 @@ test('technocracy has visible and actual science, development and energy-efficie
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 3);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 4);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};

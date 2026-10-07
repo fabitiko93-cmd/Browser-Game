@@ -1,3 +1,4 @@
+import { tickShields } from './strategic.js';
 import { RESOURCE_KEYS } from './data.js';
 import { simulatePlanet } from './economy.js';
 import { fleetUpkeep, maintainFleets } from './fleets.js';
@@ -11,6 +12,7 @@ export function runDailyEconomy(state) {
     simulatePlanet(state, p, { deferBudget: true });
     if (p.owner === 'player') { income += p.lastReport.income; buildings += p.lastReport.upkeep; science += p.lastReport.science; }
   }
+  tickShields(state);
   const fleets = fleetUpkeep(state), net = income - buildings - fleets;
   const funded = openingCredits + net >= 0;
   state.credits = Math.max(0, openingCredits + net);

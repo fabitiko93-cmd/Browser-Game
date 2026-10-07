@@ -11,6 +11,7 @@ export function workforce(state, planet) {
 export function placeBuilding(state, planet, type, x, y) {
   const def = BUILDINGS[type];
   if (!Object.hasOwn(BUILDINGS, type) || !planet || planet.owner !== 'player') return 'Hier kannst du nicht bauen.';
+  if (def.requiredTech && !state.tech.includes(def.requiredTech)) return 'Die erforderliche Basentechnologie fehlt.';
   if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x >= GRID.width || y >= GRID.height) return 'Wähle eine Baufläche.';
   if (['water', 'cliff', 'void'].includes(terrainAt(planet, x, y))) return 'Diese Fläche ist nicht bebaubar.';
   if (planet.buildings.some(b => b.x === x && b.y === y)) return 'Diese Fläche ist bereits bebaut.';
@@ -52,7 +53,7 @@ export function simulatePlanet(state, planet, options = {}) {
     workers -= def.workers; used += def.workers;
     for (const [k, v] of Object.entries(inputs)) planet.stock[k] -= v;
     for (const [k, v] of Object.entries(def.output ?? {})) {
-      let factor = k === 'ore' ? planet.oreFactor : k === 'energy' ? planet.solarFactor : 1;
+      let factor = k === 'ore' ? planet.oreFactor : k === 'energy' && b.type === 'solar' ? planet.solarFactor : 1;
       factor *= tech[k] * (k === 'weapons' ? effects.militaryProduction : effects.civilianProduction);
       planet.stock[k] += v * factor * effects.production;
     }

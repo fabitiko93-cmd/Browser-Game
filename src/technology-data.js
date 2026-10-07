@@ -1,4 +1,6 @@
+import { MILITARY_BRANCHES, MILITARY_TECHNOLOGIES } from './military-technologies.js';
 export const RESEARCH_BRANCHES = {
+  ...MILITARY_BRANCHES,
   energy: { name: 'Energie', color: '#ffd185', description: 'Ertrag, Netze und sparsame Versorgung.' },
   industry: { name: 'Industrie', color: '#8ea7ff', description: 'Rohstoffe, Fertigung und Materialeffizienz.' },
   colonies: { name: 'Kolonien', color: '#91cbff', description: 'Wohnraum, Ernährung und Wachstum.' },
@@ -9,6 +11,7 @@ export const RESEARCH_BRANCHES = {
 };
 const node = (name, branch, tier, cost, days, requires, effects, extra = {}) => ({ name, branch, tier, cost, days, requires, effects, ...extra });
 export const TECHNOLOGIES = {
+  ...MILITARY_TECHNOLOGIES,
   grid: node('Orbitales Energienetz', 'energy', 1, 35, 3, [], { energy: 1.05 }),
   fusion: node('Fusionsregelung', 'energy', 2, 65, 5, ['grid'], { energy: 1.06 }),
   photovoltaics: node('Spektrale Solarfelder', 'energy', 3, 115, 6, ['fusion'], { energy: 1.08 }, { excludes: ['reactorLoops'], focus: 'Hoher Ertrag' }),

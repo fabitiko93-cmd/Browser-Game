@@ -1,3 +1,5 @@
+import { launchStrike, cancelStrike } from './strategic.js';
+import { STRATEGIC_WEAPONS } from './military-data.js';
 import { TECHNOLOGIES } from './technology-data.js';
 import { forecastDay } from './budget.js';
 import { enactLaw, decide } from './governance.js';
@@ -47,6 +49,10 @@ function persist() {
 }
 function act(result, success) { if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
 function render() {
+  if (currentPlanet().destroyed) {
+    ui.buildType = null; ui.buildTile = null;
+    if (['build', 'build-detail', 'building', 'economy', 'fleet'].includes(ui.panel)) ensureOwned();
+  }
   ui.projection = forecastDay(state);
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
@@ -81,7 +87,7 @@ document.addEventListener('click', e => {
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
   else if (action === 'speed-toggle') { if (ui.speed) { ui.lastSpeed = ui.speed; ui.speed = 0; } else ui.speed = ui.lastSpeed; accumulator = 0; }
   else if (action === 'speed') { ui.lastSpeed = ({ 1: 2, 2: 4, 4: 1 })[ui.speed || ui.lastSpeed]; if (ui.speed) ui.speed = ui.lastSpeed; accumulator = 0; }
-  else if (action === 'nav') { if (['build', 'economy'].includes(el.dataset.panel) || el.dataset.panel === 'fleet' && ui.fleetMode === 'shipyard') ensureOwned(); panel(el.dataset.panel === 'map' || ui.panel === el.dataset.panel ? null : el.dataset.panel); if (ui.panel === 'build') ui.view = 'planet'; }
+  else if (action === 'nav') { if (['build', 'economy'].includes(el.dataset.panel) || el.dataset.panel === 'fleet' && ['shipyard', 'bases', 'arsenal'].includes(ui.fleetMode)) ensureOwned(); panel(el.dataset.panel === 'map' || ui.panel === el.dataset.panel ? null : el.dataset.panel); if (ui.panel === 'build') ui.view = 'planet'; }
   else if (action === 'close') { panel(null); }
   else if (action === 'expand') ui.expanded = !ui.expanded;
   else if (action === 'settings') { ui.speed = 0; panel('settings'); ui.expanded = true; }
@@ -105,7 +111,7 @@ document.addEventListener('click', e => {
   else if (action === 'demolish') {
     if (ui.demolishConfirm !== el.dataset.id) ui.demolishConfirm = el.dataset.id;
     else { const error = demolish(state, p, el.dataset.id); if (!error) panel('build'); return act(error, 'Anlage abgebaut.'); }
-  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value; if (el.dataset.field === 'economyMode' && el.dataset.value === 'research') ui.expanded = true; if (el.dataset.field === 'fleetMode' && el.dataset.value === 'shipyard') ensureOwned(); }
+  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value; if (el.dataset.field === 'economyMode' && el.dataset.value === 'research') ui.expanded = true; if (el.dataset.field === 'fleetMode' && ['shipyard', 'bases', 'arsenal'].includes(el.dataset.value)) ensureOwned(); }
   else if (action === 'research') { ensureOwned(); panel('economy'); ui.economyMode = 'research'; ui.expanded = true; }
   else if (action === 'research-branch') { ui.researchBranch = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'research-focus') { ui.researchBranch = TECHNOLOGIES[el.dataset.id]?.branch ?? 'energy'; ui.focusTech = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
@@ -120,6 +126,14 @@ document.addEventListener('click', e => {
     if (ui.warConfirm !== el.dataset.faction) ui.warConfirm = el.dataset.faction;
     else { ui.warConfirm = null; return act(diplomaticAction(state, el.dataset.faction, 'war'), 'Krieg erklärt.'); }
   } else if (action === 'fleet') { panel('fleet'); ui.fleetMode = 'shipyard'; ensureOwned(); }
+  else if (action === 'arsenal-open') { panel('fleet'); ui.fleetMode = 'arsenal'; ensureOwned(); }
+  else if (action === 'strike-cancel') return act(cancelStrike(state, el.dataset.id), 'Ladeauftrag abgebrochen.');
+  else if (action === 'strike-launch') {
+    const {type, source, target} = el.dataset, key = `${type}:${source}:${target}`;
+    const w = STRATEGIC_WEAPONS[type];
+    if ((w.planetKiller || w.starKiller) && ui.strikeConfirm !== key) { ui.strikeConfirm = key; render(); return; }
+    const error = launchStrike(state, source, target, type, {confirmed: ui.strikeConfirm === key}); ui.strikeConfirm = null; return act(error, 'Waffenladung begonnen.');
+  }
   else if (action === 'ship-build') return act(buildShip(state, p, el.dataset.type), 'Werftauftrag erteilt.');
   else if (action === 'fleet-order') {
     const error = orderFleet(state, ui.fleetIds, selectedTarget('fleetTarget'), el.dataset.kind);
@@ -149,6 +163,7 @@ document.addEventListener('change', async e => {
     return;
   }
   const field = e.target.dataset.field; if (!field) return;
+  ui.strikeConfirm = null;
   if (field === 'ownPlanet') { ui.planetId = e.target.value; ui.systemId = currentPlanet().system; }
   else if (field === 'fleet') { if (e.target.checked) ui.fleetIds.push(e.target.value); else ui.fleetIds = ui.fleetIds.filter(id => id !== e.target.value); }
   else if (field === 'amount') ui.amount = Number(e.target.value);

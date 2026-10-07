@@ -1,6 +1,7 @@
+import { baseStats, absorbShield } from './strategic.js';
 import { technologyEffects } from './technology.js';
 import { policyEffects } from './governance.js';
-import { SHIPS, FACTIONS } from './data.js';
+import { SHIPS, FACTIONS, BUILDINGS } from './data.js';
 import { canAfford, pay, uid, getPlanet, log, makeStock } from './state.js';
 import { workforce } from './economy.js';
 
@@ -38,7 +39,7 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
   const target = getPlanet(state, targetId);
   const ids = new Set(fleetIds);
   const fleets = state.fleets.filter(f => ids.has(f.id) && f.owner === 'player');
-  if (!target || !fleets.length || fleets.length !== ids.size) return 'Wähle eine Flotte und ein Ziel.';
+  if (!target || target.destroyed || !fleets.length || fleets.length !== ids.size) return 'Wähle eine Flotte und ein Ziel.';
   if (fleets.some(f => f.mission || f.route)) return 'Ein ausgewähltes Schiff hat bereits einen Auftrag.';
   const source = getPlanet(state, fleets[0].planetId);
   if (fleets.some(f => f.planetId !== source.id)) return 'Die Schiffe müssen am selben Planeten stehen.';
@@ -86,10 +87,12 @@ function settle(state, fleet, target) {
 export function resolveBattle(state, fleets, target) {
   if (!target.owner || target.owner === 'player' || !state.relations[target.owner]?.war) { log(state, `Angriff auf ${target.name} abgebrochen: Es besteht kein Krieg.`, 'warning'); return; }
   const attack = fleets.reduce((sum, f) => sum + fleetStrength(state, f), 0);
-  const defense = target.defense;
+  const base = baseStats(state, target);
+  const defense = target.defense + base.orbital;
+  const shieldedAttack = absorbShield(target, attack);
   if (attack <= 0) return;
-  const victory = attack >= defense;
-  target.defense = Math.max(0, target.defense - attack * (victory ? 1 : .55));
+  const victory = shieldedAttack >= defense && shieldedAttack > 0;
+  target.defense = Math.max(0, target.defense - shieldedAttack * (victory ? 1 : .55));
   const damage = victory ? Math.min(65, defense / attack * 55) : Math.min(100, defense / attack * 65);
   for (const f of fleets) { f.hp = Math.max(0, f.hp - damage * (1 - shipArmor(state, f))); f.supply = Math.max(0, f.supply - 25); }
   const survivors = fleets.filter(f => f.hp > 0);
@@ -98,8 +101,10 @@ export function resolveBattle(state, fleets, target) {
     target.defense = 0;
     const landers = survivors.filter(f => f.type === 'lander');
     const troops = landers.reduce((n, f) => n + SHIPS[f.type].troops, 0);
-    if (troops >= target.garrison && landers.length) {
+    if (troops >= target.garrison + base.fortification && landers.length) {
       const previous = target.owner;
+      for (const b of target.buildings) if (BUILDINGS[b.type].group === 'Planetare Basen') { b.enabled = false; b.status = 'pausiert'; }
+      target.shield = 0;
       target.owner = 'player'; target.garrison = troops; target.happiness = Math.max(15, target.happiness - 25);
       target.queues = []; target.lastReport = null;
       const consumed = new Set(landers.map(f => f.id));
@@ -214,7 +219,7 @@ export function tickOpponents(state) {
   source.stock.alloy -= 25; source.stock.energy -= 20;
   const guards = state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player').reduce((sum, f) => sum + fleetStrength(state, f), 0);
   const strength = 20 + state.day / 20;
-  if (guards + target.defense >= strength) {
+  if (guards + target.defense + baseStats(state, target).orbital + baseStats(state, target).fortification >= absorbShield(target, strength)) {
     log(state, `${target.name}: Ein Angriff der ${FACTIONS[foe[0]].name} wurde abgewehrt.`, 'war');
     for (const f of state.fleets.filter(f => !f.mission && f.planetId === target.id && f.owner === 'player')) f.hp = Math.max(5, f.hp - 12 * (1 - shipArmor(state, f)));
   } else {

@@ -22,3 +22,6 @@
 @media(max-width:360px){.resource-value{font-size:12px}.resource-top{gap:3px}.resources{padding-inline:7px}.resource-trend{font-size:9px}.sheet-content{padding-inline:14px}.tech-card{padding:11px}.research-branches{gap:5px}.card-heading{gap:7px}}
 
 @media(max-width:360px){.resource-top svg{display:none}.resource-top{min-height:17px}}
+
+/* Five military tabs remain touchable on narrow portrait screens. */
+.subnav{flex-wrap:wrap}.subnav button{min-width:48px;min-height:44px}.detail-card,.card-heading strong,.cost-line{overflow-wrap:anywhere}.card-heading strong{min-width:0}.card-heading .status-badge{flex-shrink:0}

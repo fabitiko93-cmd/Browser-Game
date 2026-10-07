@@ -1,3 +1,5 @@
+import { makePlanet } from './state.js';
+import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
 import { LAWS, DECISIONS, initialGovernance } from './governance.js';
 import { SAVE_VERSION, BUILDINGS, SHIPS, IDEOLOGIES, RESOURCE_KEYS, TECHNOLOGIES, PLANET_SEEDS, FACTIONS, SYSTEMS, GRID } from './data.js';
@@ -12,7 +14,15 @@ export function validateSave(value) {
       for (const id of [...completed, value.research?.id].filter(Boolean)) for (const required of TECHNOLOGIES[id]?.requires ?? []) completed.add(required);
       value.tech = [...completed];
     }
-    value.version = SAVE_VERSION; value.lastDayReport = null;
+    value.version = 3; value.lastDayReport = null;
+  }
+  if (value?.version === 3) {
+    value = structuredClone(value);
+    const legacyIds = PLANET_SEEDS.slice(0, 7).map(p => p.id);
+    if (!Array.isArray(value.planets) || ![7, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
+    for (const p of value.planets) { p.shield = 0; p.destroyed = false; }
+    for (const seed of PLANET_SEEDS) if (!value.planets.some(p=>p.id===seed.id)) value.planets.push(makePlanet(seed));
+    value.strikes = []; value.destroyedSystems = []; value.milestones = []; value.version = SAVE_VERSION;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
   const text = (v, max = 100) => typeof v === 'string' && v.length > 0 && v.length <= max;
@@ -33,7 +43,7 @@ export function validateSave(value) {
   if (Object.keys(value.relations).length !== 3 || !Array.isArray(value.logs) || value.logs.length > 60 || value.logs.some(e => !finite(e.day, 0, value.day) || !text(e.text, 600) || !text(e.type, 24))) throw new Error('Ungültiges Kommandoprotokoll.');
   const ids = new Set();
   for (const p of value.planets) {
-    if (!PLANET_SEEDS.some(seed => seed.id === p.id) || ids.has(p.id) || !text(p.name, 64) || !SYSTEMS.some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
+    if (!finite(p.shield) || typeof p.destroyed !== 'boolean' || p.destroyed && (p.owner !== null || p.population !== 0 || p.buildings?.length || p.queues?.length || p.shield !== 0) || !PLANET_SEEDS.some(seed => seed.id === p.id) || ids.has(p.id) || !text(p.name, 64) || !SYSTEMS.some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
     ids.add(p.id);
     for (const k of RESOURCE_KEYS) if (!Number.isFinite(p.stock?.[k]) || p.stock[k] < 0) throw new Error('Ungültiger Warenbestand.');
     const tiles = new Set(), buildings = new Set();
@@ -43,6 +53,9 @@ export function validateSave(value) {
     }
     for (const q of p.queues) if (!known(SHIPS, q.type) || !finite(q.remaining, 1, 30) || !text(q.id, 64)) throw new Error('Ungültiger Werftauftrag.');
   }
+  if (!Array.isArray(value.destroyedSystems) || new Set(value.destroyedSystems).size !== value.destroyedSystems.length || value.destroyedSystems.some(id => !SYSTEMS.some(s=>s.id===id) || value.planets.some(p=>p.system===id&&!p.destroyed))) throw new Error('Ungültige zerstörte Systeme.');
+  if (!Array.isArray(value.milestones) || new Set(value.milestones).size !== value.milestones.length || value.milestones.some(id=>!CAMPAIGN_GOALS.some(g=>g.id===id))) throw new Error('Ungültige Meilensteine.');
+  if (!Array.isArray(value.strikes) || value.strikes.length > 200 || new Set(value.strikes.map(s=>s.id)).size !== value.strikes.length || value.strikes.some(s=>!text(s.id,64) || !known(STRATEGIC_WEAPONS,s.type) || !known(FACTIONS,s.owner) || !ids.has(s.source) || !ids.has(s.target) || s.source === s.target || !text(s.facilityId,64) || !['charge','flight'].includes(s.phase) || !Number.isInteger(s.remaining) || !finite(s.remaining,1,s.total) || !Number.isInteger(s.total) || !finite(s.total,1,100) || !Number.isInteger(s.flight) || !finite(s.flight,1,30))) throw new Error('Ungültiger Fernangriff.');
   const fleetIds = new Set();
   for (const f of value.fleets) {
     if (!known(SHIPS, f.type) || !ids.has(f.planetId) || !text(f.id, 64) || fleetIds.has(f.id) || !text(f.name, 64) || !known(FACTIONS, f.owner) || !finite(f.hp, 0, 100) || !finite(f.supply, 0, 100)) throw new Error('Ungültige Flotte.');
