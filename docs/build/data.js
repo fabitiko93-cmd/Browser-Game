@@ -1,4 +1,4 @@
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {
@@ -19,8 +19,8 @@ export const BUILDINGS = {
   foundry: { name: 'Schmelzwerk', group: 'Industrie', glyph: 'S', color: '#c3b3a1', cost: { credits: 90, alloy: 20 }, days: 4, workers: 16, upkeep: 3, input: { ore: 8, energy: 5 }, output: { alloy: 5 }, description: 'Verarbeitet Erz und Energie zu Legierungen für Gebäude und Schiffe.' },
   optics: { name: 'Optikfabrik', group: 'Industrie', glyph: 'O', color: '#85c6cb', cost: { credits: 80, alloy: 24 }, days: 3, workers: 12, upkeep: 3, input: { ore: 2, energy: 4 }, output: { optics: 3 }, description: 'Präzisionsbauteile für Laserwaffen und Raumschiffe.' },
   laser: { name: 'Laserfabrik', group: 'Industrie', glyph: 'L', color: '#d58e8a', cost: { credits: 110, alloy: 28 }, days: 4, workers: 18, upkeep: 4, input: { alloy: 3, optics: 2, crystal: 1, energy: 5 }, output: { weapons: 3 }, description: 'Eine vollständige Produktionskette für die Bewaffnung deiner Flotte.' },
-  lab: { name: 'Forschungslabor', group: 'Wissenschaft', glyph: 'R', color: '#9bace0', cost: { credits: 85, alloy: 22 }, days: 3, workers: 12, upkeep: 4, input: { energy: 4 }, science: 4, description: 'Erzeugt Forschungspunkte. Politische Offenheit beeinflusst den Ertrag.' },
-  shipyard: { name: 'Raumwerft', group: 'Militär', glyph: 'W', color: '#7fadb8', cost: { credits: 140, alloy: 45 }, days: 5, workers: 16, upkeep: 5, input: { energy: 2 }, description: 'Baut Korvetten, Frachter, Kolonieschiffe und Landungsschiffe.' }
+  lab: { name: 'Forschungslabor', group: 'Wissenschaft', glyph: 'R', color: '#9bace0', cost: { credits: 85, alloy: 22 }, days: 3, workers: 12, upkeep: 4, input: { energy: 4 }, science: 4, description: 'Erzeugt Forschungspunkte. Forschungspolitik und wissenschaftliche Infrastruktur beeinflussen den Ertrag.' },
+  shipyard: { name: 'Raumwerft', group: 'Militär', glyph: 'W', color: '#7fadb8', cost: { credits: 140, alloy: 45 }, days: 5, workers: 16, upkeep: 5, input: { energy: 2 }, description: 'Baut neun spezialisierte Klassen von Raumfahrzeugen.' }
 };
 export const IDEOLOGIES = {
   democracy: { name: 'Demokratie', description: 'Gewählte Regierung, politische Opposition und gleiche Bürgerrechte für alle Spezies.', science: 1, workers: 1, tax: 1, happiness: 8, affinity: 'open', citizenship: 'Gleiche Bürgerrechte', leadership: 'Gewählte Regierung', repression: 'Gering', term: 60 },
@@ -30,12 +30,7 @@ export const IDEOLOGIES = {
   technocracy: { name: 'Technokratie', description: 'Fachgremien bestimmen Forschung und Ressourcenverteilung. Direkte Mitbestimmung ist begrenzt.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'technical', citizenship: 'Leistungsbezogener Zugang', leadership: 'Fachgremien', repression: 'Mittel' },
   nationalSocialism: { name: 'Nationalsozialismus', description: 'Führerprinzip, politische Repression, expansionistische Ziele und eine rassistische Spezieshierarchie.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'supremacist', citizenship: 'Hierarchischer Bürgerstatus', leadership: 'Führerprinzip', repression: 'Sehr hoch' }
 };
-export const TECHNOLOGIES = {
-  fusion: { name: 'Fusionsregelung', cost: 90, description: 'Energieertrag aller Solarfelder +30 %.' },
-  lasers: { name: 'Kohärente Laser', cost: 120, description: 'Kampfstärke deiner bewaffneten Schiffe +30 %.' },
-  propulsion: { name: 'Sprungantrieb II', cost: 140, description: 'Reisezeiten zwischen Planeten −30 %.' },
-  habitats: { name: 'Adaptive Habitate', cost: 100, description: 'Wohnkapazität +25 %, Bevölkerungswachstum +40 %.' }
-};
+export { TECHNOLOGIES } from './technology-data.js';
 export const SHIPS = {
   scout: { name: 'Aufklärer', color: '#a9dce1', cost: { credits: 65, alloy: 20, optics: 8, energy: 10 }, days: 3, strength: 3, armor: 0, speed: 1.5, upkeep: 1, troops: 0, cargo: 0, description: 'Schnelles Forschungsschiff. Erkundung liefert einmalig 45 Forschung pro Zielplanet.' },
   destroyer: { name: 'Laserzerstörer', color: '#e1a38b', cost: { credits: 230, alloy: 80, optics: 20, weapons: 30, energy: 30 }, days: 7, strength: 36, armor: .2, speed: 1, upkeep: 3, troops: 0, cargo: 0, description: 'Schwerer Begleitschutz mit 20 % Schadensreduktion und 36 Grundstärke.' },
@@ -53,7 +48,7 @@ export const SYSTEMS = [
   { id: 'umbra', name: 'Umbra', x: .68, y: .76, color: '#da8e72', description: 'Eine umkämpfte industrielle Grenzregion.' }
 ];
 export const PLANET_SEEDS = [
-  { id: 'nereid', name: 'Nereid', system: 'helios', owner: 'player', kind: 'Temperiert', color: '#68b7ac', seed: 31, oreFactor: 1, solarFactor: 1, population: 180, aliens: .12, orbit: 0 },
+  { id: 'nereid', name: 'Nereid', system: 'helios', owner: 'player', kind: 'Temperiert', color: '#7892d9', seed: 31, oreFactor: 1, solarFactor: 1, population: 180, aliens: .12, orbit: 0 },
   { id: 'cinder', name: 'Cinder', system: 'helios', owner: null, kind: 'Vulkanisch', color: '#d98d63', seed: 72, oreFactor: 1.6, solarFactor: 1.15, population: 0, aliens: 0, orbit: 1 },
   { id: 'thalassa', name: 'Thalassa', system: 'helios', owner: 'ilyri', kind: 'Ozeanisch', color: '#7aa5d8', seed: 21, oreFactor: .8, solarFactor: .9, population: 150, aliens: .9, orbit: 2 },
   { id: 'veyra', name: 'Veyra', system: 'vesper', owner: 'khepri', kind: 'Kristallwelt', color: '#b798cf', seed: 18, oreFactor: 1.2, solarFactor: 1, population: 200, aliens: .95, orbit: 0 },
@@ -63,7 +58,7 @@ export const PLANET_SEEDS = [
 ];
 export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const FACTIONS = {
-  player: { name: 'Nereid-Union', species: 'Menschen / Ilyri', color: '#77c9c5', ideology: 'democracy' },
+  player: { name: 'Nereid-Union', species: 'Menschen / Ilyri', color: '#9aaeff', ideology: 'democracy' },
   ilyri: { name: 'Ilyrische Liga', species: 'Ilyri', color: '#89b4df', ideology: 'democracy' },
   khepri: { name: 'Khepri-Konsortium', species: 'Khepri', color: '#b89be0', ideology: 'technocracy' },
   aster: { name: 'Direktorat Aster', species: 'Menschen', color: '#d99b83', ideology: 'nationalSocialism' }

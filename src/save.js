@@ -1,8 +1,19 @@
+import { technologyEffects } from './technology.js';
 import { LAWS, DECISIONS, initialGovernance } from './governance.js';
 import { SAVE_VERSION, BUILDINGS, SHIPS, IDEOLOGIES, RESOURCE_KEYS, TECHNOLOGIES, PLANET_SEEDS, FACTIONS, SYSTEMS, GRID } from './data.js';
 const KEY = 'orbit3077-save';
 export function validateSave(value) {
-  if (value?.version === 1) { value = structuredClone(value); value.version = SAVE_VERSION; value.governance = initialGovernance(); value.surveys = []; }
+  if ([1, 2].includes(value?.version)) {
+    value = structuredClone(value);
+    if (value.version === 1) { value.governance = initialGovernance(); value.surveys = []; }
+    if (Array.isArray(value.tech)) {
+      if (value.tech.some(id => !['fusion', 'lasers', 'propulsion', 'habitats'].includes(id))) throw new Error('Ungültige Forschung im alten Spielstand.');
+      const completed = new Set(value.tech);
+      for (const id of [...completed, value.research?.id].filter(Boolean)) for (const required of TECHNOLOGIES[id]?.requires ?? []) completed.add(required);
+      value.tech = [...completed];
+    }
+    value.version = SAVE_VERSION; value.lastDayReport = null;
+  }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
   const text = (v, max = 100) => typeof v === 'string' && v.length > 0 && v.length <= max;
   const known = (dict, key) => typeof key === 'string' && Object.hasOwn(dict, key);
@@ -13,7 +24,8 @@ export function validateSave(value) {
   if (!g || !g.laws || Object.keys(g.laws).length !== Object.keys(LAWS).length || Object.entries(LAWS).some(([id, law]) => !known(law.options, g.laws[id])) || !finite(g.lawReady, 0, value.day + 5) || !Array.isArray(g.decisions) || g.decisions.length > Object.keys(DECISIONS).length || new Set(g.decisions.map(d => d.id)).size !== g.decisions.length || g.decisions.some(d => !known(DECISIONS, d.id) || !finite(d.until, value.day, value.day + DECISIONS[d.id].duration)) || !g.cooldowns || typeof g.cooldowns !== 'object' || Array.isArray(g.cooldowns) || Object.entries(g.cooldowns).some(([id, until]) => !known(DECISIONS, id) || !finite(until, 0, value.day + DECISIONS[id].cooldown))) throw new Error('Ungültige Regierungspolitik.');
   if (!Array.isArray(value.surveys) || new Set(value.surveys).size !== value.surveys.length || value.surveys.some(id => !PLANET_SEEDS.some(p => p.id === id))) throw new Error('Ungültige Erkundungsdaten.');
   if (!Array.isArray(value.tech) || value.tech.length > Object.keys(TECHNOLOGIES).length || new Set(value.tech).size !== value.tech.length || value.tech.some(t => !known(TECHNOLOGIES, t))) throw new Error('Ungültige Forschung.');
-  if (value.research && (!known(TECHNOLOGIES, value.research.id) || !finite(value.research.remaining, 1, 6) || value.research.total !== 6 || value.tech.includes(value.research.id))) throw new Error('Ungültiger Forschungsauftrag.');
+  if (value.tech.some(id => TECHNOLOGIES[id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[id].requiresAny && !TECHNOLOGIES[id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültige Forschungsabhängigkeiten.');
+  if (value.research && (!known(TECHNOLOGIES, value.research.id) || !Number.isInteger(value.research.total) || !finite(value.research.total, 2, 30) || !Number.isInteger(value.research.remaining) || !finite(value.research.remaining, 1, value.research.total) || value.tech.includes(value.research.id) || TECHNOLOGIES[value.research.id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[value.research.id].requiresAny && !TECHNOLOGIES[value.research.id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[value.research.id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültiger Forschungsauftrag.');
   for (const id of Object.keys(FACTIONS).filter(id => id !== 'player')) {
     const rel = value.relations?.[id];
     if (!rel || !finite(rel.score, -100, 100) || typeof rel.war !== 'boolean' || typeof rel.trade !== 'boolean' || rel.war && rel.trade) throw new Error('Ungültige diplomatische Beziehungen.');
@@ -36,11 +48,15 @@ export function validateSave(value) {
     if (!known(SHIPS, f.type) || !ids.has(f.planetId) || !text(f.id, 64) || fleetIds.has(f.id) || !text(f.name, 64) || !known(FACTIONS, f.owner) || !finite(f.hp, 0, 100) || !finite(f.supply, 0, 100)) throw new Error('Ungültige Flotte.');
     fleetIds.add(f.id);
     const m = f.mission, r = f.route;
-    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey'].includes(m.kind) || !validCargo(m.cargo, SHIPS[f.type].cargo))) throw new Error('Ungültiger Flottenauftrag.');
-    if (r && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || !finite(r.amount, 1, SHIPS[f.type].cargo))) throw new Error('Ungültige Handelsroute.');
+    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if (r && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || !finite(r.amount, 1, Math.floor(SHIPS[f.type].cargo * technologyEffects(value).cargoCapacity)))) throw new Error('Ungültige Handelsroute.');
   }
   if (!value.planets.some(p => p.owner === 'player')) throw new Error('Der Spielstand enthält keinen eigenen Planeten.');
   if (value.event && (!['signal', 'storm', 'migration'].includes(value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
+  if (value.lastDayReport != null) {
+    const b = value.lastDayReport;
+    if (!finite(b.day, 0, value.day) || !['income', 'buildings', 'fleets', 'science', 'unfunded'].every(k => finite(b[k])) || !['net', 'actual', 'oneOff'].every(k => finite(b[k], -1e12, 1e12)) || !b.resources || Object.entries(b.resources).some(([id, rates]) => !ids.has(id) || RESOURCE_KEYS.some(k => !finite(rates[k]?.recurring, -1e12, 1e12) || !finite(rates[k]?.oneOff, -1e12, 1e12)))) throw new Error('Ungültige Haushaltsabrechnung.');
+  }
   return value;
 }
 export function loadGame(storage = globalThis.localStorage) { const raw = storage.getItem(KEY); return raw ? validateSave(JSON.parse(raw)) : null; }

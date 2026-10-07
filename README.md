@@ -77,3 +77,12 @@ Quellen und erzeugtes `docs/` zusammen committen. Modulkarte: [ARCHITECTURE.md](
 - Neun Schiffstypen: zusätzlich Aufklärer, Laserzerstörer, Schlachtkreuzer, Großfrachter und Versorgungsschiff. Erkundung bringt einmal pro Planet 45 Forschung, Großfrachter transportieren 200 Waren, Panzerung mindert Schäden.
 - Schiffsgeschwindigkeit, täglicher Flottenunterhalt, Versorgungstransfers und Forschungsbonus für alle bewaffneten Schiffe. Werftboni gelten für neu erteilte Aufträge.
 - Bestehende v1-Spielstände werden automatisch übernommen. Zum Laden eines neuen Service-Worker-Caches alle offenen Spieltabs schließen und das Spiel neu öffnen.
+
+## Erweiterung 0.3
+
+- Haushaltsfehler behoben: lokaler Überschuss wurde bisher ohne Flottenunterhalt angezeigt. Der Reichshaushalt erfasst nun Steuern, Gebäude und Flotten aller eigenen Planeten in einer gemeinsamen Abrechnung.
+- HUD und Wirtschaft verwenden dieselbe Vorschau auf den nächsten Spieltag. Wartung, Versorgung, Bevölkerungsänderungen und fertig werdende Gebäude sind darin enthalten. Laufende Raten sind von Einzelbuchungen wie Frachtverkauf oder Abflugenergie getrennt; die letzte Tagesabrechnung ist sichtbar.
+- Tagesraten direkt im HUD; Bestände zeigen Nachkommastellen. Dunkles Weltraumdesign in Blau und Violett, neue Kartentöne und touchfreundliche Forschungsansichten.
+- Politische Profile mit kausalen Rollen: Demokratie (Handel/Debatte), Kommunismus (Produktion/Beschäftigung), Monarchie (Verwaltung/Kontinuität), Militärdiktatur (Werften/Einsatzlogistik), Technokratie (Forschung/Entwicklung/Energieeffizienz), Nationalsozialismus (Rüstung/Mobilisierung). Vorteile und Kosten werden vor Änderungen ausgewiesen.
+- 42 Technologien in Energie, Industrie, Kolonien, Wissenschaft, Raumfahrt, Flotten und Handel. Voraussetzungen, Querverbindungen und sieben dauerhafte Spezialisierungsentscheidungen ermöglichen unterschiedliche Spielweisen. Eine vollständige Richtung umfasst 35 der 42 Technologien.
+- Kleine Technologieboni ersetzen die vier frühen Pauschalboni. Bereits erforschte Technologien bleiben abgeschlossen; fehlende neue Grundlagen werden automatisch ergänzt. Laufende Aufträge behalten ihre Restzeit. Alte v1- und v2-Spielstände werden als v3 übernommen.

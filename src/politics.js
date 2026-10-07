@@ -1,14 +1,16 @@
-import { policyEffects } from './governance.js';
+import { technologyEffects } from './technology.js';
+import { policyEffects, governmentChangeCost } from './governance.js';
 import { IDEOLOGIES, FACTIONS } from './data.js';
 import { ownedPlanets, log } from './state.js';
 
 export function changeGovernment(state, ideology) {
   if (!Object.hasOwn(IDEOLOGIES, ideology)) return 'Unbekannte Regierungsform.';
   if (state.player.ideology === ideology) return 'Diese Regierung ist bereits im Amt.';
-  if (state.credits < 100) return 'Eine Regierungsumbildung kostet 100 Credits.';
-  state.credits -= 100;
+  const cost = governmentChangeCost(state), stabilityCost = 18 * policyEffects(state).reformStability;
+  if (state.credits < cost) return `Eine Regierungsumbildung kostet ${cost} Credits.`;
+  state.credits -= cost;
   state.player.ideology = ideology;
-  state.player.stability = Math.max(5, state.player.stability - 18);
+  state.player.stability = Math.max(5, state.player.stability - stabilityCost);
   state.player.term = state.day + 60;
   for (const p of ownedPlanets(state)) p.happiness = Math.max(5, p.happiness - 8);
   for (const [id, rel] of Object.entries(state.relations)) {
@@ -33,7 +35,7 @@ export function diplomaticAction(state, faction, action) {
   } else if (action === 'envoy') {
     if (rel.war) return 'Während eines Krieges sind Gesandtschaften nicht möglich.';
     if (state.credits < 60) return 'Für eine Gesandtschaft fehlen 60 Credits.';
-    state.credits -= 60; rel.score = Math.min(100, rel.score + 15 * policyEffects(state).envoy);
+    state.credits -= 60; rel.score = Math.min(100, rel.score + 15 * policyEffects(state).envoy * technologyEffects(state).envoy);
     log(state, `Gesandtschaft zur ${FACTIONS[faction].name}: Beziehungen verbessert.`, 'politics');
   } else if (action === 'trade') {
     if (rel.trade) return 'Das Handelsabkommen besteht bereits.';

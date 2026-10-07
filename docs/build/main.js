@@ -1,3 +1,5 @@
+import { TECHNOLOGIES } from './technology-data.js';
+import { forecastDay } from './budget.js';
 import { enactLaw, decide } from './governance.js';
 import { createGame, getPlanet, ownedPlanets, log } from './state.js';
 import { placeBuilding, demolish } from './economy.js';
@@ -16,7 +18,7 @@ const ui = {
   view: 'planet', planetId: 'nereid', systemId: 'helios', panel: null, expanded: false, speed: 0, lastSpeed: 1,
   buildType: null, buildTile: null, detailType: 'farm', selectedBuilding: null, fleetIds: [],
   fleetTarget: 'cinder', routeTarget: 'thalassa', routeFleet: 'starter-f', cargo: 'ore', amount: 40, repeat: true,
-  economyMode: 'production', politicsMode: 'government', fleetMode: 'orders', government: state.player.ideology,
+  researchBranch: 'energy', economyMode: 'production', politicsMode: 'government', fleetMode: 'orders', government: state.player.ideology,
   hints: true, demolishConfirm: null, warConfirm: null, resetConfirm: false
 };
 const $ = id => document.getElementById(id);
@@ -45,6 +47,7 @@ function persist() {
 }
 function act(result, success) { if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
 function render() {
+  ui.projection = forecastDay(state);
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
   $('resources').innerHTML = renderResources(state, ui);
@@ -59,6 +62,7 @@ function render() {
   if (ui.panel) {
     sheet.innerHTML = renderSheet(state, ui);
     sheet.querySelector('.sheet-content').scrollTop = oldScroll;
+    if (ui.focusTech) { sheet.querySelector(`[data-tech-id="${ui.focusTech}"]`)?.scrollIntoView({ block: 'center' }); ui.focusTech = null; }
     if (activeField && activeField === 'empireName') {
       const input = sheet.querySelector(`[data-field="${activeField}"]`);
       input?.focus({ preventScroll: true });
@@ -101,8 +105,10 @@ document.addEventListener('click', e => {
   else if (action === 'demolish') {
     if (ui.demolishConfirm !== el.dataset.id) ui.demolishConfirm = el.dataset.id;
     else { const error = demolish(state, p, el.dataset.id); if (!error) panel('build'); return act(error, 'Anlage abgebaut.'); }
-  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value; if (el.dataset.field === 'fleetMode' && el.dataset.value === 'shipyard') ensureOwned(); }
-  else if (action === 'research') { ensureOwned(); panel('economy'); ui.economyMode = 'research'; }
+  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value; if (el.dataset.field === 'economyMode' && el.dataset.value === 'research') ui.expanded = true; if (el.dataset.field === 'fleetMode' && el.dataset.value === 'shipyard') ensureOwned(); }
+  else if (action === 'research') { ensureOwned(); panel('economy'); ui.economyMode = 'research'; ui.expanded = true; }
+  else if (action === 'research-branch') { ui.researchBranch = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
+  else if (action === 'research-focus') { ui.researchBranch = TECHNOLOGIES[el.dataset.id]?.branch ?? 'energy'; ui.focusTech = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'research-start') return act(startResearch(state, el.dataset.tech), 'Forschungsprojekt gestartet.');
   else if (action === 'tax') { state.player.tax = Number(el.dataset.tax); persist(); }
   else if (action === 'law-enact') return act(enactLaw(state, el.dataset.category, el.dataset.choice), 'Gesetz verabschiedet.');

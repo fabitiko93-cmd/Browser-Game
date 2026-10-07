@@ -1,7 +1,7 @@
 import { GRID, SYSTEMS, BUILDINGS, FACTIONS } from './data.js';
 import { terrainAt } from './state.js';
 
-const COLORS = { ground: '#294341', rough: '#354f48', rock: '#3d504b', cliff: '#172c30', water: '#1b3c50' };
+const COLORS = { ground: '#26344c', rough: '#31415b', rock: '#414660', cliff: '#10182d', water: '#142d54' };
 function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 export class MapRenderer {
   constructor(canvas, state, ui, tap) {
@@ -70,11 +70,11 @@ export class MapRenderer {
     else this.galaxy(ctx, w, h, time);
   }
   stars(ctx, w, h, time) {
-    const gradient = ctx.createLinearGradient(0, 0, w, h); gradient.addColorStop(0, '#101f29'); gradient.addColorStop(.55, '#0c1821'); gradient.addColorStop(1, '#102630'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
-    const nebula = ctx.createRadialGradient(w * .8, h * .25, 0, w * .8, h * .25, w * .8); nebula.addColorStop(0, '#28525435'); nebula.addColorStop(1, '#28525400'); ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
+    const gradient = ctx.createLinearGradient(0, 0, w, h); gradient.addColorStop(0, '#090d20'); gradient.addColorStop(.55, '#08091a'); gradient.addColorStop(1, '#13132c'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
+    const nebula = ctx.createRadialGradient(w * .8, h * .25, 0, w * .8, h * .25, w * .8); nebula.addColorStop(0, '#57328835'); nebula.addColorStop(1, '#57328800'); ctx.fillStyle = nebula; ctx.fillRect(0, 0, w, h);
     for (let i = 0; i < 85; i++) {
       const x = ((i * 7919 + 43) % 1000) / 1000 * w, y = ((i * 3571 + 71) % 1000) / 1000 * h;
-      ctx.globalAlpha = .2 + .3 * (Math.sin(time * .0003 + i) + 1) / 2; ctx.fillStyle = '#dbe9ee'; ctx.fillRect(x, y, i % 15 === 0 ? 2 : 1, i % 15 === 0 ? 2 : 1);
+      ctx.globalAlpha = .2 + .3 * (Math.sin(time * .0003 + i) + 1) / 2; ctx.fillStyle = '#dfe7ff'; ctx.fillRect(x, y, i % 15 === 0 ? 2 : 1, i % 15 === 0 ? 2 : 1);
     }
     ctx.globalAlpha = 1;
   }
@@ -118,23 +118,23 @@ export class MapRenderer {
       } else {
         ctx.fillStyle = '#22333b'; ctx.font = `600 ${Math.max(10, size * .37)}px system-ui`; ctx.textAlign = 'center'; ctx.fillText(def.glyph, px + size * .5, py + size * .51);
       }
-      ctx.fillStyle = b.remaining > 0 ? '#d4b481' : b.enabled && b.status === 'aktiv' ? '#88d0bb' : '#e3a071';
+      ctx.fillStyle = b.remaining > 0 ? '#d4b481' : b.enabled && b.status === 'aktiv' ? '#99b7ff' : '#e3a071';
       ctx.beginPath(); ctx.arc(px + size * .8, py + size * .79, Math.max(2, size * .06), 0, Math.PI * 2); ctx.fill();
-      if (b.id === this.ui.selectedBuilding) { ctx.strokeStyle = '#b2e6db'; ctx.lineWidth = 2; roundRect(ctx, px + 1, py + 1, size - 2, size - 2, 3); ctx.stroke(); }
+      if (b.id === this.ui.selectedBuilding) { ctx.strokeStyle = '#c3d1ff'; ctx.lineWidth = 2; roundRect(ctx, px + 1, py + 1, size - 2, size - 2, 3); ctx.stroke(); }
     }
     const tile = this.ui.buildTile;
     if (this.ui.buildType && tile) {
       const valid = !['water', 'cliff', 'void'].includes(terrainAt(p, tile.x, tile.y)) && !p.buildings.some(b => b.x === tile.x && b.y === tile.y);
       const px = ox + tile.x * size, py = oy + tile.y * size;
-      ctx.fillStyle = valid ? '#80d4c650' : '#e58c8b60'; ctx.fillRect(px, py, size, size); ctx.strokeStyle = valid ? '#a7e5d8' : '#e58c8b'; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, size - 2, size - 2);
+      ctx.fillStyle = valid ? '#89aaff50' : '#e58c8b60'; ctx.fillRect(px, py, size, size); ctx.strokeStyle = valid ? '#c0cfff' : '#e58c8b'; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, size - 2, size - 2);
     }
     if (this.ui.buildType) {
-      ctx.strokeStyle = '#ccebdd15'; ctx.lineWidth = 1;
+      ctx.strokeStyle = '#aabaff1c'; ctx.lineWidth = 1;
       for (let x = 0; x <= GRID.width; x++) { ctx.beginPath(); ctx.moveTo(ox + x * size, oy); ctx.lineTo(ox + x * size, oy + GRID.height * size); ctx.stroke(); }
     }
     if (p.owner) {
-      ctx.fillStyle = '#c7d7d0'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText('NORDSEKTOR', ox + 5, oy - 12);
-      const pulse = .3 + .3 * Math.sin(time * .001); ctx.globalAlpha = pulse; ctx.fillStyle = '#83d7c6'; ctx.fillRect(ox + GRID.width * size - 26, oy - 17, 4, 4); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#c7d3f2'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText('NORDSEKTOR', ox + 5, oy - 12);
+      const pulse = .3 + .3 * Math.sin(time * .001); ctx.globalAlpha = pulse; ctx.fillStyle = '#aeacff'; ctx.fillRect(ox + GRID.width * size - 26, oy - 17, 4, 4); ctx.globalAlpha = 1;
     }
   }
   planetBody(ctx, x, y, r, p, time) {
@@ -142,15 +142,15 @@ export class MapRenderer {
     ctx.save();
     ctx.shadowColor = `${p.color}88`; ctx.shadowBlur = r * .5;
     const gradient = ctx.createRadialGradient(x - r * .35, y - r * .4, r * .05, x + r * .25, y + r * .1, r * 1.2);
-    gradient.addColorStop(0, '#d4e7dd'); gradient.addColorStop(.2, p.color); gradient.addColorStop(1, '#0a151d'); ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    gradient.addColorStop(0, '#e0e6ff'); gradient.addColorStop(.2, p.color); gradient.addColorStop(1, '#07091d'); ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
-    ctx.strokeStyle = '#153f4240'; ctx.lineWidth = r * .18;
+    ctx.strokeStyle = '#26245150'; ctx.lineWidth = r * .18;
     for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(x + r * .08, y - r * .45 + i * r * .4, r * .94, r * .23, -.3, 0, Math.PI * 2); ctx.stroke(); }
     ctx.fillStyle = '#ffffff25'; ctx.beginPath(); ctx.ellipse(x - r * .2, y - r * .28, r * .45, r * .12, -.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
-    ctx.strokeStyle = p.id === this.ui.planetId ? '#b7e5dc' : `${owner}80`; ctx.lineWidth = p.id === this.ui.planetId ? 1.8 : 1; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = p.id === this.ui.planetId ? '#c7caff' : `${owner}80`; ctx.lineWidth = p.id === this.ui.planetId ? 1.8 : 1; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = owner; ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.fillText(p.name, x, y + r + 24);
-    if (p.owner === 'player') { ctx.fillStyle = '#89d5c4'; ctx.beginPath(); ctx.arc(x, y - r - 12, 2, 0, Math.PI * 2); ctx.fill(); }
+    if (p.owner === 'player') { ctx.fillStyle = '#aab4ff'; ctx.beginPath(); ctx.arc(x, y - r - 12, 2, 0, Math.PI * 2); ctx.fill(); }
     this.hits.push({ kind: 'planet', x, y, r: Math.max(25, r + 7), id: p.id });
   }
   system(ctx, w, h, time) {
@@ -175,14 +175,14 @@ export class MapRenderer {
       const index = planets.findIndex(p => p.id === f.planetId);
       if (index < 0) continue;
       const [dx, dy] = positions[index], x = cx + dx * r + 33 * zoom, y = cy + dy * r - 24 * zoom;
-      ctx.strokeStyle = '#8ad4ca'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x - 4, y + 5); ctx.lineTo(x + 4, y + 5); ctx.closePath(); ctx.stroke();
+      ctx.strokeStyle = '#a3b9ff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x - 4, y + 5); ctx.lineTo(x + 4, y + 5); ctx.closePath(); ctx.stroke();
       if (f.mission) {
         const to = planets.findIndex(p => p.id === f.mission.target);
         if (to < 0) continue;
         const a = positions[index], b = positions[to];
-        ctx.strokeStyle = '#8ad4ca50'; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(cx + a[0] * r, cy + a[1] * r); ctx.lineTo(cx + b[0] * r, cy + b[1] * r); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = '#a3b9ff50'; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(cx + a[0] * r, cy + a[1] * r); ctx.lineTo(cx + b[0] * r, cy + b[1] * r); ctx.stroke(); ctx.setLineDash([]);
         const progress = 1 - f.mission.remaining / f.mission.total;
-        ctx.fillStyle = '#a4e0d0'; ctx.beginPath(); ctx.arc(cx + (a[0] + (b[0] - a[0]) * progress) * r, cy + (a[1] + (b[1] - a[1]) * progress) * r, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ced4ff'; ctx.beginPath(); ctx.arc(cx + (a[0] + (b[0] - a[0]) * progress) * r, cy + (a[1] + (b[1] - a[1]) * progress) * r, 3, 0, Math.PI * 2); ctx.fill();
       }
     }
   }
@@ -193,11 +193,11 @@ export class MapRenderer {
     ctx.setLineDash([]);
     for (const s of points) {
       const glow = ctx.createRadialGradient(s.px, s.py, 0, s.px, s.py, 60); glow.addColorStop(0, `${s.color}45`); glow.addColorStop(1, `${s.color}00`); ctx.fillStyle = glow; ctx.fillRect(s.px - 60, s.py - 60, 120, 120);
-      ctx.strokeStyle = '#75969e45'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.px, s.py, 27, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#878dcc45'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.px, s.py, 27, 0, Math.PI * 2); ctx.stroke();
       ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(s.px, s.py, 9, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#d4dfdc'; ctx.font = '600 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText(s.name, s.px, s.py + 48);
+      ctx.fillStyle = '#e3e6ff'; ctx.font = '600 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText(s.name, s.px, s.py + 48);
       const planets = this.state.planets.filter(p => p.system === s.id); const count = planets.filter(p => p.owner === 'player').length;
-      ctx.font = '10px system-ui'; ctx.fillStyle = '#809b9e'; ctx.fillText(`${planets.length} Planeten${count ? ` · ${count} eigene` : ''}`, s.px, s.py + 65);
+      ctx.font = '10px system-ui'; ctx.fillStyle = '#8e9cc7'; ctx.fillText(`${planets.length} Planeten${count ? ` · ${count} eigene` : ''}`, s.px, s.py + 65);
       this.hits.push({ kind: 'system', x: s.px, y: s.py, r: 32, id: s.id });
     }
   }

@@ -18,10 +18,10 @@ test('each ideology has advantages and tradeoffs, without a blanket happiness or
     const s = createGame(); s.player.ideology = id;
     const effects = policyEffects(s);
     const entries = Object.entries(PROFILES[id]);
-    const beneficial = ([k, v]) => ['shipTime', 'upkeep', 'fleetUpkeep', 'foodDemand'].includes(k) ? v < 1 : v > 1;
+    const beneficial = ([k, v]) => ['shipTime', 'upkeep', 'fleetUpkeep', 'foodDemand', 'researchTime', 'inputEnergy', 'reformCost', 'reformStability'].includes(k) ? v < 1 : v > 1;
     assert.ok(entries.some(beneficial), id); assert.ok(entries.some(e => !beneficial(e)), id);
     assert.equal(effects.happiness, 0);
-    assert.equal(workforce(s, home(s)), 125);
+    assert.ok(workforce(s, home(s)) >= 125);
     assert.ok(forecast(s, home(s)).lastReport.science > 0);
   }
 });
@@ -30,7 +30,7 @@ test('laws alter actual production, staff and approval and reject invalid change
   const before = exportGame(s); assert.ok(enactLaw(s, 'missing', 'free')); assert.equal(exportGame(s), before);
   assert.equal(enactLaw(s, 'economy', 'planned'), null);
   assert.ok(forecast(s, home(s)).net.alloy > base.net.alloy);
-  assert.equal(s.credits, 740); assert.equal(s.player.stability, 72);
+  assert.equal(s.credits, 731); assert.equal(s.player.stability, 72);
   const locked = exportGame(s); assert.ok(enactLaw(s, 'labor', 'extended')); assert.equal(exportGame(s), locked);
   days(s, 5); assert.equal(enactLaw(s, 'labor', 'extended'), null);
   assert.ok(policyEffects(s).workers > 1); assert.equal(policyEffects(s).happiness, -8);
@@ -50,14 +50,14 @@ test('temporary decisions expire, cannot be stacked with themselves and survive 
   assert.equal(forecast(s, home(s)).lastReport.science, normal * 1.5);
   const before = exportGame(s); assert.ok(decide(s, 'grant')); assert.equal(exportGame(s), before);
   assert.deepEqual(parseImport(before), s);
-  days(s, 15); assert.equal(s.governance.decisions.length, 0); assert.equal(policyEffects(s).science, 1);
+  days(s, 15); assert.equal(s.governance.decisions.length, 0); assert.equal(policyEffects(s).science, PROFILES.democracy.science);
   assert.ok(decide(s, 'grant')); days(s, 15); assert.equal(decide(s, 'grant'), null);
 });
 test('version 1 saves migrate without losing buildings, stocks, population or missions', () => {
   const s = createGame(); orderFleet(s, ['starter-c'], 'cinder'); days(s, 2);
   const old = structuredClone(s); old.version = 1; delete old.governance; delete old.surveys;
   const loaded = parseImport(JSON.stringify(old));
-  assert.equal(loaded.version, 2); assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
+  assert.equal(loaded.version, 3); assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   assert.equal(loaded.credits, old.credits); assert.equal(loaded.day, 2);
   days(loaded, 5); assert.equal(loaded.fleets[0].planetId, 'cinder');
   loaded.governance.laws.economy = 'fake'; assert.throws(() => parseImport(exportGame(loaded)));

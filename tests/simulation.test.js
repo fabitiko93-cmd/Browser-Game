@@ -38,10 +38,10 @@ test('raw material shortages halt production instead of creating negative resour
   for (const v of Object.values(p.stock)) assert.ok(v >= 0);
 });
 test('research has a real delay and changes output after completion', () => {
-  const s = createGame(); s.science = 100;
+  const s = createGame(); s.science = 100; s.tech = ['grid'];
   assert.equal(startResearch(s, 'fusion'), null);
-  assert.equal(s.science, 10);
-  days(s, 5); assert.ok(!s.tech.includes('fusion'));
+  assert.equal(s.science, 35);
+  days(s, 4); assert.ok(!s.tech.includes('fusion'));
   days(s, 1); assert.ok(s.tech.includes('fusion'));
   const p = home(s); const boosted = forecast(s, p).net.energy;
   s.tech = []; const normal = forecast(s, p).net.energy;

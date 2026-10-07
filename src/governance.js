@@ -2,12 +2,20 @@ import { log } from './state.js';
 
 // Multipliers combine; approval and daily expenses add. No hidden moral score.
 export const PROFILES = {
-  democracy: { trade: 1.2, envoy: 1.2, shipTime: 1.15 },
-  communism: { production: 1.15, trade: .85, upkeep: 1.1 },
-  monarchy: { upkeep: .85, tax: 1.1, science: .9 },
-  military: { shipTime: .75, combat: 1.15, production: .9 },
-  technocracy: { science: 1.25, production: 1.05, upkeep: 1.2 },
-  nationalSocialism: { shipTime: .8, combat: 1.1, production: 1.1, trade: .8, upkeep: 1.15 }
+  democracy: { trade: 1.18, envoy: 1.2, science: 1.08, shipTime: 1.12, reformCost: 1.15 },
+  communism: { production: 1.12, workers: 1.06, trade: .85, upkeep: 1.08 },
+  monarchy: { upkeep: .88, tax: 1.1, reformStability: .75, reformCost: 1.2 },
+  military: { shipTime: .82, militaryProduction: 1.18, fleetUpkeep: .9, civilianProduction: .93 },
+  technocracy: { science: 1.25, researchTime: .85, inputEnergy: .92, upkeep: 1.18 },
+  nationalSocialism: { shipTime: .82, militaryProduction: 1.2, combat: 1.08, reformCost: .8, trade: .85, upkeep: 1.12 }
+};
+export const PROFILE_REASONS = {
+  democracy: 'Wettbewerb und offene Fachdebatten fördern Handel, Diplomatie und Forschung. Parlamentarische Abstimmung erhöht Reformkosten und verzögert Werftentscheidungen.',
+  communism: 'Zentrale Produktionsplanung und breite Beschäftigung erhöhen Ausstoß und Personalangebot. Verwaltungsaufwand und staatlich geregelter Außenhandel kosten Unterhalt und Exporterlös.',
+  monarchy: 'Eine dauerhafte Verwaltung reduziert laufende Kosten und verbessert Abgabenerhebung. Eingespielte Machtstrukturen machen Reformen teurer, aber weniger destabiliserend.',
+  military: 'Eine gemeinsame Befehlskette standardisiert Flottenbetrieb und priorisiert Rüstung und Werften. Zivile Betriebe erhalten weniger organisatorische Kapazität.',
+  technocracy: 'Fachgremien verkürzen Entwicklung und optimieren Energieeinsatz. Wissenschaftliche Verwaltung und spezialisierte Infrastruktur erhöhen laufende Kosten.',
+  nationalSocialism: 'Zentralisierte Mobilisierung und Rüstungsaufträge beschleunigen Werften und Waffenfertigung. Umfangreiche Kontrollapparate kosten Unterhalt; auf den eigenen Machtblock konzentrierter Handel reduziert Exporterlöse.'
 };
 export const LAWS = {
   economy: { name: 'Wirtschaftsordnung', options: {
@@ -49,7 +57,7 @@ export const DECISIONS = {
   mobilize: { name: 'Flottenmobilisierung', description: 'Werften haben Vorrang bei Personal und Material.', cost: 150, duration: 12, cooldown: 28, effects: { shipTime: .65, combat: 1.15, workers: .85 } },
   trade: { name: 'Handelsmission', description: 'Exportförderung und zusätzliche diplomatische Vertretungen.', cost: 100, duration: 16, cooldown: 30, effects: { trade: 1.4, envoy: 1.4 } }
 };
-export const EFFECT_LABELS = { production: 'Warenproduktion', science: 'Forschung', workers: 'Arbeitskräfte', tax: 'Steuereinnahmen', trade: 'Exporterlös', envoy: 'Gesandtschaftswirkung', shipTime: 'Schiffbauzeit', combat: 'Kampfstärke', upkeep: 'Gebäudeunterhalt', fleetUpkeep: 'Flottenunterhalt', growth: 'Bevölkerungswachstum', foodDemand: 'Nahrungsbedarf', happiness: 'Zufriedenheit' };
+export const EFFECT_LABELS = { production: 'Warenproduktion', science: 'Forschung', workers: 'Arbeitskräfte', tax: 'Steuereinnahmen', trade: 'Exporterlös', envoy: 'Gesandtschaftswirkung', shipTime: 'Schiffbauzeit', combat: 'Kampfstärke', upkeep: 'Gebäudeunterhalt', fleetUpkeep: 'Flottenunterhalt', growth: 'Bevölkerungswachstum', foodDemand: 'Nahrungsbedarf', happiness: 'Zufriedenheit', researchTime: 'Entwicklungszeit', inputEnergy: 'Fabrik-Energiebedarf', militaryProduction: 'Waffenproduktion', civilianProduction: 'Zivile Warenproduktion', reformCost: 'Reformkosten', reformStability: 'Stabilitätsverlust bei Reformen' };
 export function effectText(effects) { return Object.entries(effects).map(([k, v]) => `${EFFECT_LABELS[k]} ${k === 'happiness' ? `${v >= 0 ? '+' : ''}${v} Punkte` : `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`}`).join(' · ') || 'Keine zusätzlichen Modifikatoren'; }
 export function initialGovernance() { return { laws: Object.fromEntries(Object.entries(LAWS).map(([id, law]) => [id, Object.keys(law.options)[0]])), lawReady: 0, decisions: [], cooldowns: {} }; }
 export function policyEffects(state, owner = 'player') {
@@ -63,9 +71,10 @@ export function enactLaw(state, category, choice) {
   if (!Object.hasOwn(LAWS, category) || !Object.hasOwn(LAWS[category].options, choice)) return 'Unbekanntes Gesetz.';
   if (state.governance.laws[category] === choice) return 'Dieses Gesetz gilt bereits.';
   if (state.day < state.governance.lawReady) return 'Die Verwaltung arbeitet noch an der letzten Gesetzesänderung.';
-  if (state.credits < 60) return 'Eine Gesetzesänderung kostet 60 Credits.';
-  state.credits -= 60; state.governance.laws[category] = choice; state.governance.lawReady = state.day + 5;
-  state.player.stability = Math.max(0, state.player.stability - 3);
+  const cost = lawChangeCost(state);
+  if (state.credits < cost) return `Eine Gesetzesänderung kostet ${cost} Credits.`;
+  state.credits -= cost; state.governance.laws[category] = choice; state.governance.lawReady = state.day + 5;
+  state.player.stability = Math.max(0, state.player.stability - 3 * policyEffects(state).reformStability);
   log(state, `Gesetz verabschiedet: ${LAWS[category].options[choice].name}.`, 'politics');
   return null;
 }
@@ -86,3 +95,6 @@ export function tickGovernance(state) {
     log(state, `${DECISIONS[d.id].name}: Programm beendet.`, 'politics'); return false;
   });
 }
+
+export function lawChangeCost(state) { return Math.ceil(60 * policyEffects(state).reformCost); }
+export function governmentChangeCost(state) { return Math.ceil(100 * policyEffects(state).reformCost); }

@@ -1,5 +1,6 @@
 import { tickGovernance } from './governance.js';
-import { simulatePlanet } from './economy.js';
+import { runDailyEconomy } from './budget.js';
+import { RESOURCE_KEYS } from './data.js';
 import { tickPolitics } from './politics.js';
 import { tickShipyards, tickFleets, tickOpponents } from './fleets.js';
 import { tickResearch } from './research.js';
@@ -7,9 +8,16 @@ import { getPlanet, log } from './state.js';
 
 export function stepDay(state) {
   state.day++;
-  for (const planet of state.planets) simulatePlanet(state, planet);
-  tickShipyards(state); tickResearch(state); tickFleets(state); tickOpponents(state); tickPolitics(state);
+  const before = new Map(state.planets.map(p => [p.id, { ...p.stock }]));
+  const openingCredits = state.credits;
+  const budget = runDailyEconomy(state);
+  const afterRecurring = new Map(state.planets.map(p => [p.id, { ...p.stock }]));
+  tickShipyards(state); tickResearch(state); tickFleets(state, { economyProcessed: true }); tickOpponents(state); tickPolitics(state);
   tickGovernance(state);
+  budget.oneOff = state.credits - openingCredits - budget.actual;
+  budget.actual = state.credits - openingCredits;
+  budget.resources = Object.fromEntries(state.planets.filter(p => p.owner === 'player').map(p => [p.id, Object.fromEntries(RESOURCE_KEYS.map(k => [k, { recurring: afterRecurring.get(p.id)[k] - before.get(p.id)[k], oneOff: p.stock[k] - afterRecurring.get(p.id)[k] }]))]));
+  state.lastDayReport = budget;
   if (state.day % 24 === 0 && !state.event) {
     const kinds = ['signal', 'storm', 'migration'];
     state.event = { kind: kinds[Math.floor(state.day / 24 - 1) % kinds.length], planet: state.planets.find(p => p.owner === 'player')?.id };
