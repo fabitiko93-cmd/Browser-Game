@@ -1,0 +1,21 @@
+import { RESOURCES, RESOURCE_KEYS, FACTIONS } from './data.js';
+import { tradingAccess, marketPrice, marketDemand } from './trade.js';
+import { getPlanet } from './state.js';
+import { esc,fmt,opts,button } from './ui-format.js';
+export function marketSelection(state,ui) {
+ const planets=state.planets.filter(p=>tradingAccess(state,p));return {planets,p:planets.find(p=>p.id===ui.marketPlanet)??planets[0]};
+}
+const chooser=(planets,p)=>`<label class="form-label">Handelsmarkt</label><select class="select" data-field="marketPlanet">${opts(planets.map(q=>[q.id,`${q.name} · ${FACTIONS[q.owner].name}`]),p.id)}</select>`;
+export function marketPanel(state,ui) {
+ const {planets,p}=marketSelection(state,ui);if(!p)return '<div class="alert">Schließe zuerst ein Handelsabkommen. Dann kannst du Preise, Vorräte und Bedarf vergleichen.</div>';
+ return `${chooser(planets,p)}<p class="lede">${esc(FACTIONS[p.owner].goal)}. Preise reagieren auf den Vorrat in Verbrauchstagen. Regelmäßiger Verbrauch schafft dauerhafte Nachfrage; große Lieferungen drücken den Knappheitsaufschlag.</p>${RESOURCE_KEYS.map(k=>{
+  const demand=marketDemand(state,p,k),production=p.lastReport?.productionByResource?.[k]??0;
+  return `<div class="detail-card market-card"><strong>${RESOURCES[k].name}</strong><div class="stat-line"><span>Verkaufen / Einkaufen</span><strong>${fmt(marketPrice(state,p,k))} / ${fmt(marketPrice(state,p,k,'buy'))} ¢</strong></div><p class="note">Vorrat ${fmt(p.stock[k])} · Verbrauch ${fmt(demand)} / Tag · Produktion ${fmt(production)} / Tag${demand>0?` · ${fmt(p.stock[k]/demand)} Tage Vorrat`:''}</p></div>`;
+ }).join('')}<p class="note">Preise gelten bei Ankunft. Abnahme ist durch örtlichen Bedarf und die finanziellen Mittel des Partners begrenzt. Frachter behalten unverkaufte Ware; klassische Einzelrouten bringen sie zurück. Lieferverträge sichern einen Preis und reservieren Geld je Lieferperiode.</p><div class="section-title">Letzte Handelsbuchungen</div>${state.tradeLedger.slice(0,8).map(e=>`<p class="note">Tag ${e.day} · ${esc(getPlanet(state,e.planet)?.name)} · ${fmt(e.amount)} ${RESOURCES[e.resource].name}<br>${e.revenue?`Erlös +${fmt(e.revenue)} ¢`:`Einkauf −${fmt(e.cost)} ¢`}</p>`).join('')||'<p class="note">Noch keine Verkäufe oder Einkäufe.</p>'}`;
+}
+export function contractsPanel(state,ui) {
+ const {planets,p}=marketSelection(state,ui),key=RESOURCE_KEYS.includes(ui.contractResource)?ui.contractResource:'ore';
+ const amount=Math.max(1,Math.min(2000,Number(ui.contractAmount)||40));
+ const form=!p?'<div class="alert">Es fehlt ein erreichbarer Handelspartner.</div>':`${chooser(planets,p)}<label class="form-label">Liefergut</label><select class="select" data-field="contractResource">${opts(RESOURCE_KEYS.map(k=>[k,RESOURCES[k].name]),key)}</select><label class="form-label">Einheiten je 30 Spieltage</label><input class="text-input" type="number" min="1" max="2000" data-field="contractAmount" value="${amount}"><p class="note">180 Tage Laufzeit · vereinbarter Preis ${fmt(marketPrice(state,p,key))} ¢ je Einheit. Der Partner reserviert Geld für die erste Periode und finanziert folgende Perioden aus seinem Haushalt. Volle Lieferungen verbessern Vertrauen, verfehlte finanzierte Mengen senken es.</p>${button('Liefervertrag abschließen','contract-create','',!state.tech.includes('contracts'))}`;
+ return `<p class="lede">Lieferverträge halten eine regelmäßige Route planbar. Du lieferst mit normalen Frachtern; passende Verkäufe werden zuerst auf den Vertrag angerechnet.</p>${!state.tech.includes('contracts')?'<p class="research-condition unmet">Benötigt: Planetare Vertragsnetze.</p>':''}${form}<div class="section-title">Laufende Verträge</div>${state.contracts.map(c=>`<div class="detail-card"><strong>${esc(getPlanet(state,c.planet).name)} · ${RESOURCES[c.resource].name}</strong><p>${fmt(c.delivered)} / ${c.quantity} geliefert · ${fmt(c.price)} ¢ je Einheit<br>Nächste Periode in ${Math.max(0,c.periodStart+30-state.day)} Tagen · Laufzeit noch ${c.until-state.day} Tage<br>Reserviertes Geld: ${fmt(c.escrow)} ¢${c.escrow+c.delivered*c.price<c.quantity*c.price-.01?' · Partner kann diese Periode nur teilweise finanzieren':''}</p>${button('Vertrag kündigen · −3 Beziehungen','contract-cancel',`data-id="${c.id}"`)}</div>`).join('')||'<p class="note">Noch keine Lieferverträge.</p>'}`;
+}

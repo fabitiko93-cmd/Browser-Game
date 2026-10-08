@@ -8,6 +8,7 @@ import { startResearch, researchDays } from '../src/research.js';
 import { researchBlock, technologyEffects } from '../src/technology.js';
 import { TECHNOLOGIES, RESEARCH_BRANCHES } from '../src/technology-data.js';
 import { diplomaticAction } from '../src/politics.js';
+import { quoteSale } from '../src/trade.js';
 import { decide, policyEffects } from '../src/governance.js';
 import { parseImport, exportGame } from '../src/save.js';
 import { renderResources, renderSheet, signed } from '../src/ui.js';
@@ -58,13 +59,13 @@ test('trade deliveries appear as single bookings instead of a misleading permane
   const s = createGame(); diplomaticAction(s, 'ilyri', 'trade');
   assert.equal(orderFleet(s, ['starter-f'], 'thalassa', 'transport', {resource:'ore',amount:20}), null);
   s.fleets[1].mission.remaining = 1; const f = forecastDay(s); const before = s.credits;
-  stepDay(s); close(s.lastDayReport.oneOff, 20 * 2 * policyEffects(s).trade);
+  stepDay(s); close(s.lastDayReport.oneOff, s.tradeLedger[0].revenue);
   close(s.credits - before, f.budget.actual + s.lastDayReport.oneOff);
   const panel = renderSheet(s, {panel:'economy',economyMode:'production',planetId:'nereid'});
   assert.ok(panel.includes('Einzelbuchungen')); assert.deepEqual(parseImport(exportGame(s)), s);
 });
-test('60 technology nodes form an acyclic dependency graph with seven exclusive specializations', () => {
-  assert.equal(Object.keys(TECHNOLOGIES).length, 60); assert.equal(Object.keys(RESEARCH_BRANCHES).length, 10);
+test('77 technology nodes form an acyclic dependency graph with seven exclusive specializations', () => {
+  assert.equal(Object.keys(TECHNOLOGIES).length, 77); assert.equal(Object.keys(RESEARCH_BRANCHES).length, 10);
   const visited = new Set(), visiting = new Set();
   function visit(id) {
     assert.ok(TECHNOLOGIES[id], id); if (visited.has(id)) return; assert.ok(!visiting.has(id), `Cycle: ${id}`); visiting.add(id);
@@ -73,7 +74,7 @@ test('60 technology nodes form an acyclic dependency graph with seven exclusive 
     visiting.delete(id); visited.add(id);
   }
   for (const id of Object.keys(TECHNOLOGIES)) visit(id);
-  assert.equal(visited.size, 60);
+  assert.equal(visited.size, 77);
 });
 test('both directions in every specialization remain playable through advanced cross-branch research', () => {
   for (const reverse of [false, true]) {
@@ -83,7 +84,7 @@ test('both directions in every specialization remain playable through advanced c
       for (const id of entries) if (!researchBlock(s, id)) { s.science = 10000; assert.equal(startResearch(s, id), null); progress(s, s.research.remaining); advanced = true; }
       if (!advanced) break;
     }
-    assert.equal(s.tech.length, 53); assert.equal(Object.keys(TECHNOLOGIES).filter(id => !s.tech.includes(id)).length, 7);
+    assert.equal(s.tech.length, 70); assert.equal(Object.keys(TECHNOLOGIES).filter(id => !s.tech.includes(id)).length, 7);
     assert.deepEqual(parseImport(exportGame(s)), s);
   }
 });
@@ -116,7 +117,7 @@ test('technocracy has visible and actual science, development and energy-efficie
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 5);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 6);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};
@@ -128,6 +129,6 @@ test('every research branch renders traceable prerequisites and a limited specia
   for (const branch of Object.keys(RESEARCH_BRANCHES)) {
     const html = renderSheet(s,{panel:'economy',economyMode:'research',planetId:'nereid',researchBranch:branch});
     assert.ok(!html.includes('undefined')); assert.ok(!html.includes('NaN'));
-    assert.equal((html.match(/data-tech-id=/g) ?? []).length, 6); assert.ok(html.includes('data-action="research-focus"'));
+    assert.equal((html.match(/data-tech-id=/g) ?? []).length, Object.values(TECHNOLOGIES).filter(t=>t.branch===branch).length); assert.ok(html.includes('data-action="research-focus"'));
   }
 });

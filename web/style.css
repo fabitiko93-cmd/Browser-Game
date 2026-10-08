@@ -38,3 +38,18 @@
 @media(max-width:360px){.resources{padding-inline:7px 27px}.resource-top{gap:2px}.resource-top svg{width:13px;height:13px}.resource-value{font-size:11px}.resource-label{font-size:8px;letter-spacing:0}.resource-trend{font-size:9px}.resource-switch{font-size:7px}}
 .sheet-content{min-width:0;width:100%}.select{min-width:0;max-width:100%}
 .building-card,.building-card small,.research-condition{white-space:normal;overflow-wrap:anywhere}
+
+/* Development, logistics and market controls share the portrait sheet. */
+.resource-pill.warning,.resource-pill.warning .resource-value,.resource-pill.warning .resource-trend{color:#ff526c!important}
+.resource-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.resource-pill:not(.warning) .resource-trend.negative{color:#dfb56e}
+.route-action{border-top:1px solid var(--line);margin-top:12px;padding-top:4px}
+.route-stop .card-heading{justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.route-stop .card-heading .button{margin-top:0;padding:6px 9px;font-size:10px}
+.route-stop .two-column{gap:8px}.route-stop .form-label{min-width:0}.route-stop .select{min-width:0;padding:8px;font-size:11px}
+.text-input[type=number]{font-size:16px;min-width:0}
+.faction-focus{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:0;min-height:44px;border:0;background:transparent;text-align:left}
+.faction-focus strong{font-size:13px}.faction-focus .status-badge{flex-shrink:0}
+.shortage-cause{text-align:left;line-height:1.6;display:block;width:100%;overflow-wrap:anywhere}
+.market-card{padding:10px 12px}.market-card .stat-line{flex-wrap:wrap}.fleet-card>.button{margin-top:8px;margin-right:5px}
+[hidden]{display:none!important}

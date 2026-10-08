@@ -1,3 +1,4 @@
+import { routePlanets } from './routing.js';
 import { BUILDINGS, SYSTEMS } from './data.js';
 import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
@@ -44,7 +45,8 @@ export function destroyPlanet(state, p) {
   if (state.event?.planet === p.id) state.event = null;
   state.fleets = state.fleets.filter(f => f.mission || f.planetId !== p.id);
   for (const f of state.fleets) {
-    if (f.route && [f.route.source, f.route.target].includes(p.id)) f.route = null;
+    if (f.supplySettings?.homePort === p.id) { const home = state.planets.find(q => q.owner === f.owner && !q.destroyed); if (home) f.supplySettings.homePort = home.id; else delete f.supplySettings; }
+    if (f.route && routePlanets(f.route).includes(p.id)) f.route = null;
     if (f.mission?.target === p.id) {
       const home = state.planets.find(q => q.owner === f.owner && !q.destroyed);
       if (home) f.mission = { ...f.mission, kind: f.mission.cargo ? 'return-cargo' : 'move', source: p.id, target: home.id, remaining: 10, total: 10 };

@@ -20,8 +20,8 @@ test('each ideology has advantages and tradeoffs, without a blanket happiness or
     const entries = Object.entries(PROFILES[id]);
     const beneficial = ([k, v]) => ['shipTime', 'upkeep', 'fleetUpkeep', 'foodDemand', 'researchTime', 'inputEnergy', 'reformCost', 'reformStability'].includes(k) ? v < 1 : v > 1;
     assert.ok(entries.some(beneficial), id); assert.ok(entries.some(e => !beneficial(e)), id);
-    assert.equal(effects.happiness, 0);
-    assert.ok(workforce(s, home(s)) >= 125);
+    assert.equal(effects.happiness, PROFILES[id].happiness);
+    assert.ok(workforce(s, home(s)) === Math.floor(home(s).population*.7*PROFILES[id].workers));
     assert.ok(forecast(s, home(s)).lastReport.science > 0);
   }
 });
@@ -33,15 +33,15 @@ test('laws alter actual production, staff and approval and reject invalid change
   assert.equal(s.credits, 731); assert.equal(s.player.stability, 72);
   const locked = exportGame(s); assert.ok(enactLaw(s, 'labor', 'extended')); assert.equal(exportGame(s), locked);
   days(s, 5); assert.equal(enactLaw(s, 'labor', 'extended'), null);
-  assert.ok(policyEffects(s).workers > 1); assert.equal(policyEffects(s).happiness, -8);
+  assert.ok(policyEffects(s).workers > 1); assert.equal(policyEffects(s).happiness, PROFILES.democracy.happiness - 8);
 });
-test('every law and decision is available to every political form', () => {
+test('shared policies remain available and regime-specific reforms enforce affinity', () => {
   for (const ideology of Object.keys(PROFILES)) for (const [category, law] of Object.entries(LAWS)) for (const choice of Object.keys(law.options)) {
     const s = createGame(); s.player.ideology = ideology;
-    if (s.governance.laws[category] !== choice) assert.equal(enactLaw(s, category, choice), null);
+    const option=law.options[choice]; if(option.ideologies&&!option.ideologies.includes(ideology)||option.requiredTech) assert.ok(enactLaw(s,category,choice)); else if (s.governance.laws[category] !== choice) assert.equal(enactLaw(s, category, choice), null);
   }
   for (const ideology of Object.keys(PROFILES)) for (const id of Object.keys(DECISIONS)) {
-    const s = createGame(); s.player.ideology = ideology; assert.equal(decide(s, id), null);
+    const s = createGame(); s.player.ideology = ideology; const d=DECISIONS[id]; if(d.requiredTech||d.ideologies&&!d.ideologies.includes(ideology))assert.ok(decide(s,id));else assert.equal(decide(s, id), null);
   }
 });
 test('temporary decisions expire, cannot be stacked with themselves and survive save/import', () => {
@@ -57,15 +57,15 @@ test('version 1 saves migrate without losing buildings, stocks, population or mi
   const s = createGame(); orderFleet(s, ['starter-c'], 'cinder'); days(s, 2);
   const old = structuredClone(s); old.version = 1; old.planets = old.planets.slice(0, 7); delete old.governance; delete old.surveys;
   const loaded = parseImport(JSON.stringify(old));
-  assert.equal(loaded.version, 5); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
+  assert.equal(loaded.version, 6); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   assert.equal(loaded.credits, old.credits); assert.equal(loaded.day, 2);
   days(loaded, 5); assert.equal(loaded.fleets[0].planetId, 'cinder');
   loaded.governance.laws.economy = 'fake'; assert.throws(() => parseImport(exportGame(loaded)));
 });
-test('all nine ship types build using current policy times and effective armor reduces battle damage', () => {
-  assert.equal(Object.keys(SHIPS).length, 9);
+test('all eleven ship types build using current policy times and effective armor reduces battle damage', () => {
+  assert.equal(Object.keys(SHIPS).length, 11);
   for (const type of Object.keys(SHIPS)) {
-    const s = createGame(); s.credits = 10000; home(s).population = 240;
+    const s = createGame(); s.credits = 10000; s.tech = SHIPS[type].requiredTech ? [SHIPS[type].requiredTech] : []; home(s).population = 240;
     for (const k of Object.keys(home(s).stock)) home(s).stock[k] = 10000;
     assert.equal(buildShip(s, home(s), type), null);
     assert.equal(home(s).queues[0].remaining, shipBuildDays(s, type));

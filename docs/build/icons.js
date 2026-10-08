@@ -1,4 +1,9 @@
 const paths = {
+  medicine:'<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/>',
+  goods:'<path d="M4 8h16v13H4ZM8 8V5h8v3M4 12h16"/>',
+  electronics:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/>',
+  fuel:'<path d="M6 21V6h10v15M6 10h10M8 3h6m5 6 3 3v6c0 3-5 3-5-1"/>',
+
   ore: '<path d="m4 17 2-10 7-4 7 7-2 9-8 2Z"/><path d="m6 7 7 3 5 9M13 10l7-0"/>',
   crystal: '<path d="m12 2 7 6-3 12-4 2-4-2L5 8Z"/><path d="M12 2v20M5 8h14"/>',
   optics: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m5 5 4 4m6 6 4 4"/>',

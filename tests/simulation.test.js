@@ -48,7 +48,7 @@ test('research has a real delay and changes output after completion', () => {
   assert.ok(boosted > normal);
 });
 test('a colony ship costs resources and settlers, travels, and is consumed into a functional colony', () => {
-  const s = createGame(), p = home(s);
+  const s = createGame(), p = home(s); s.tech=['habitats'];
   assert.equal(buildShip(s, p, 'colony'), null); assert.equal(p.population, 140);
   days(s, shipBuildDays(s, 'colony'));
   const f = s.fleets.find(f => f.type === 'colony'); assert.ok(f);
@@ -114,7 +114,7 @@ test('war, fleet combat and landers combine to capture a planet', () => {
 test('government transition has costs without excluding population by ideology, taxes affect happiness, and elections advance', () => {
   const s = createGame(), p = home(s), before = workforce(s, p);
   assert.equal(changeGovernment(s, 'nationalSocialism'), null);
-  assert.equal(workforce(s, p), before); assert.ok(s.player.stability < 75);
+  assert.ok(workforce(s, p) > before); assert.ok(s.player.stability < 75);
   assert.equal(changeGovernment(s, 'democracy'), null);
   const lowTax = structuredClone(s); lowTax.player.tax = .12;
   s.player.tax = .22;

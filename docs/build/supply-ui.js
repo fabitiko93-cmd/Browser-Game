@@ -1,0 +1,12 @@
+import { SUPPLY_DEFAULTS, cargoUsed } from './routing.js';
+import { RESOURCES } from './data.js';
+import { ownedPlanets, getPlanet } from './state.js';
+import { esc,fmt,opts,button } from './ui-format.js';
+export function supplyPanel(state,ui) {
+ const f=state.fleets.find(f=>f.id===ui.supplyFleet&&f.owner==='player');if(!f)return '';
+ const s={...SUPPLY_DEFAULTS,...f.supplySettings},home=ownedPlanets(state);
+ return `<div class="section-title">Versorgung / ${esc(f.name)}</div><div class="detail-card"><p>Eigene Planeten versorgen stationäre Schiffe mit Nahrung und Energie. Reparaturen brauchen Legierungen. Eine Route wartet bei Unterschreiten der Schwelle bis zum Zielwert; Depots und Docks verkürzen die Pause.</p><div class="two-column"><label class="form-label">Auffüllen unter %<input class="text-input" type="number" min="0" max="99" data-field="supplyThreshold" value="${ui.supplyThreshold??s.threshold}"></label><label class="form-label">Auffüllen bis %<input class="text-input" type="number" min="1" max="100" data-field="supplyTarget" value="${ui.supplyTarget??s.target}"></label><label class="form-label">Reparieren unter %<input class="text-input" type="number" min="0" max="99" data-field="repairBelow" value="${ui.repairBelow??s.repairBelow}"></label><label class="form-label">Reparieren bis %<input class="text-input" type="number" min="1" max="100" data-field="repairTo" value="${ui.repairTo??s.repairTo}"></label></div><label class="form-label">Heimathafen</label><select class="select" data-field="supplyHome">${opts(home.map(p=>[p.id,p.name]),ui.supplyHome??s.homePort)}</select><label class="check-label"><input type="checkbox" data-field="supplySmart" ${ui.supplySmart??s.smart?'checked':''} ${!state.tech.includes('smartLogistics')?'disabled':''}>Reserve für Hin- und Rückflug automatisch berechnen</label>${!state.tech.includes('smartLogistics')?'<p class="note">Automatische Reserve benötigt: Bedarfsgesteuerte Logistik.</p>':''}<p class="note">Versorgung an erreichbaren eigenen Stopps; fremde Häfen benötigen ein Hafenabkommen. Routen mit mehreren Stopps müssen den Heimathafen enthalten.</p>${button('Einstellungen übernehmen','supply-apply',`data-id="${f.id}"`)}${button('Jetzt auffüllen','supply-now',`data-id="${f.id}"`,Boolean(f.mission))}</div>`;
+}
+export function cargoLine(f) {
+ return cargoUsed(f)>0?`<p class="note">An Bord: ${Object.entries(f.cargo).filter(([,v])=>v>.001).map(([k,v])=>`${fmt(v)} ${RESOURCES[k].name}`).join(' · ')}</p>`:'';
+}
