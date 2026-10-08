@@ -118,6 +118,7 @@ document.addEventListener('click', e => {
   else if (action === 'home') { ensureOwned(); ui.view = 'planet'; panel(null); }
   else if (action === 'surface') { ui.view = 'planet'; panel(null); }
   else if (action === 'planet-info') { panel('planet-info'); }
+  else if (action === 'inspect-site') { panel('terrain'); ui.view = 'planet'; ui.surfaceTile = { x: Number(el.dataset.x), y: Number(el.dataset.y) }; }
   else if (action === 'build') { ensureOwned(); panel('build'); }
   else if (action === 'build-detail') { ensureOwned(); panel('build-detail'); ui.detailType = el.dataset.type; }
   else if (action === 'build-start') { panel(null); ui.view = 'planet'; ui.buildType = el.dataset.type; if (el.dataset.x !== undefined && el.dataset.y !== undefined) ui.buildTile = { x: Number(el.dataset.x), y: Number(el.dataset.y) }; }

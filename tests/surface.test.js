@@ -121,7 +121,7 @@ test('construction progresses through foundation, frame and finishing before pro
 test('portrait tile picking follows the drawn position after dragging and zooming', () => {
   const s = createGame(), controls = ui(), selected = [], map = Object.create(MapRenderer.prototype);
   Object.assign(map, { state: s, ui: controls, width: 320, height: 520, camera: { x: 0, y: 0, zoom: 1 }, hits: [], pointers: new Map(), dragged: false, tap: hit => selected.push(hit), canvas: { getBoundingClientRect: () => ({ left: 12, top: 80 }) }, surfaceRenderer: { render() {} } });
-  const ctx = { fillText() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
+  const ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
   for (const [zoom, dx, dy] of [[1, 0, 0], [2.1, 45, -24], [.7, -31, 40]]) {
     map.camera = { zoom, x: dx, y: dy }; map.hits = []; map.surface(ctx, 320, 520, 0);
     assert.ok(map.hits.length > 0 && map.hits.length <= GRID.width * GRID.height);
@@ -136,7 +136,7 @@ test('portrait tile picking follows the drawn position after dragging and zoomin
 test('small portrait construction retains tappable tiles and focuses a selected site above the controls', () => {
   const s = createGame(), controls = { ...ui(), buildType: 'mine', buildTile: richTile(home(s)) }, map = Object.create(MapRenderer.prototype);
   Object.assign(map, { state: s, ui: controls, camera: { x: 0, y: 0, zoom: 1 }, hits: [], surfaceRenderer: { render() {} } });
-  const ctx = { fillText() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
+  const ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
   map.surface(ctx, 320, 362, 0);
   assert.ok(map.tileSize >= 24);
   const tile = map.hits.find(h => h.tx === controls.buildTile.x && h.ty === controls.buildTile.y);

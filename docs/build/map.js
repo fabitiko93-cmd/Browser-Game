@@ -1,6 +1,5 @@
 import { GRID, SYSTEMS, FACTIONS } from './data.js';
 import { SurfaceRenderer } from './surface-renderer.js';
-import { surfaceName } from './surface.js';
 
 export class MapRenderer {
   constructor(canvas, state, ui, tap) {
@@ -101,12 +100,9 @@ export class MapRenderer {
       const right = Math.min(w, ox + (x + 1) * size), bottom = Math.min(84 + available, oy + (y + 1) * size);
       if (right > px && bottom > py) this.hits.push({ kind: 'tile', x: px, y: py, w: right - px, h: bottom - py, tx: x, ty: y });
     }
-    ctx.fillStyle = '#b0c3e0'; ctx.font = '9px system-ui'; ctx.textAlign = 'left';
-    if (oy >= 100) ctx.fillText(surfaceName(p).toLocaleUpperCase('de-DE'), ox + 4, oy - 9);
-    if (!this.ui.buildType) {
-      const legendY = Math.min(oy + GRID.height * size + 17, 84 + available + 17);
-      ctx.font = '9px system-ui'; ctx.fillStyle = '#d3bea2'; ctx.fillText('◇ Erzader', 16, legendY);
-      ctx.fillStyle = '#efb993'; ctx.fillText('≋ Wärmequelle', 98, legendY);
+    if (p.owner && oy >= 100) {
+      ctx.fillStyle = '#c7d3f2'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText('NORDSEKTOR', ox + 5, oy - 12);
+      ctx.globalAlpha = .3 + .3 * Math.sin(time * .001); ctx.fillStyle = '#aeacff'; ctx.fillRect(ox + GRID.width * size - 26, oy - 17, 4, 4); ctx.globalAlpha = 1;
     }
   }
   planetBody(ctx, x, y, r, p, time) {

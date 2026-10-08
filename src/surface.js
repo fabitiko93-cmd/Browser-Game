@@ -21,8 +21,9 @@ export function terrainClassAt(planet, x, y) {
   if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x >= GRID.width || y >= GRID.height) return 'void';
   // Keep the old coast/escarpment footprint: every existing buildable tile stays buildable.
   if ((x < 2 && y > 7) || (x > 9 && y < 4)) return planet.kind === 'Ozeanisch' ? 'water' : 'cliff';
-  const height = surfaceNoise(planet.seed, x / 2.8, y / 2.8, 19);
-  return height > .7 ? 'rock' : height > .5 ? 'rough' : 'ground';
+  // Restore the original visual tile distribution; deposits and yields stay independent.
+  const n = ((x * 37 + y * 53 + planet.seed * 17) % 101) / 101;
+  return n < .1 ? 'rock' : n < .32 ? 'rough' : 'ground';
 }
 export function planetSurface(planet) {
   const key = `${planet.seed}:${planet.kind}`;

@@ -70,7 +70,7 @@ export function renderNavigation(ui) {
 }
 function buildPanel(state, ui, p) {
   if (p.owner !== 'player') return `<p class="lede">Bauen ist auf deinen eigenen Planeten möglich.</p>${planetSelect(state, ui)}${button('Heimatplanet öffnen', 'home', '', 'primary')}`;
-  return planetSelect(state,ui) + `<button class="surface-overview" data-action="planet-info"><span>${surfaceName(p)}</span><small>◇ Erzadern · ≋ Wärmequellen · Standorte auf der Karte prüfen</small></button>` + categoryPanel(state,ui,p,costLine);
+  return planetSelect(state,ui) + `<button class="button secondary full" data-action="planet-info">${surfaceName(p)} · Standorte prüfen</button>` + categoryPanel(state,ui,p,costLine);
 }
 function buildingDetails(state, ui, p, def, building = null) {
   const prod = building ? potentialMarkup(state, p, building) : Object.entries(def.output ?? {}).map(([k, v]) => `${v} ${RESOURCES[k].name}`).join(', ');

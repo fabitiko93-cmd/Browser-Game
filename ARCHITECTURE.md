@@ -15,7 +15,7 @@
 | `src/save.js` | Lokaler Spielstand, Validierung, Import und Export |
 | `src/map.js` | Canvas-Karten, Oberflächen, Planeten, Sterne, Auswahl, Verschieben und Zoom |
 | `src/surface.js` / `src/surface-ui.js` | Seedbasierte Geologie, Standortboni, Bauphasen, automatische Verbindungen und Standortvorschau |
-| `src/surface-renderer.js` / `src/surface-buildings.js` | Zusammenhängende Fels-, Eis- und Vulkanlandschaften, zwischengespeicherte Gebäudegrafik und Bauplatzmarkierung |
+| `src/surface-renderer.js` / `src/surface-buildings.js` | Ursprüngliche Kachel- und Gebäudeoptik mit zwischengespeicherter Grafik und Bauplatzmarkierung |
 | `src/ui.js` / `src/icons.js` | Verwaltungsansichten und SVG-Symbole |
 | `src/main.js` | Laufende Anwendung, Eingabe, Zeitsteuerung und Speicherung |
 | `web/` | HTML, CSS, App-Manifest und Icon |
@@ -23,7 +23,7 @@
 | `tests/` | Regeln der Simulation und Integrationsabläufe |
 
 Waren befinden sich auf einzelnen Planeten. Credits und Forschung gelten reichsweit.
-Oberflächen werden dauerhaft aus Planetensamen und Planetentyp abgeleitet. Alte Baukoordinaten und bebaubare Flächen bleiben erhalten; das Speicherformat bleibt v6. Drei örtliche Erzfelder liefern +20–35 % Ertrag für Erzförderer/Tiefenförderanlagen, Wärmequellen +40 % für Geothermie. Sie erschöpfen sich nicht. Planeten-, Standort-, Forschungs- und Regierungsfaktoren gehen über `productionFactor` in dieselbe Simulation und Ertragsvorschau ein. Verbindungen zwischen fertigen Anlagen sind rein visuell: keine Bauflächen, Kosten oder gesonderten Transportaufträge. Versorgung erfolgt weiterhin aus dem gemeinsamen Planetenvorrat. Gelände und Gebäudegrafik werden begrenzt zwischengespeichert; Bauphasen folgen den bestehenden Restbauzeiten.
+Oberflächen werden dauerhaft aus Planetensamen und Planetentyp abgeleitet. Alte Baukoordinaten und bebaubare Flächen bleiben erhalten; das Speicherformat bleibt v6. Drei örtliche Erzfelder liefern +20–35 % Ertrag für Erzförderer/Tiefenförderanlagen, Wärmequellen +40 % für Geothermie. Sie erschöpfen sich nicht. Planeten-, Standort-, Forschungs- und Regierungsfaktoren gehen über `productionFactor` in dieselbe Simulation und Ertragsvorschau ein. Verbindungen zwischen fertigen Anlagen sind rein visuell: keine Bauflächen, Kosten oder gesonderten Transportaufträge. Versorgung erfolgt weiterhin aus dem gemeinsamen Planetenvorrat. Die Karte nutzt wieder die ursprünglichen Kacheln, Gebäudedächer, Buchstaben und Statuspunkte. Neue Erz-/Wärmequellenmarker und Landschaftsgrafiken sind deaktiviert. Standorte und Boni bleiben in den bestehenden Verwaltungsbausteinen prüfbar, bekannte Koordinaten öffnen die Standortprüfung. Gelände und Gebäudegrafik werden begrenzt zwischengespeichert; Bauphasen folgen den bestehenden Restbauzeiten.
 Ein Spieltag dauert bei 1× drei Sekunden. Geschwindigkeit: Pause, 1×, 2×, 4×.
 Beim Wechsel in den Hintergrund wird pausiert; es gibt keine Offline-Zeitfortschreibung.
 Reisen und Fabriken werden jeweils im Tagesablauf verarbeitet. Flottenaufträge validieren Kosten, Zugang und Auswahl vor jeder Buchung.

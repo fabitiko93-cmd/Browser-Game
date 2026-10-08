@@ -6,10 +6,10 @@ Arbeitstitel: ORBIT 3077.
 
 ## Planetarer Basenbau
 
-- Zusammenhängende Fels-, Eis- und Vulkanoberflächen mit Kratern, Eisbrüchen und vulkanischen Wärmequellen. Die Geologie eines Planeten bleibt dauerhaft gleich.
-- Freie Flächen antippen, um Boden und Standortwirkung zu prüfen. Erzadern geben Erzförderern und Tiefenförderanlagen +20–35 % Ertrag; Wärmequellen geben Geothermiekraftwerken +40 %. Vorkommen erschöpfen sich nicht.
+- Die Karte verwendet die bisherige Kachel-, Gelände- und Gebäudeoptik. Die planetare Geologie mit Eis-, Fels- und Vulkanwelten wirkt weiterhin in der Simulation und bleibt dauerhaft gleich.
+- Freie Flächen antippen, um Boden und Standortwirkung zu prüfen; bekannte Erzadern und Wärmequellen sind zusätzlich in den Planetendetails per Sektorkoordinate auswählbar. Erzadern geben Erzförderern und Tiefenförderanlagen +20–35 % Ertrag; Wärmequellen geben Geothermiekraftwerken +40 %. Vorkommen erschöpfen sich nicht.
 - Beim Bauen zeigt die Vorschau den Standortbonus und den Ertrag inklusive Planetenfaktoren, Forschung und Regierung. Tatsächliche Produktion setzt Personal und Versorgung voraus.
-- Alle 37 Gebäudetypen haben erkennbare Anlagenformen. Fundamente, Rohbau und Endausbau zeigen den Baufortschritt; fertige Anlagen verbinden sich automatisch.
+- Die bisherigen Gebäudedächer, Symbole und Statuspunkte bleiben erhalten. Fundament, Rohbau und Endausbau werden in den Anlagendetails ausgewiesen; fertige Anlagen verbinden sich automatisch.
 - Verbindungen belegen keine Baufläche und benötigen keine Transportaufträge. Versorgung bleibt Teil des gemeinsamen Planetenvorrats. Kleine Displays behalten brauchbare Bauflächen; Karte verschieben und mit zwei Fingern zoomen.
 - Vorhandene Spielstände, Gebäude und Baukoordinaten bleiben erhalten. Gasriesen, neue Fantasierohstoffe und Terraforming gehören noch nicht zu diesem Ausbau.
 
