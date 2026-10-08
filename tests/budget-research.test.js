@@ -132,3 +132,52 @@ test('every research branch renders traceable prerequisites and a limited specia
     assert.equal((html.match(/data-tech-id=/g) ?? []).length, Object.values(TECHNOLOGIES).filter(t=>t.branch===branch).length); assert.ok(html.includes('data-action="research-focus"'));
   }
 });
+
+test('research layout shows every real technology once, orders foundations first and joins exclusive choices', async () => {
+  const { researchLayout, researchPanel } = await import('../src/research-ui.js');
+  const s = createGame();
+  for (const branch of Object.keys(RESEARCH_BRANCHES)) {
+    const found = [];
+    const visit = unit => {
+      found.push(...unit.ids);
+      if (unit.parent) for (const id of unit.ids) {
+        const t = TECHNOLOGIES[id];
+        assert.ok([...t.requires, ...(t.requiresAny ?? [])].some(required => unit.parent.ids.includes(required)));
+      }
+      if (unit.ids.length === 2) assert.ok(TECHNOLOGIES[unit.ids[0]].excludes.includes(unit.ids[1]));
+      unit.children.forEach(visit);
+    };
+    researchLayout(branch).forEach(visit);
+    assert.deepEqual(found.toSorted(), Object.keys(TECHNOLOGIES).filter(id => TECHNOLOGIES[id].branch === branch).sort());
+    const html = researchPanel(s, { researchBranch: branch });
+    const rendered = [...html.matchAll(/data-tech-id="([^"]+)"/g)].map(match => match[1]);
+    assert.deepEqual(rendered.toSorted(), found.toSorted());
+    for (const id of rendered) for (const required of TECHNOLOGIES[id].requires) {
+      if (TECHNOLOGIES[required].branch === branch) assert.ok(rendered.indexOf(required) < rendered.indexOf(id));
+    }
+    assert.ok(!html.includes('tech-tier'));
+  }
+  const colonyHtml = researchPanel(s, { researchBranch: 'colonies' });
+  assert.ok(colonyHtml.indexOf('data-tech-id="habitats"') < colonyHtml.indexOf('data-tech-id="consumerCulture"'));
+  assert.ok(colonyHtml.includes('class="tech-merge"'));
+  assert.ok(colonyHtml.includes('Benötigt: Mineralische Tiefenscans'));
+});
+
+test('research cost colors use actual points independently of prerequisite locks and preserve action guards', async () => {
+  const { researchPanel } = await import('../src/research-ui.js');
+  const s = createGame(); s.science = 65;
+  const card = id => researchPanel(s, { researchBranch: 'colonies' }).match(new RegExp(`<details data-tech-id="${id}"[\\s\\S]*?</details>`))[0];
+  assert.ok(card('hydroponics').includes('class="tech-cost-amount enough"'));
+  assert.ok(card('hydroponics').includes('data-tech="hydroponics" disabled'));
+  assert.ok(card('compactCities').includes('class="tech-cost-amount short"'));
+  assert.ok(card('hydroponics').includes('>65</span> Forschung'));
+  s.tech = ['habitats'];
+  assert.ok(!card('hydroponics').includes('data-tech="hydroponics" disabled'));
+  assert.ok(card('habitats').includes('aria-label="Erforscht">✓'));
+  assert.ok(!card('habitats').includes('tech-cost-amount'));
+  s.research = { id: 'hydroponics', remaining: 3, total: 5 };
+  assert.ok(card('hydroponics').includes('Noch 3 Tage'));
+  assert.ok(!card('hydroponics').includes('research-start'));
+  s.tech.push('compactCities');
+  assert.ok(card('biospheres').includes('Andere Richtung gewählt'));
+});

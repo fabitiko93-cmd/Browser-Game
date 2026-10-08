@@ -74,13 +74,15 @@ function render() {
   $('navigation').innerHTML = renderNavigation(ui);
   const sheet = $('sheet');
   const oldScroll = sheet.querySelector('.sheet-content')?.scrollTop ?? 0;
+  const openTech = [...sheet.querySelectorAll('details[data-tech-id][open]')].map(el => el.dataset.techId);
   const activeField = document.activeElement?.dataset.field;
   const selectionStart = document.activeElement?.selectionStart;
   sheet.hidden = !ui.panel; sheet.classList.toggle('expanded', ui.expanded);
   if (ui.panel) {
     sheet.innerHTML = renderSheet(state, ui);
+    for (const id of openTech) { const card = sheet.querySelector(`[data-tech-id="${id}"]`); if (card) card.open = true; }
     sheet.querySelector('.sheet-content').scrollTop = oldScroll;
-    if (ui.focusTech) { sheet.querySelector(`[data-tech-id="${ui.focusTech}"]`)?.scrollIntoView({ block: 'center' }); ui.focusTech = null; }
+    if (ui.focusTech) { const card = sheet.querySelector(`[data-tech-id="${ui.focusTech}"]`); if (card) { card.open = true; card.scrollIntoView({ block: 'center' }); } ui.focusTech = null; }
     if (activeField) {
       const input = sheet.querySelector(`[data-field="${activeField}"]`);
       input?.focus({ preventScroll: true });
