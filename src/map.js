@@ -1,5 +1,6 @@
 import { GRID, SYSTEMS, FACTIONS } from './data.js';
 import { SurfaceRenderer } from './surface-renderer.js';
+import { compactSurface } from './surface-ui.js';
 
 export class MapRenderer {
   constructor(canvas, state, ui, tap) {
@@ -79,28 +80,30 @@ export class MapRenderer {
   surface(ctx, w, h, time) {
     const p = this.state.planets.find(p => p.id === this.ui.planetId);
     if (p.destroyed) { ctx.fillStyle = '#c8a7c7'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('TRÜMMERFELD', w / 2, h / 2); return; }
-    const footer = this.ui.buildType ? 146 : this.ui.hints && p.owner === 'player' && !this.ui.panel ? 78 : 34;
-    const available = Math.max(100, h - 84 - footer);
+    const insets = this.surfaceInsets ?? { top: compactSurface(this.ui) ? 148 : 84, bottom: this.ui.hints && p.owner === 'player' && !this.ui.panel ? 78 : 67 };
+    const top = Math.max(0, insets.top), available = Math.max(0, h - top - insets.bottom);
+    if (!available) return;
     const size = Math.min((w - 24) / GRID.width, Math.max(24, available / GRID.height)) * this.camera.zoom;
     let ox = w / 2 - GRID.width * size / 2 + this.camera.x;
-    let oy = 84 + available / 2 - GRID.height * size / 2 + this.camera.y;
-    const tile = this.ui.buildType && this.ui.buildTile, focusKey = tile ? `${p.id}:${this.ui.buildType}:${tile.x},${tile.y}` : '';
+    let oy = top + available / 2 - GRID.height * size / 2 + this.camera.y;
+    const tile = this.ui.buildType ? this.ui.buildTile : this.ui.panel === 'terrain' ? this.ui.surfaceTile : this.ui.panel === 'building' ? p.buildings.find(b => b.id === this.ui.selectedBuilding) : null;
+    const focusKey = tile ? `${p.id}:${this.ui.buildType ?? this.ui.panel}:${tile.x},${tile.y}:${w},${h}:${top.toFixed(1)},${available.toFixed(1)}` : '';
     if (focusKey && focusKey !== this.surfaceFocusKey) {
       const px = ox + (tile.x + .5) * size, py = oy + (tile.y + .5) * size;
       const dx = Math.max(12 + size / 2, Math.min(w - 12 - size / 2, px)) - px;
-      const dy = Math.max(84 + size / 2, Math.min(84 + available - size / 2, py)) - py;
+      const dy = Math.max(top + size / 2, Math.min(top + available - size / 2, py)) - py;
       this.camera.x += dx; this.camera.y += dy; ox += dx; oy += dy;
     }
     this.surfaceFocusKey = focusKey;
     this.tileSize = size; this.origin = { x: ox, y: oy };
-    ctx.save(); ctx.beginPath(); ctx.rect(0, 84, w, available); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(0, top, w, available); ctx.clip();
     this.surfaceRenderer.render(ctx, p, this.ui, { x: ox, y: oy, size }, time); ctx.restore();
     for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
-      const px = Math.max(0, ox + x * size), py = Math.max(84, oy + y * size);
-      const right = Math.min(w, ox + (x + 1) * size), bottom = Math.min(84 + available, oy + (y + 1) * size);
+      const px = Math.max(0, ox + x * size), py = Math.max(top, oy + y * size);
+      const right = Math.min(w, ox + (x + 1) * size), bottom = Math.min(top + available, oy + (y + 1) * size);
       if (right > px && bottom > py) this.hits.push({ kind: 'tile', x: px, y: py, w: right - px, h: bottom - py, tx: x, ty: y });
     }
-    if (p.owner && oy >= 100) {
+    if (p.owner && oy >= top + 16) {
       ctx.fillStyle = '#c7d3f2'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText('NORDSEKTOR', ox + 5, oy - 12);
       ctx.globalAlpha = .3 + .3 * Math.sin(time * .001); ctx.fillStyle = '#aeacff'; ctx.fillRect(ox + GRID.width * size - 26, oy - 17, 4, 4); ctx.globalAlpha = 1;
     }

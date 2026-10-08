@@ -1,5 +1,5 @@
 import { GRID } from './data.js';
-import { terrainClassAt, surfaceConnections, placementIssue } from './surface.js';
+import { planetSurface, surfaceConnections, placementIssue } from './surface.js';
 import { paintBuilding } from './surface-buildings.js';
 
 const UNIT = 64;
@@ -9,13 +9,20 @@ function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w,
 function paintTerrain(ctx, planet, displaySize) {
   const unit = UNIT / displaySize, warm = planet.kind === 'Vulkanisch' || planet.kind === 'Industriewelt';
   ctx.lineWidth = unit;
-  for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
-    const terrain = terrainClassAt(planet, x, y), px = x * UNIT, py = y * UNIT;
-    ctx.fillStyle = warm && terrain === 'ground' ? '#51463e' : warm && terrain === 'rough' ? '#625245' : COLORS[terrain];
+  for (const { x, y, terrain, ore, vent } of planetSurface(planet).tiles) {
+    const px = x * UNIT, py = y * UNIT;
+    ctx.fillStyle = ore ? ore === .35 ? '#3a6672' : '#304c55' : vent ? '#695039' : warm && terrain === 'ground' ? '#51463e' : warm && terrain === 'rough' ? '#625245' : COLORS[terrain];
     roundRect(ctx, px + .7 * unit, py + .7 * unit, UNIT - 1.4 * unit, UNIT - 1.4 * unit, 2 * unit); ctx.fill();
     ctx.fillStyle = '#ffffff05'; ctx.fillRect(px + 2 * unit, py + 2 * unit, UNIT - 4 * unit, unit);
-    if (terrain === 'rough') { ctx.strokeStyle = '#adc0a71b'; ctx.beginPath(); ctx.moveTo(px + UNIT * .3, py + UNIT * .7); ctx.lineTo(px + UNIT * .7, py + UNIT * .35); ctx.stroke(); }
-    if (terrain === 'rock') { ctx.fillStyle = warm ? '#978270' : '#6b7e72'; ctx.beginPath(); ctx.moveTo(px + UNIT * .25, py + UNIT * .65); ctx.lineTo(px + UNIT * .42, py + UNIT * .3); ctx.lineTo(px + UNIT * .7, py + UNIT * .55); ctx.lineTo(px + UNIT * .65, py + UNIT * .72); ctx.closePath(); ctx.fill(); }
+    if (terrain === 'rough' && !ore && !vent) { ctx.strokeStyle = '#adc0a71b'; ctx.beginPath(); ctx.moveTo(px + UNIT * .3, py + UNIT * .7); ctx.lineTo(px + UNIT * .7, py + UNIT * .35); ctx.stroke(); }
+    // Reuse the existing stone silhouette; rich cores have a brighter tint.
+    if (ore || terrain === 'rock' && !vent) { ctx.fillStyle = ore ? ore === .35 ? '#b0d5d8' : '#74a0a8' : warm ? '#978270' : '#6b7e72'; ctx.beginPath(); ctx.moveTo(px + UNIT * .25, py + UNIT * .65); ctx.lineTo(px + UNIT * .42, py + UNIT * .3); ctx.lineTo(px + UNIT * .7, py + UNIT * .55); ctx.lineTo(px + UNIT * .65, py + UNIT * .72); ctx.closePath(); ctx.fill(); }
+    // The original short terrain stroke, repeated to distinguish thermal sites.
+    if (vent) {
+      ctx.strokeStyle = '#e3b073'; ctx.lineWidth = 1.5 * unit;
+      for (const offset of [-.17, 0, .17]) { ctx.beginPath(); ctx.moveTo(px + UNIT * (.35 + offset), py + UNIT * .7); ctx.lineTo(px + UNIT * (.65 + offset), py + UNIT * .35); ctx.stroke(); }
+      ctx.lineWidth = unit;
+    }
     if (terrain === 'cliff') { ctx.strokeStyle = '#5e797c45'; ctx.beginPath(); ctx.moveTo(px, py + UNIT * .65); ctx.lineTo(px + UNIT * .6, py + UNIT * .25); ctx.lineTo(px + UNIT, py + UNIT * .4); ctx.stroke(); }
   }
 }
@@ -60,7 +67,7 @@ export class SurfaceRenderer {
     }
     if (ui.buildType && ui.buildTile) {
       const tile = ui.buildTile, valid = !placementIssue(planet, tile.x, tile.y), px = tile.x * size, py = tile.y * size;
-      ctx.fillStyle = valid ? '#89aaff50' : '#e58c8b60'; ctx.fillRect(px, py, size, size);
+      ctx.fillStyle = valid ? '#89aaff1c' : '#e58c8b40'; ctx.fillRect(px, py, size, size);
       ctx.strokeStyle = valid ? '#c0cfff' : '#e58c8b'; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, size - 2, size - 2);
     } else if (ui.panel === 'terrain' && ui.surfaceTile) this.selection(ctx, ui.surfaceTile.x * size, ui.surfaceTile.y * size, size);
     if (ui.buildType) {

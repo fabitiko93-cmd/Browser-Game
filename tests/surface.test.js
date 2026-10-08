@@ -103,9 +103,13 @@ test('site inspection exposes research gates and offers no construction on forei
   let markup = renderSheet(s, controls);
   assert.match(markup, /Wärmequelle/); assert.match(markup, /\+40 %/);
   assert.match(markup, /Benötigt:/); assert.match(markup, /data-action="build-start"[^>]*disabled/);
+  assert.match(renderMapFoot(s, controls), /Benötigt: Geothermische Erschließung/);
+  assert.match(renderMapFoot(s, controls), /data-action="build-start"[^>]*disabled/);
   s.tech.push('geothermal'); markup = renderSheet(s, controls); assert.doesNotMatch(markup, /data-action="build-start"[^>]*disabled/);
+  assert.doesNotMatch(renderMapFoot(s, controls), /data-action="build-start"[^>]*disabled/);
   controls.planetId = 'thalassa'; controls.surfaceTile = richTile(getPlanet(s, controls.planetId));
   assert.doesNotMatch(renderSheet(s, controls), /data-action="build-start"/);
+  assert.doesNotMatch(renderMapFoot(s, controls), /data-action="build-start"/);
 });
 
 test('construction progresses through foundation, frame and finishing before producing', () => {
@@ -133,7 +137,7 @@ test('portrait tile picking follows the drawn position after dragging and zoomin
   }
 });
 
-test('small portrait construction retains tappable tiles and focuses a selected site above the controls', () => {
+test('small portrait construction retains tappable tiles and focuses a selected site below the top card', () => {
   const s = createGame(), controls = { ...ui(), buildType: 'mine', buildTile: richTile(home(s)) }, map = Object.create(MapRenderer.prototype);
   Object.assign(map, { state: s, ui: controls, camera: { x: 0, y: 0, zoom: 1 }, hits: [], surfaceRenderer: { render() {} } });
   const ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
@@ -141,9 +145,31 @@ test('small portrait construction retains tappable tiles and focuses a selected 
   assert.ok(map.tileSize >= 24);
   const tile = map.hits.find(h => h.tx === controls.buildTile.x && h.ty === controls.buildTile.y);
   assert.ok(tile && tile.w >= 24 && tile.h >= 24);
-  assert.ok(tile.y >= 84 && tile.y + tile.h <= 216 + 1e-8);
+  assert.ok(tile.y >= 148 && tile.y + tile.h <= 295 + 1e-8);
   // Panning after choosing the site is allowed; animation frames must not snap it back.
   map.camera.y += 36; const afterPan = map.camera.y; map.surface(ctx, 320, 362, 5000); close(map.camera.y, afterPan);
+});
+
+test('construction and inspection keep edge tiles visible when measured card or screen heights change', () => {
+  const s = createGame(), p = home(s), b = facility('mine', { x: 11, y: 13 }); p.buildings.push(b);
+  const map = Object.create(MapRenderer.prototype), ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
+  Object.assign(map, { state: s, camera: { x: 0, y: 0, zoom: 1 }, hits: [], surfaceRenderer: { render() {} } });
+  for (const mode of [
+    { buildType: 'mine', buildTile: { x: 10, y: 13 } },
+    { panel: 'terrain', surfaceTile: { x: 0, y: 0 } },
+    { panel: 'building', selectedBuilding: b.id }
+  ]) {
+    map.ui = { ...ui(), ...mode }; map.resetCamera();
+    const target = mode.buildTile ?? mode.surfaceTile ?? b;
+    for (const [width, height, top, bottom] of [[320, 362, 144, 67], [320, 362, 178, 67], [390, 638, 150, 67]]) {
+      map.surfaceInsets = { top, bottom }; map.hits = [];
+      map.surface(ctx, width, height, 0);
+      const tile = map.hits.find(h => h.tx === target.x && h.ty === target.y);
+      assert.ok(tile && tile.w >= 24 - 1e-8 && tile.h >= 24 - 1e-8, `Selected ${mode.panel ?? 'build'} tile stays fully tappable`);
+      assert.ok(tile.y >= top && tile.y + tile.h <= height - bottom + 1e-8);
+      assert.ok(map.hits.every(h => h.y >= top && h.y + h.h <= height - bottom + 1e-8));
+    }
+  }
 });
 
 test('every system draws all its planets, including the fourth capital worlds, without interrupting the map loop', () => {

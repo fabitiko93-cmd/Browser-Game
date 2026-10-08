@@ -2,12 +2,56 @@ import { BUILDINGS, RESOURCES, TECHNOLOGIES } from './data.js';
 import { PLANET_FACTORS } from './development-data.js';
 import { surfaceTile, surfaceName, siteBonus, placementIssue, planetSurface, constructionPhase } from './surface.js';
 import { buildingPotential } from './economy.js';
+import { canAfford } from './state.js';
+import { icon } from './icons.js';
 
 const decimal = value => value.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+const featureName = tile => tile.vent ? 'Wärmequelle' : tile.ore ? 'Erzader' : ({ ground: 'Ebene Fläche', rough: 'Felsiger Boden', rock: 'Gesteinsrücken', cliff: 'Steilhang', water: 'Offenes Wasser' })[tile.terrain];
+const sector = tile => `Sektor ${tile.x + 1} / ${tile.y + 1}`;
+const bonusValue = bonus => `<span class="effect-benefit">+${Math.round((bonus.factor - 1) * 100)} %</span>`;
+export const compactSurface = ui => ui.view === 'planet' && Boolean(ui.buildType || !ui.expanded && ['terrain', 'building'].includes(ui.panel));
+export const surfaceLegend = () => '<div class="surface-legend"><span class="site-key ore">Erz</span><span class="site-key thermal">Wärme</span><span class="site-key neutral">Normal</span></div>';
+function heading(title, caption, cancel, details = false) {
+  const text = `<strong>${title}</strong><small>${caption}${details ? '<span class="site-details-link"> · Details</span>' : ''}</small>`;
+  return `<div class="site-card-heading">${details ? `<button class="site-card-title" data-action="expand" aria-label="Details zu ${title} öffnen">${text}</button>` : `<div class="site-card-title">${text}</div>`}<button class="icon-button" data-action="${cancel}" aria-label="${cancel === 'build-cancel' ? 'Bauplanung abbrechen' : 'Auswahl schließen'}">${icon('close', 18)}</button></div>`;
+}
+const detailsButton = () => '<button class="button secondary site-card-action" data-action="expand">Details</button>';
+export function compactSiteMarkup(state, ui, planet, costs) {
+  let header, content, action;
+  if (ui.buildType) {
+    const type = ui.buildType, def = BUILDINGS[type], position = ui.buildTile;
+    const tile = position && surfaceTile(planet, position.x, position.y), issue = position && placementIssue(planet, position.x, position.y);
+    const bonus = position && siteBonus(planet, type, position.x, position.y);
+    const locked = def.requiredTech && !state.tech.includes(def.requiredTech);
+    header = heading(def.name, tile ? `${sector(tile)} · ${featureName(tile)}${bonus ? ` · ${bonusValue(bonus)}` : ''}` : 'Freie Kachel antippen', 'build-cancel');
+    const output = tile && !issue && potentialMarkup(state, planet, { type, x: tile.x, y: tile.y });
+    content = `${issue ? `<p class="site-warning">${issue}</p>` : output ? `<p class="site-card-output">Bei Betrieb / Tag: ${output}</p>` : ''}${costs(state, planet, def.cost)}${locked ? `<p class="site-warning">Benötigt: ${TECHNOLOGIES[def.requiredTech].name}</p>` : ''}`;
+    action = `<button class="button primary site-card-action" data-action="build-place" ${!tile || issue || locked || !canAfford(state, planet, def.cost) ? 'disabled' : ''}>Bauen</button>`;
+  } else if (ui.panel === 'building') {
+    const b = planet.buildings.find(b => b.id === ui.selectedBuilding);
+    if (!b) return `<div class="compact-site">${heading('Anlage nicht verfügbar', 'Die Anlage existiert nicht mehr.', 'close')}</div>${surfaceLegend()}`;
+    const def = BUILDINGS[b.type], status = b.remaining > 0 ? `Bau: ${b.remaining} Tage` : !b.enabled ? 'Pausiert' : b.status === 'aktiv' ? 'Aktiv' : 'Versorgung fehlt';
+    header = heading(def.name, `${sector(b)} · ${status}`, 'close', true);
+    const output = b.remaining <= 0 && potentialMarkup(state, planet, b), bonus = siteBonus(planet, b.type, b.x, b.y);
+    content = `${output ? `<p class="site-card-output">Bei Betrieb / Tag: ${output}</p>` : ''}<p class="site-card-note">${bonus ? `Standort ${bonusValue(bonus)} · ` : ''}Unterhalt ${decimal(def.upkeep)} ¢ / Tag</p>`;
+    action = detailsButton();
+  } else {
+    const position = ui.surfaceTile, tile = position && surfaceTile(planet, position.x, position.y);
+    if (!tile) return '';
+    const type = tile.vent ? 'geothermal' : tile.ore ? 'mine' : null, def = BUILDINGS[type];
+    const bonus = siteBonus(planet, type, tile.x, tile.y), issue = placementIssue(planet, tile.x, tile.y);
+    const tech = planet.owner && planet.owner !== 'player' ? state.factions?.[planet.owner]?.tech ?? [] : state.tech;
+    const locked = def?.requiredTech && !tech.includes(def.requiredTech);
+    header = heading(featureName(tile), `${sector(tile)}${bonus ? ` · ${bonusValue(bonus)} Ertrag` : ''}`, 'close', true);
+    content = issue ? `<p class="site-warning">${issue}</p>` : def ? `<p class="site-card-note">${def.name}</p>${locked ? `<p class="site-warning">Benötigt: ${TECHNOLOGIES[def.requiredTech].name}</p>` : `<p class="site-card-output">${potentialMarkup(state, planet, { type, x: tile.x, y: tile.y })} / Tag</p>`}` : '<p class="site-card-note">Freie Baufläche · kein Standortbonus</p>';
+    action = def && !issue && planet.owner === 'player' ? `<button class="button secondary site-card-action" data-action="build-start" data-type="${type}" data-x="${tile.x}" data-y="${tile.y}" ${locked ? 'disabled' : ''}>Planen</button>` : detailsButton();
+  }
+  return `<div class="compact-site">${header}<div class="site-card-row"><div class="site-card-summary">${content}</div>${action}</div></div>${surfaceLegend()}`;
+}
 export function siteMarkup(planet, type, x, y) {
   const tile = surfaceTile(planet, x, y), bonus = siteBonus(planet, type, x, y);
   if (!tile) return '';
-  const feature = tile.vent ? 'Wärmequelle' : tile.ore ? 'Erzader' : ({ ground: 'Ebene Fläche', rough: 'Felsiger Boden', rock: 'Gesteinsrücken', cliff: 'Steilhang', water: 'Offenes Wasser' })[tile.terrain];
+  const feature = featureName(tile);
   return `<div class="stat-line"><span>${feature}</span><strong>${bonus ? `Standortertrag <span class="effect-benefit">+${Math.round((bonus.factor - 1) * 100)} %</span>` : 'Kein Standortbonus'}</strong></div>`;
 }
 export function potentialMarkup(state, planet, building) {

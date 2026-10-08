@@ -20,6 +20,7 @@ import { stepDay, resolveEvent } from './simulation.js';
 import { loadGame, saveGame, parseImport, exportGame } from './save.js';
 import { MapRenderer } from './map.js';
 import { icon } from './icons.js';
+import { compactSurface } from './surface-ui.js';
 import { renderHeader, renderResources, renderMapHead, renderMapFoot, renderNavigation, renderSheet, welcomeMarkup } from './ui.js';
 
 let state, storageError = false;
@@ -49,6 +50,21 @@ const map = new MapRenderer($('map'), state, ui, hit => {
   render();
 });
 $('recenter').innerHTML = icon('target', 18);
+function measureSurfaceViewport() {
+  const bounds = $('map').getBoundingClientRect();
+  const compact = compactSurface(ui), head = $(compact ? 'map-foot' : 'map-head');
+  const header = !head.hidden && head.getBoundingClientRect();
+  if (!header || !header.height || !bounds.height) { map.surfaceInsets = null; return; }
+  let bottom = 34;
+  for (const el of [$('sheet'), $('recenter'), ...(compact ? [] : [$('map-foot')])]) {
+    if (el.hidden) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.height && rect.top < bounds.bottom) bottom = Math.max(bottom, bounds.bottom - rect.top + 8);
+  }
+  map.surfaceInsets = { top: Math.max(0, header.bottom - bounds.top + 8), bottom };
+}
+const surfaceLayout = new ResizeObserver(measureSurfaceViewport);
+for (const id of ['map', 'map-head', 'map-foot', 'sheet', 'recenter']) surfaceLayout.observe($(id));
 function currentPlanet() { return getPlanet(state, ui.planetId); }
 function toast(message, error = false) {
   const el = $('toast'); el.textContent = message; el.classList.toggle('error', error); el.classList.add('visible');
@@ -62,6 +78,7 @@ function act(result, success) { audio.play(result?'error':'confirm'); if (result
 function render() {
   if (currentPlanet().destroyed) {
     ui.buildType = null; ui.buildTile = null;
+    if (['terrain', 'building'].includes(ui.panel)) { ui.panel = 'planet-info'; ui.expanded = false; }
     if (['build', 'build-detail', 'building', 'economy', 'fleet'].includes(ui.panel)) ensureOwned();
   }
   ui.audioSettings = audio.settings;
@@ -72,14 +89,17 @@ function render() {
   const pages=resourcePages(state,currentPlanet());ui.resourcePage%=pages.length;$('resources').setAttribute('aria-label',`${pages[ui.resourcePage].name}: antippen für ${pages[(ui.resourcePage+1)%pages.length].name}`);
   $('map-head').innerHTML = renderMapHead(state, ui);
   $('map-foot').innerHTML = renderMapFoot(state, ui);
+  const compact = compactSurface(ui);
+  $('map-head').hidden = compact;
+  $('map-foot').classList.toggle('site-mode', compact);
   $('navigation').innerHTML = renderNavigation(ui);
   const sheet = $('sheet');
   const oldScroll = sheet.querySelector('.sheet-content')?.scrollTop ?? 0;
   const openTech = [...sheet.querySelectorAll('details[data-tech-id][open]')].map(el => el.dataset.techId);
   const activeField = document.activeElement?.dataset.field;
   const selectionStart = document.activeElement?.selectionStart;
-  sheet.hidden = !ui.panel; sheet.classList.toggle('expanded', ui.expanded);
-  if (ui.panel) {
+  sheet.hidden = !ui.panel || compact; sheet.classList.toggle('expanded', ui.expanded);
+  if (!sheet.hidden) {
     sheet.innerHTML = renderSheet(state, ui);
     for (const id of openTech) { const card = sheet.querySelector(`[data-tech-id="${id}"]`); if (card) card.open = true; }
     sheet.querySelector('.sheet-content').scrollTop = oldScroll;
@@ -92,6 +112,7 @@ function render() {
   }
   $('welcome').hidden = state.started;
   if (!state.started && !$('welcome').innerHTML) $('welcome').innerHTML = welcomeMarkup();
+  measureSurfaceViewport();
 }
 function panel(name) { ui.panel = name; ui.expanded = false; ui.buildType = null; ui.buildTile = null; ui.demolishConfirm = null; ui.warConfirm = null; ui.resetConfirm = false; }
 function ensureOwned() { if (currentPlanet().owner !== 'player') { ui.planetId = ownedPlanets(state)[0]?.id ?? 'nereid'; ui.systemId = currentPlanet().system; } }

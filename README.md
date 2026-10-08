@@ -6,9 +6,9 @@ Arbeitstitel: ORBIT 3077.
 
 ## Planetarer Basenbau
 
-- Die Karte verwendet die bisherige Kachel-, Gelände- und Gebäudeoptik. Die planetare Geologie mit Eis-, Fels- und Vulkanwelten wirkt weiterhin in der Simulation und bleibt dauerhaft gleich.
+- Die Karte verwendet die bisherigen Kacheln und Gebäudegrafiken. Erzflächen sind kühl eingefärbt und nutzen die vorhandene Steinform; Wärmequellen sind warm eingefärbt und zeigen einfache Gelände-Striche. Helle Erzkerne liefern den stärkeren Bonus. Eine kleine Legende erklärt die Farben.
 - Freie Flächen antippen, um Boden und Standortwirkung zu prüfen; bekannte Erzadern und Wärmequellen sind zusätzlich in den Planetendetails per Sektorkoordinate auswählbar. Erzadern geben Erzförderern und Tiefenförderanlagen +20–35 % Ertrag; Wärmequellen geben Geothermiekraftwerken +40 %. Vorkommen erschöpfen sich nicht.
-- Beim Bauen zeigt die Vorschau den Standortbonus und den Ertrag inklusive Planetenfaktoren, Forschung und Regierung. Tatsächliche Produktion setzt Personal und Versorgung voraus.
+- Standort-, Anlagen- und Bauinfos erscheinen standardmäßig als kompakte Karte oben; ausführliche Verwaltung öffnet sich über „Details“. Die gewählte Kachel bleibt im freien Kartenbereich, dessen Grenzen aus den tatsächlichen Fensterhöhen gemessen werden. Beim Bauen zeigt die Vorschau Standortbonus, Kosten und Ertrag inklusive Planetenfaktoren, Forschung und Regierung. Tatsächliche Produktion setzt Personal und Versorgung voraus.
 - Die bisherigen Gebäudedächer, Symbole und Statuspunkte bleiben erhalten. Fundament, Rohbau und Endausbau werden in den Anlagendetails ausgewiesen; fertige Anlagen verbinden sich automatisch.
 - Verbindungen belegen keine Baufläche und benötigen keine Transportaufträge. Versorgung bleibt Teil des gemeinsamen Planetenvorrats. Kleine Displays behalten brauchbare Bauflächen; Karte verschieben und mit zwei Fingern zoomen.
 - Vorhandene Spielstände, Gebäude und Baukoordinaten bleiben erhalten. Gasriesen, neue Fantasierohstoffe und Terraforming gehören noch nicht zu diesem Ausbau.

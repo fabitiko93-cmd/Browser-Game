@@ -18,8 +18,8 @@ import { profileMarkup, governancePanel } from './governance-ui.js';
 import { BUILDINGS, RESOURCES, RESOURCE_KEYS, IDEOLOGIES, TECHNOLOGIES, SHIPS, FACTIONS, SYSTEMS } from './data.js';
 import { getPlanet, ownedPlanets, dateLabel, canAfford } from './state.js';
 import { housing } from './economy.js';
-import { siteMarkup, potentialMarkup, geologyMarkup, terrainPanel, constructionMarkup } from './surface-ui.js';
-import { placementIssue, surfaceName } from './surface.js';
+import { siteMarkup, potentialMarkup, geologyMarkup, terrainPanel, constructionMarkup, compactSurface, compactSiteMarkup, surfaceLegend } from './surface-ui.js';
+import { surfaceName } from './surface.js';
 import { icon } from './icons.js';
 import { fleetStrength, shipBuildDays, cargoCapacity, fleetUpkeep } from './fleets.js';
 
@@ -46,12 +46,7 @@ export function renderMapHead(state, ui) {
 }
 export function renderMapFoot(state, ui) {
   const p = getPlanet(state, ui.planetId);
-  if (ui.buildType) {
-    const def = BUILDINGS[ui.buildType];
-    const tile = ui.buildTile, issue = tile && placementIssue(p, tile.x, tile.y);
-    const potential = tile && !issue && potentialMarkup(state, p, { type: ui.buildType, ...tile });
-    return `<div class="build-instruction"><strong>${def.name}</strong>${tile ? issue ? `<p class="negative">${issue}</p>` : `${siteMarkup(p, ui.buildType, tile.x, tile.y)}${potential ? `<p class="site-output">Bei Betrieb / Tag: ${potential}</p>` : ''}` : '<p>Freie Fläche wählen · Ziehen zum Verschieben · Zwei Finger zum Zoomen</p>'}${costLine(state, p, def.cost)}<div class="button-row">${button('Abbrechen', 'build-cancel', '', 'secondary')}${button('Bauen', 'build-place', '', 'primary', !tile || Boolean(issue) || !canAfford(state, p, def.cost) || Boolean(def.requiredTech && !state.tech.includes(def.requiredTech)))}</div></div>`;
-  }
+  if (compactSurface(ui)) return compactSiteMarkup(state, ui, p, costLine);
   if (state.strikes.some(s => s.owner !== 'player' && getPlanet(state, s.target)?.owner === 'player')) return `<button class="signal-button" data-action="arsenal-open">${icon('warning',17)}Feindlicher Fernangriff · Abwehr prüfen</button>`;
   if (state.event) return `<button class="signal-button" data-action="event">${icon('warning', 17)}Neue Meldung${icon('chevron', 15)}</button>`;
   if (ui.panel) return '';
@@ -63,7 +58,7 @@ export function renderMapFoot(state, ui) {
     else if (ownedPlanets(state).length === 1) { hint = 'Ein Kolonieschiff kann Cinder oder Elys besiedeln.'; action = 'fleet'; extra = ''; }
     if (hint) return `<div class="onboarding"><div class="eyebrow">NÄCHSTER SCHRITT</div>${hint}<div style="display:flex;justify-content:space-between"><button data-action="${action}" ${extra}>Ansehen ${icon('arrow', 12)}</button><button data-action="hints-off" aria-label="Hinweise ausblenden">${icon('close', 13)}</button></div></div>`;
   }
-  return `<div class="map-caption">${ui.view === 'planet' ? `<strong>${number(p.population)}</strong> Einwohner · <strong>${number(p.happiness)} %</strong> Zufriedenheit` : 'OBJEKT ANTIPPEN · KARTE VERSCHIEBEN'}</div>`;
+  return `<div class="map-caption">${ui.view === 'planet' ? `<strong>${number(p.population)}</strong> Einwohner · <strong>${number(p.happiness)} %</strong> Zufriedenheit` : 'OBJEKT ANTIPPEN · KARTE VERSCHIEBEN'}</div>${ui.view === 'planet' && !p.destroyed ? surfaceLegend() : ''}`;
 }
 export function renderNavigation(ui) {
   return [ ['map', 'map', 'Karte'], ['build', 'build', 'Bauen'], ['economy', 'economy', 'Wirtschaft'], ['politics', 'politics', 'Politik'], ['fleet', 'fleet', 'Flotte'] ].map(([panel, glyph, label]) => `<button class="nav-button ${(!ui.panel && panel === 'map') || ui.panel === panel || (panel === 'build' && ['building', 'build-detail'].includes(ui.panel)) ? 'active' : ''}" data-action="nav" data-panel="${panel}" aria-label="${label}">${icon(glyph)}<span>${label}</span></button>`).join('');
