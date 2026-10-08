@@ -83,3 +83,10 @@
 .tech-side-forks .tech-side-forks{width:100%;padding-left:8px;margin:0}.tech-side-forks .tech-side-path::before{left:-10px}
 @media(max-width:360px){.research-tree{padding-left:11px}.tech-main-step::before{left:-11px;width:11px}.tech-node>summary{padding-inline:7px}.tech-name{padding-inline:19px}}
 .tech-name{hyphens:auto}
+
+/* A modifier's benefit depends on its meaning, including reduced costs. */
+.effect-value{font-variant-numeric:tabular-nums}.effect-benefit{color:#95d8bd}.effect-penalty{color:#ff879f}
+.tech-node.researched{background:#1b2940;border-color:#34405e}
+.tech-node.researched .tech-status.complete{font-size:23px;font-weight:600;top:9px;height:22px}
+.tech-node.researched.tech-upgrade .tech-status.complete{top:7px}
+.tech-completion{color:#95d8bd;font-size:11px;letter-spacing:1px;font-weight:600}

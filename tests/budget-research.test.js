@@ -112,7 +112,7 @@ test('technocracy has visible and actual science, development and energy-efficie
   assert.ok(researchDays(tech,'quantumModels') < researchDays(normal,'quantumModels'));
   assert.ok(advanced.planets[0].net.energy > baseline.planets[0].net.energy);
   const markup = renderSheet(tech,{panel:'politics',politicsMode:'government',planetId:'nereid',government:'technocracy'});
-  assert.ok(markup.includes('× 1.25')); assert.ok(markup.includes('Fabrik-Energiebedarf −8 %'));
+  assert.ok(markup.includes('× 1.25')); assert.ok(markup.replace(/<[^>]*>/g, '').includes('Fabrik-Energiebedarf −8 %'));
 });
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
