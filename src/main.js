@@ -28,7 +28,7 @@ const audio = new SpaceAudio();
 const ui = {
   audioSettings: audio.settings, resourcePage: 0, buildCategory: null,routeMode:'simple',routeDraft:null,tradeReserve:40,contractAmount:40,
   view: 'planet', planetId: 'nereid', systemId: 'helios', panel: null, expanded: false, speed: 0, lastSpeed: 1,
-  buildType: null, buildTile: null, detailType: 'farm', selectedBuilding: null, fleetIds: [],
+  buildType: null, buildTile: null, surfaceTile: null, detailType: 'farm', selectedBuilding: null, fleetIds: [],
   fleetTarget: 'cinder', routeTarget: 'thalassa', routeFleet: 'starter-f', cargo: 'ore', amount: 40, repeat: true,
   researchBranch: 'energy', economyMode: 'production', politicsMode: 'government', fleetMode: 'orders', government: state.player.ideology,
   hints: true, demolishConfirm: null, warConfirm: null, resetConfirm: false
@@ -43,6 +43,7 @@ const map = new MapRenderer($('map'), state, ui, hit => {
     else {
       const b = currentPlanet().buildings.find(b => b.x === hit.tx && b.y === hit.ty);
       if (b) { ui.selectedBuilding = b.id; ui.panel = 'building'; ui.expanded = false; }
+      else { ui.surfaceTile = { x: hit.tx, y: hit.ty }; ui.panel = 'terrain'; ui.expanded = false; }
     }
   }
   render();
@@ -116,9 +117,10 @@ document.addEventListener('click', e => {
   else if (action === 'recenter') map.resetCamera();
   else if (action === 'home') { ensureOwned(); ui.view = 'planet'; panel(null); }
   else if (action === 'surface') { ui.view = 'planet'; panel(null); }
+  else if (action === 'planet-info') { panel('planet-info'); }
   else if (action === 'build') { ensureOwned(); panel('build'); }
   else if (action === 'build-detail') { ensureOwned(); panel('build-detail'); ui.detailType = el.dataset.type; }
-  else if (action === 'build-start') { panel(null); ui.view = 'planet'; ui.buildType = el.dataset.type; }
+  else if (action === 'build-start') { panel(null); ui.view = 'planet'; ui.buildType = el.dataset.type; if (el.dataset.x !== undefined && el.dataset.y !== undefined) ui.buildTile = { x: Number(el.dataset.x), y: Number(el.dataset.y) }; }
   else if (action === 'build-cancel') { ui.buildType = null; ui.buildTile = null; }
   else if (action === 'build-place') {
     if (!ui.buildTile) return;

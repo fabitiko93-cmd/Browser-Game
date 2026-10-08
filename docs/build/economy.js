@@ -1,9 +1,18 @@
-import { PLANET_FACTORS } from './development-data.js';
+import { geologicalFactor, placementIssue } from './surface.js';
 import { serviceCount, buildingBlock, orderedBuildings } from './infrastructure.js';
 import { technologyEffects } from './technology.js';
 import { policyEffects } from './governance.js';
-import { BUILDINGS, IDEOLOGIES, FACTIONS, GRID, RESOURCE_KEYS } from './data.js';
-import { canAfford, pay, uid, terrainAt, log } from './state.js';
+import { BUILDINGS, IDEOLOGIES, FACTIONS, RESOURCE_KEYS } from './data.js';
+import { canAfford, pay, uid, log } from './state.js';
+
+export function productionFactor(state, planet, building, resource, effects = policyEffects(state, planet.owner), tech = technologyEffects(state, planet.owner)) {
+  let factor = geologicalFactor(planet, building, resource) * (state.relations[planet.owner]?.embargo ? .85 : 1);
+  for (const e of state.effects ?? []) if (e.planet === planet.id && e.until > state.day && (e.id === 'energyHarvest' && resource === 'energy' || e.id === 'factoryUpgrade' && resource === 'alloy')) factor *= e.id === 'energyHarvest' ? 1.2 : 1.15;
+  return factor * (tech[resource === 'fuel' ? 'reactorFuel' : resource] ?? 1) * (resource === 'weapons' ? effects.militaryProduction : effects.civilianProduction) * effects.production;
+}
+export function buildingPotential(state, planet, building) {
+  return Object.fromEntries(Object.entries(BUILDINGS[building.type].output ?? {}).map(([k, v]) => [k, v * productionFactor(state, planet, building, k)]));
+}
 
 export function housing(state, planet) { return planet.buildings.filter(b => BUILDINGS[b.type].housing && b.remaining <= 0 && b.enabled).reduce((n, b) => n + BUILDINGS[b.type].housing * technologyEffects(state, planet.owner).housing, 0); }
 export function workforce(state, planet) {
@@ -15,9 +24,7 @@ export function placeBuilding(state, planet, type, x, y) {
   if (!Object.hasOwn(BUILDINGS, type) || !planet || planet.owner !== 'player') return 'Hier kannst du nicht bauen.';
   if (def.requiredTech && !state.tech.includes(def.requiredTech)) return 'Die erforderliche Technologie fehlt.';
   const blocked=buildingBlock(state,planet,type);if(blocked)return blocked;
-  if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x >= GRID.width || y >= GRID.height) return 'Wähle eine Baufläche.';
-  if (['water', 'cliff', 'void'].includes(terrainAt(planet, x, y))) return 'Diese Fläche ist nicht bebaubar.';
-  if (planet.buildings.some(b => b.x === x && b.y === y)) return 'Diese Fläche ist bereits bebaut.';
+  const siteError = placementIssue(planet, x, y); if (siteError) return siteError;
   if (!canAfford(state, planet, def.cost)) return 'Es fehlen Baumaterial oder Credits auf diesem Planeten.';
   pay(state, planet, def.cost);
   planet.buildings.push({ id: uid(state, 'b'), type, x, y, remaining: def.days, enabled: true, status: 'Bau' });
@@ -59,14 +66,7 @@ export function simulatePlanet(state, planet, options = {}) {
     workers -= def.workers; used += def.workers;
     for (const [k, v] of Object.entries(inputs)) planet.stock[k] -= v;
     for (const [k, v] of Object.entries(def.output ?? {})) {
-      let factor = k === 'ore' ? planet.oreFactor : k === 'energy' && b.type === 'solar' ? planet.solarFactor : 1;
-      if(b.type==='farm')factor*=PLANET_FACTORS[planet.kind]?.food??1;
-      if(k==='crystal')factor*=PLANET_FACTORS[planet.kind]?.crystal??1;
-      if(def.factor)factor*=PLANET_FACTORS[planet.kind]?.[def.factor]??1;
-      factor *= (state.relations[planet.owner]?.embargo ? .85 : 1);
-      for (const e of state.effects ?? []) if (e.planet === planet.id && e.until > state.day && (e.id === 'energyHarvest' && k === 'energy' || e.id === 'factoryUpgrade' && k === 'alloy')) factor *= e.id === 'energyHarvest' ? 1.2 : 1.15;
-      factor *= (tech[k==='fuel'?'reactorFuel':k]??1) * (k === 'weapons' ? effects.militaryProduction : effects.civilianProduction);
-      const output=v*factor*effects.production;planet.stock[k]+=output;productionByResource[k]+=output;
+      const output = v * productionFactor(state, planet, b, k, effects, tech); planet.stock[k] += output; productionByResource[k] += output;
     }
     science += (def.science ?? 0) * regime.science * effects.science * tech.science;
     b.status = 'aktiv';

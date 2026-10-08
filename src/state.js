@@ -2,15 +2,10 @@ import { initialFactions, FOREIGN_FACILITIES } from './foreign.js';
 import { initialRelationExtras } from './diplomacy.js';
 import { initialEventSchedule } from './events.js';
 import { initialGovernance } from './governance.js';
-import { PLANET_SEEDS, FACTIONS, GRID, SAVE_VERSION, RESOURCE_KEYS } from './data.js';
+import { PLANET_SEEDS, FACTIONS, SAVE_VERSION, RESOURCE_KEYS } from './data.js';
+export { terrainClassAt as terrainAt } from './surface.js';
 
 export const makeStock = (overrides = {}) => Object.assign(Object.fromEntries(RESOURCE_KEYS.map(k => [k, 0])), overrides);
-export function terrainAt(planet, x, y) {
-  if (x < 0 || y < 0 || x >= GRID.width || y >= GRID.height) return 'void';
-  const n = ((x * 37 + y * 53 + planet.seed * 17) % 101) / 101;
-  if ((x < 2 && y > 7) || (x > 9 && y < 4)) return planet.kind === 'Ozeanisch' ? 'water' : 'cliff';
-  return n < .1 ? 'rock' : n < .32 ? 'rough' : 'ground';
-}
 export function initialBuildings(prefix) {
   return [ ['habitat', 4, 7], ['habitat', 5, 7], ['habitat', 6, 7], ['farm', 4, 6], ['solar', 5, 6], ['mine', 6, 6], ['foundry', 4, 5], ['optics', 5, 5], ['lab', 6, 5], ['shipyard', 6, 8] ].map(([type, x, y], i) => ({ id: `${prefix}-b${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' }));
 }

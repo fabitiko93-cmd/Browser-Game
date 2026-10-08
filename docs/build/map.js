@@ -1,12 +1,11 @@
-import { GRID, SYSTEMS, BUILDINGS, FACTIONS } from './data.js';
-import { terrainAt } from './state.js';
+import { GRID, SYSTEMS, FACTIONS } from './data.js';
+import { SurfaceRenderer } from './surface-renderer.js';
+import { surfaceName } from './surface.js';
 
-const COLORS = { ground: '#26344c', rough: '#31415b', rock: '#414660', cliff: '#10182d', water: '#142d54' };
-function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 export class MapRenderer {
   constructor(canvas, state, ui, tap) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.state = state; this.ui = ui; this.tap = tap;
-    this.width = 1; this.height = 1; this.hits = []; this.pointers = new Map(); this.dragged = false; this.camera = { x: 0, y: 0, zoom: 1 }; this.lastView = '';
+    this.width = 1; this.height = 1; this.hits = []; this.pointers = new Map(); this.dragged = false; this.camera = { x: 0, y: 0, zoom: 1 }; this.lastView = ''; this.surfaceRenderer = new SurfaceRenderer();
     this.observer = new ResizeObserver(() => this.resize()); this.observer.observe(canvas);
     canvas.addEventListener('pointerdown', e => this.pointerDown(e));
     canvas.addEventListener('pointermove', e => this.pointerMove(e));
@@ -21,7 +20,7 @@ export class MapRenderer {
     this.canvas.width = Math.round(rect.width * dpr); this.canvas.height = Math.round(rect.height * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.dpr = dpr;
   }
-  resetCamera() { this.camera = { x: 0, y: 0, zoom: 1 }; }
+  resetCamera() { this.camera = { x: 0, y: 0, zoom: 1 }; this.surfaceFocusKey = ''; }
   point(e) { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
   pointerDown(e) {
     this.canvas.setPointerCapture(e.pointerId);
@@ -80,62 +79,34 @@ export class MapRenderer {
   }
   surface(ctx, w, h, time) {
     const p = this.state.planets.find(p => p.id === this.ui.planetId);
-    if (p.destroyed) { ctx.fillStyle = '#c8a7c7'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('TRÜMMERFELD', w/2, h/2); return; }
-    const size = Math.min((w - 28) / GRID.width, (h - 40) / GRID.height) * this.camera.zoom;
-    const ox = w / 2 - GRID.width * size / 2 + this.camera.x, oy = h / 2 - GRID.height * size / 2 + this.camera.y;
+    if (p.destroyed) { ctx.fillStyle = '#c8a7c7'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('TRÜMMERFELD', w / 2, h / 2); return; }
+    const footer = this.ui.buildType ? 146 : this.ui.hints && p.owner === 'player' && !this.ui.panel ? 78 : 34;
+    const available = Math.max(100, h - 84 - footer);
+    const size = Math.min((w - 24) / GRID.width, Math.max(24, available / GRID.height)) * this.camera.zoom;
+    let ox = w / 2 - GRID.width * size / 2 + this.camera.x;
+    let oy = 84 + available / 2 - GRID.height * size / 2 + this.camera.y;
+    const tile = this.ui.buildType && this.ui.buildTile, focusKey = tile ? `${p.id}:${this.ui.buildType}:${tile.x},${tile.y}` : '';
+    if (focusKey && focusKey !== this.surfaceFocusKey) {
+      const px = ox + (tile.x + .5) * size, py = oy + (tile.y + .5) * size;
+      const dx = Math.max(12 + size / 2, Math.min(w - 12 - size / 2, px)) - px;
+      const dy = Math.max(84 + size / 2, Math.min(84 + available - size / 2, py)) - py;
+      this.camera.x += dx; this.camera.y += dy; ox += dx; oy += dy;
+    }
+    this.surfaceFocusKey = focusKey;
     this.tileSize = size; this.origin = { x: ox, y: oy };
-    const warm = p.kind === 'Vulkanisch' || p.kind === 'Industriewelt';
-    ctx.fillStyle = '#00000025'; roundRect(ctx, ox - 6, oy - 6, GRID.width * size + 12, GRID.height * size + 12, 14); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 84, w, available); ctx.clip();
+    this.surfaceRenderer.render(ctx, p, this.ui, { x: ox, y: oy, size }, time); ctx.restore();
     for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
-      const terrain = terrainAt(p, x, y), px = ox + x * size, py = oy + y * size;
-      ctx.fillStyle = warm && terrain === 'ground' ? '#51463e' : warm && terrain === 'rough' ? '#625245' : COLORS[terrain];
-      roundRect(ctx, px + .7, py + .7, size - 1.4, size - 1.4, 2); ctx.fill();
-      ctx.fillStyle = '#ffffff05'; ctx.fillRect(px + 2, py + 2, size - 4, 1);
-      if (terrain === 'rough') { ctx.strokeStyle = '#adc0a71b'; ctx.beginPath(); ctx.moveTo(px + size * .3, py + size * .7); ctx.lineTo(px + size * .7, py + size * .35); ctx.stroke(); }
-      if (terrain === 'rock') { ctx.fillStyle = warm ? '#978270' : '#6b7e72'; ctx.beginPath(); ctx.moveTo(px + size * .25, py + size * .65); ctx.lineTo(px + size * .42, py + size * .3); ctx.lineTo(px + size * .7, py + size * .55); ctx.lineTo(px + size * .65, py + size * .72); ctx.closePath(); ctx.fill(); }
-      if (terrain === 'cliff') { ctx.strokeStyle = '#5e797c45'; ctx.beginPath(); ctx.moveTo(px, py + size * .65); ctx.lineTo(px + size * .6, py + size * .25); ctx.lineTo(px + size, py + size * .4); ctx.stroke(); }
-      this.hits.push({ kind: 'tile', x: px, y: py, w: size, h: size, tx: x, ty: y });
+      const px = Math.max(0, ox + x * size), py = Math.max(84, oy + y * size);
+      const right = Math.min(w, ox + (x + 1) * size), bottom = Math.min(84 + available, oy + (y + 1) * size);
+      if (right > px && bottom > py) this.hits.push({ kind: 'tile', x: px, y: py, w: right - px, h: bottom - py, tx: x, ty: y });
     }
-    const built = p.buildings.filter(b => b.remaining <= 0);
-    ctx.strokeStyle = '#9dab925a'; ctx.lineWidth = Math.max(2, size * .11);
-    for (const a of built) for (const b of built) if (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1) {
-      ctx.beginPath(); ctx.moveTo(ox + (a.x + .5) * size, oy + (a.y + .5) * size); ctx.lineTo(ox + (b.x + .5) * size, oy + (b.y + .5) * size); ctx.stroke();
-    }
-    for (const b of p.buildings) {
-      const def = BUILDINGS[b.type], px = ox + b.x * size, py = oy + b.y * size;
-      ctx.save(); ctx.shadowColor = '#00000070'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-      ctx.fillStyle = '#111f25'; roundRect(ctx, px + size * .12, py + size * .15, size * .76, size * .7, 3); ctx.fill(); ctx.restore();
-      ctx.fillStyle = b.remaining > 0 ? '#526266' : def.color; roundRect(ctx, px + size * .16, py + size * .1, size * .68, size * .56, 2); ctx.fill();
-      if (b.type === 'solar') {
-        ctx.fillStyle = '#254862'; ctx.fillRect(px + size * .23, py + size * .17, size * .54, size * .4);
-        ctx.strokeStyle = '#789cc0'; ctx.lineWidth = .7;
-        for (let j = 1; j < 3; j++) { ctx.beginPath(); ctx.moveTo(px + size * (.23 + .18 * j), py + size * .17); ctx.lineTo(px + size * (.23 + .18 * j), py + size * .57); ctx.stroke(); }
-        ctx.beginPath(); ctx.moveTo(px + size * .23, py + size * .37); ctx.lineTo(px + size * .77, py + size * .37); ctx.stroke();
-      } else if (b.type === 'farm') {
-        ctx.fillStyle = '#38553a'; for (let j = 0; j < 3; j++) { roundRect(ctx, px + size * .23, py + size * (.18 + j * .13), size * .54, size * .09, 2); ctx.fill(); }
-      } else if (b.type === 'habitat') {
-        ctx.fillStyle = '#3a5360'; ctx.fillRect(px + size * .28, py + size * .16, size * .44, size * .42);
-        ctx.fillStyle = '#dfd9ae'; for (let i = 0; i < 4; i++) ctx.fillRect(px + size * (.33 + (i % 2) * .22), py + size * (.21 + Math.floor(i / 2) * .2), size * .09, size * .1);
-      } else {
-        ctx.fillStyle = '#22333b'; ctx.font = `600 ${Math.max(10, size * .37)}px system-ui`; ctx.textAlign = 'center'; ctx.fillText(def.glyph, px + size * .5, py + size * .51);
-      }
-      ctx.fillStyle = b.remaining > 0 ? '#d4b481' : b.enabled && b.status === 'aktiv' ? '#99b7ff' : '#e3a071';
-      ctx.beginPath(); ctx.arc(px + size * .8, py + size * .79, Math.max(2, size * .06), 0, Math.PI * 2); ctx.fill();
-      if (b.id === this.ui.selectedBuilding) { ctx.strokeStyle = '#c3d1ff'; ctx.lineWidth = 2; roundRect(ctx, px + 1, py + 1, size - 2, size - 2, 3); ctx.stroke(); }
-    }
-    const tile = this.ui.buildTile;
-    if (this.ui.buildType && tile) {
-      const valid = !['water', 'cliff', 'void'].includes(terrainAt(p, tile.x, tile.y)) && !p.buildings.some(b => b.x === tile.x && b.y === tile.y);
-      const px = ox + tile.x * size, py = oy + tile.y * size;
-      ctx.fillStyle = valid ? '#89aaff50' : '#e58c8b60'; ctx.fillRect(px, py, size, size); ctx.strokeStyle = valid ? '#c0cfff' : '#e58c8b'; ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, size - 2, size - 2);
-    }
-    if (this.ui.buildType) {
-      ctx.strokeStyle = '#aabaff1c'; ctx.lineWidth = 1;
-      for (let x = 0; x <= GRID.width; x++) { ctx.beginPath(); ctx.moveTo(ox + x * size, oy); ctx.lineTo(ox + x * size, oy + GRID.height * size); ctx.stroke(); }
-    }
-    if (p.owner) {
-      ctx.fillStyle = '#c7d3f2'; ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillText('NORDSEKTOR', ox + 5, oy - 12);
-      const pulse = .3 + .3 * Math.sin(time * .001); ctx.globalAlpha = pulse; ctx.fillStyle = '#aeacff'; ctx.fillRect(ox + GRID.width * size - 26, oy - 17, 4, 4); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#b0c3e0'; ctx.font = '9px system-ui'; ctx.textAlign = 'left';
+    if (oy >= 100) ctx.fillText(surfaceName(p).toLocaleUpperCase('de-DE'), ox + 4, oy - 9);
+    if (!this.ui.buildType) {
+      const legendY = Math.min(oy + GRID.height * size + 17, 84 + available + 17);
+      ctx.font = '9px system-ui'; ctx.fillStyle = '#d3bea2'; ctx.fillText('◇ Erzader', 16, legendY);
+      ctx.fillStyle = '#efb993'; ctx.fillText('≋ Wärmequelle', 98, legendY);
     }
   }
   planetBody(ctx, x, y, r, p, time) {
@@ -166,7 +137,7 @@ export class MapRenderer {
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 78 * zoom); glow.addColorStop(0, `${system.color}65`); glow.addColorStop(1, `${system.color}00`); ctx.fillStyle = glow; ctx.fillRect(cx - 78 * zoom, cy - 78 * zoom, 156 * zoom, 156 * zoom);
     ctx.shadowColor = system.color; ctx.shadowBlur = 20; ctx.fillStyle = this.state.destroyedSystems.includes(system.id) ? '#473954' : system.color; ctx.beginPath(); ctx.arc(cx, cy, 14 * zoom, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#ddc99e'; ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(system.name.toUpperCase(), cx, cy + 33 * zoom);
-    const positions = [ [-.9, -.65], [.82, .35], [-.37, 1.6] ];
+    const positions = [ [-.9, -.65], [.82, .35], [-.37, 1.6], [.9, -1.05] ];
     for (let i = 0; i < planets.length; i++) {
       const [dx, dy] = positions[i], x = cx + dx * orbitRadius, y = cy + dy * orbitRadius;
       this.planetBody(ctx, x, y, 20 * zoom, planets[i], time);

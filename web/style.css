@@ -90,3 +90,14 @@
 .tech-node.researched .tech-status.complete{font-size:23px;font-weight:600;top:9px;height:22px}
 .tech-node.researched.tech-upgrade .tech-status.complete{top:7px}
 .tech-completion{color:#95d8bd;font-size:11px;letter-spacing:1px;font-weight:600}
+
+/* Geological inspection and construction remain compact in portrait. */
+.surface-overview{display:block;width:100%;min-height:54px;padding:9px 11px;margin:0 0 12px;text-align:left;background:#111a32;border:1px solid var(--line);border-radius:10px;color:#c3d6ed;font-size:12px}
+.surface-overview small{display:block;font-size:9px;color:var(--muted);line-height:1.6;margin-top:3px}
+.site-summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;font-size:10px;color:#c1cde4;line-height:1.5;margin:6px 0 8px}
+.site-summary>span:last-child{color:var(--muted)}.site-summary strong{font-weight:600}
+.build-instruction .site-output{font-size:10px;line-height:1.5;margin-bottom:5px}.site-output strong{font-weight:500;color:#d8e8ff}
+.build-instruction>strong{display:block;font-weight:500;margin-bottom:3px}.build-instruction p{font-size:10px;line-height:1.5}
+.construction-status{font-size:10px;color:var(--gold);padding:8px 0 14px}.construction-status .progress{margin-top:6px}.construction-status .progress span{background:var(--gold)}
+.geology-card .site-summary{border-top:1px solid var(--line);padding-top:10px}
+@media(max-width:360px){.build-instruction{padding:8px 9px}.build-instruction .button{padding:9px 8px;font-size:11px}.map-foot{left:12px;right:61px}.site-summary{font-size:9px}}
