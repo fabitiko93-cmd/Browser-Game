@@ -10,6 +10,8 @@ import { RESOURCE_KEYS } from './data.js';
 import { tickPolitics } from './politics.js';
 import { tickShipyards, tickFleets, tickOpponents } from './fleets.js';
 import { tickResearch } from './research.js';
+import { tickExplorationAI } from './exploration.js';
+import { tickCommunications } from './communications.js';
 
 export function stepDay(state) {
   state.day++;
@@ -19,6 +21,7 @@ export function stepDay(state) {
   const afterRecurring = new Map(state.planets.map(p => [p.id, { ...p.stock }]));
   tickShipyards(state); tickResearch(state); tickForeignDevelopment(state); tickFleets(state, { economyProcessed: true }); tickOpponents(state); tickPolitics(state);
   tickGovernance(state); tickContracts(state); tickStrikes(state); tickGoals(state); tickDiplomacy(state); tickEvents(state);
+  tickExplorationAI(state); tickCommunications(state);
   budget.oneOff = state.credits - openingCredits - budget.actual;
   budget.actual = state.credits - openingCredits;
   budget.resources = Object.fromEntries(state.planets.filter(p => p.owner === 'player').map(p => [p.id, Object.fromEntries(RESOURCE_KEYS.map(k => [k, { recurring: afterRecurring.get(p.id)[k] - before.get(p.id)[k], oneOff: p.stock[k] - afterRecurring.get(p.id)[k] }]))]));

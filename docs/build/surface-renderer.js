@@ -49,7 +49,7 @@ export class SurfaceRenderer {
     }
     return this.buildingCache.get(key);
   }
-  render(ctx, planet, ui, { x, y, size }) {
+  render(ctx, planet, ui, { x, y, size }, signal = null) {
     const width = GRID.width * size, height = GRID.height * size;
     ctx.fillStyle = '#00000025'; roundRect(ctx, x - 6, y - 6, width + 12, height + 12, 14); ctx.fill();
     ctx.drawImage(this.terrain(planet, size), x, y, width, height);
@@ -63,6 +63,7 @@ export class SurfaceRenderer {
     }
     for (const b of planet.buildings) {
       ctx.drawImage(this.buildingImage(b, size), (b.x - .25) * size, (b.y - .25) * size, size * 1.5, size * 1.5);
+      if (b.type==='commCenter'&&!b.remaining&&signal) this.communicationRoof(ctx,b,size,signal);
       if (ui.panel === 'building' && b.id === ui.selectedBuilding) this.selection(ctx, b.x * size, b.y * size, size);
     }
     if (ui.buildType && ui.buildTile) {
@@ -78,5 +79,14 @@ export class SurfaceRenderer {
   }
   selection(ctx, x, y, size) {
     ctx.strokeStyle = '#c3d1ff'; ctx.lineWidth = 2; roundRect(ctx, x + 1, y + 1, size - 2, size - 2, 3); ctx.stroke();
+  }
+  communicationRoof(ctx,b,size,signal) {
+    const label=String(signal.count),font=Math.max(12,Math.min(17,size*.46));
+    ctx.save();ctx.font=`700 ${font}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const width=Math.max(18,ctx.measureText(label).width+8),height=font+4,cx=(b.x+.5)*size,cy=(b.y+.35)*size;
+    ctx.fillStyle='#101b31';roundRect(ctx,cx-width/2,cy-height/2,width,height,3);ctx.fill();
+    ctx.fillStyle=signal.count===0?'#93a6bf':signal.urgent?'#ff956f':'#ffd479';ctx.fillText(label,cx,cy+.5);
+    if(signal.unread){ctx.fillStyle='#a7d7ff';ctx.beginPath();ctx.arc(cx+width/2-1,cy-height/2,3,0,Math.PI*2);ctx.fill();}
+    ctx.restore();
   }
 }

@@ -1,6 +1,7 @@
 import { NEW_RESOURCES, DEVELOPMENT_BUILDINGS, BULK_SHIPS } from './development-data.js';
 import { MILITARY_BUILDINGS } from './military-data.js';
-export const SAVE_VERSION = 6;
+import { DEEP_SYSTEMS, DEEP_PLANETS, EXPLORATION_BUILDINGS, EXPLORATION_SHIPS } from './exploration-data.js';
+export const SAVE_VERSION = 7;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {
@@ -14,6 +15,7 @@ export const RESOURCES = {
   weapons: { name: 'Laserwaffen', short: 'LAS', color: '#e58c8b' }
 };
 export const BUILDINGS = {
+  ...EXPLORATION_BUILDINGS,
   ...MILITARY_BUILDINGS,
   ...DEVELOPMENT_BUILDINGS,
   habitat: { name: 'Wohnquartier', group: 'Bevölkerung', glyph: 'H', color: '#a1c7d2', cost: { credits: 60, alloy: 18 }, days: 3, workers: 0, upkeep: 1, housing: 80, description: 'Wohnraum für 80 Einwohner. Versorgte Städte ziehen neue Bewohner an.' },
@@ -25,7 +27,7 @@ export const BUILDINGS = {
   optics: { name: 'Optikfabrik', group: 'Industrie', glyph: 'O', color: '#85c6cb', cost: { credits: 80, alloy: 24 }, days: 3, workers: 12, upkeep: 3, input: { ore: 2, energy: 4 }, output: { optics: 3 }, description: 'Präzisionsbauteile für Laserwaffen und Raumschiffe.' },
   laser: { name: 'Laserfabrik', group: 'Industrie', glyph: 'L', color: '#d58e8a', cost: { credits: 110, alloy: 28 }, days: 4, workers: 18, upkeep: 4, input: { alloy: 3, optics: 2, crystal: 1, energy: 5 }, output: { weapons: 3 }, description: 'Eine vollständige Produktionskette für die Bewaffnung deiner Flotte.' },
   lab: { name: 'Forschungslabor', group: 'Wissenschaft', glyph: 'R', color: '#9bace0', cost: { credits: 85, alloy: 22 }, days: 3, workers: 12, upkeep: 4, input: { energy: 4 }, science: 4, description: 'Erzeugt Forschungspunkte. Forschungspolitik und wissenschaftliche Infrastruktur beeinflussen den Ertrag.' },
-  shipyard: { name: 'Raumwerft', group: 'Militär', glyph: 'W', color: '#7fadb8', cost: { credits: 140, alloy: 45 }, days: 5, workers: 16, upkeep: 5, input: { energy: 2 }, description: 'Baut elf spezialisierte Klassen von Raumfahrzeugen. Baupläne werden durch Forschung erschlossen.' }
+  shipyard: { name: 'Raumwerft', group: 'Militär', glyph: 'W', color: '#7fadb8', cost: { credits: 140, alloy: 45 }, days: 5, workers: 16, upkeep: 5, input: { energy: 2 }, description: 'Baut zwölf spezialisierte Klassen von Raumfahrzeugen. Baupläne werden durch Forschung erschlossen.' }
 };
 export const IDEOLOGIES = {
   democracy: { name: 'Demokratie', description: 'Gewählte Regierung, politische Opposition und gleiche Bürgerrechte für alle Spezies.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'open', citizenship: 'Gleiche Bürgerrechte', leadership: 'Gewählte Regierung', repression: 'Gering', term: 60 },
@@ -37,8 +39,9 @@ export const IDEOLOGIES = {
 };
 export { TECHNOLOGIES } from './technology-data.js';
 export const SHIPS = {
+  ...EXPLORATION_SHIPS,
   ...BULK_SHIPS,
-  scout: { requiredTech: 'engineTuning', name: 'Aufklärer', color: '#a9dce1', cost: { credits: 65, alloy: 20, optics: 8, energy: 10 }, days: 3, strength: 3, armor: 0, speed: 1.5, upkeep: 1, troops: 0, cargo: 0, description: 'Schnelles Forschungsschiff. Erkundung liefert einmalig 45 Forschung pro Zielplanet.' },
+  scout: { requiredTech: 'engineTuning', name: 'Erkunder', color: '#a9dce1', cost: { credits: 65, alloy: 20, optics: 8, energy: 10 }, days: 3, strength: 0, armor: 0, speed: 1.5, upkeep: 1, troops: 0, cargo: 0, description: 'Kartiert neue Flugrouten und prüft Bewohnung aus sicherer Entfernung. Liefert keine Regierungs-, Oberflächen- oder Militärdaten. Zieht sich bei bewohnten Welten zurück; aggressive Bewohner können das Schiff zerstören.' },
   destroyer: { requiredTech: 'lasers', name: 'Laserzerstörer', color: '#e1a38b', cost: { credits: 230, alloy: 80, optics: 20, weapons: 30, energy: 30 }, days: 7, strength: 36, armor: .2, speed: 1, upkeep: 3, troops: 0, cargo: 0, description: 'Schwerer Begleitschutz mit 20 % Schadensreduktion und 36 Grundstärke.' },
   cruiser: { requiredTech: 'coordination', name: 'Schlachtkreuzer', color: '#bd9cdc', cost: { credits: 420, alloy: 140, optics: 35, weapons: 55, energy: 50 }, days: 10, strength: 65, armor: .35, speed: .8, upkeep: 6, troops: 0, cargo: 0, description: '65 Grundstärke und 35 % Schadensreduktion. Langsam und teuer im Unterhalt.' },
   heavyFreighter: { requiredTech: 'logistics', name: 'Großfrachter', color: '#e4c893', cost: { credits: 190, alloy: 65, energy: 25 }, days: 6, strength: 0, armor: .1, speed: .8, upkeep: 2, troops: 0, cargo: 200, description: 'Transportiert 200 Waren pro Reise. Größere Lieferung bei längerer Reisezeit.' },
@@ -57,7 +60,9 @@ const frontierSystems = [
   ['aurora','Aurora',.18,.44,'#96b8fa'],['lyra','Lyra',.5,.44,'#e6a8dc'],['draco','Draco',.82,.44,'#ffac91'],
   ['orion','Orion',.18,.74,'#b7a3fc'],['caelum','Caelum',.5,.74,'#a8d3eb'],['erebus','Erebus',.82,.74,'#eece8e']
 ].map(([id,name,x,y,color])=>({id,name,x,y,color,description:'Grenzsystem mit neuen Kolonien und befestigten Außenposten.'}));
-SYSTEMS.push(...frontierSystems);
+SYSTEMS.push(...frontierSystems, ...DEEP_SYSTEMS);
+// A fourth row keeps the additional frontier readable in portrait orientation.
+for (const s of SYSTEMS) if (!s.uncharted) s.y = s.y < .3 ? .13 : s.y < .6 ? .38 : .63;
 export const PLANET_SEEDS = [
   { id: 'nereid', name: 'Nereid', system: 'helios', owner: 'player', kind: 'Temperiert', color: '#7892d9', seed: 31, oreFactor: 1, solarFactor: 1, population: 180, aliens: .12, orbit: 0 },
   { id: 'cinder', name: 'Cinder', system: 'helios', owner: null, kind: 'Vulkanisch', color: '#d98d63', seed: 72, oreFactor: 1.6, solarFactor: 1.15, population: 0, aliens: 0, orbit: 1 },
@@ -76,6 +81,7 @@ PLANET_SEEDS.push(
   {id:'collective',name:'Synara',system:'caelum',owner:'collective',kind:'Industriewelt',color:'#e3a8bb',seed:241,oreFactor:1.15,solarFactor:.9,population:260,aliens:.7,orbit:3,frontier:true},
   {id:'vanguard',name:'Bastion',system:'erebus',owner:'vanguard',kind:'Eiswelt',color:'#9ac9c1',seed:252,oreFactor:1.2,solarFactor:.7,population:240,aliens:.4,orbit:3,frontier:true}
 );
+PLANET_SEEDS.push(...DEEP_PLANETS);
 export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const FACTIONS = {
   corona:{name:'Sternenkrone Corona',species:'Menschen / Ilyri',color:'#e9cd95',ideology:'monarchy',goal:'Versorgung und stabile Handelsverbindungen',priority:'goods',research:'colonies'},

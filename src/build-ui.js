@@ -5,7 +5,7 @@ export const BUILD_CATEGORIES = {
  supply:{name:'Versorgung',icon:'E',text:'Nahrung und Energie',buildings:['farm','synthesis','solar','geothermal','fusionPlant','reactor']},
  resources:{name:'Rohstoffe',icon:'M',text:'Erz und Kristalle fördern',buildings:['mine','deepMine','crystal','fuelExtractor']},
  industry:{name:'Industrie',icon:'S',text:'Legierungen, Optik und Waffen',buildings:['foundry','optics','laser','electronicsFactory','medicineFactory','goodsFactory','recycler']},
- science:{name:'Forschung',icon:'R',text:'Wissenschaftliche Infrastruktur',buildings:['lab','academy','embassy']},
+ science:{name:'Forschung & Kommunikation',icon:'R',text:'Wissenschaft und diplomatische Verbindung',buildings:['lab','academy','embassy','commCenter']},
  space:{name:'Raumfahrt',icon:'W',text:'Schiffe und Transport',buildings:['shipyard','depot','dryDock','tradePort']},
  defense:{name:'Verteidigung',icon:'D',text:'Festungen, Abfangnetze und Schilde',buildings:['bunker','orbitalGun','interceptor','shield','worldShield','stellarAegis']},
  strategic:{name:'Strategische Anlagen',icon:'X',text:'Fernraketen und Megawaffen',buildings:['missileSilo','planetLance','stellarForge']}

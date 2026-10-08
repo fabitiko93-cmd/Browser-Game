@@ -1,3 +1,4 @@
+import { portKnown } from './intelligence.js';
 import { circuitPanel } from './circuit-ui.js';
 import { marketPanel, contractsPanel } from './market-ui.js';
 import { SHIPS, RESOURCES, RESOURCE_KEYS, FACTIONS } from './data.js';
@@ -9,7 +10,7 @@ const num=v=>v.toLocaleString('de-DE',{maximumFractionDigits:1});
 const opts=(items,selected)=>items.map(([id,name])=>`<option value="${id}" ${id===selected?'selected':''}>${esc(name)}</option>`).join('');
 export function routeSelection(state,ui,p) {
  const ships=state.fleets.filter(f=>f.owner==='player'&&f.planetId===p.id&&SHIPS[f.type].cargo&&!f.mission&&!f.route);
- const targets=state.planets.filter(q=>q.id!==p.id&&!q.destroyed&&(q.owner==='player'||state.relations[q.owner]?.trade&&!state.relations[q.owner]?.war&&!state.relations[q.owner]?.embargo));
+ const targets=state.planets.filter(q=>portKnown(state,q)&&q.id!==p.id&&!q.destroyed&&(q.owner==='player'||state.relations[q.owner]?.trade&&!state.relations[q.owner]?.war&&!state.relations[q.owner]?.embargo));
  const f=ships.find(f=>f.id===ui.routeFleet)??ships[0],target=targets.find(q=>q.id===ui.routeTarget)??targets[0];
  const capacity=f?cargoCapacity(state,f.type):80,amount=Math.max(1,Math.min(Number(ui.amount)||40,capacity)),resource=RESOURCE_KEYS.includes(ui.cargo)?ui.cargo:'ore';
  return {ships,targets,f,target,capacity,amount,resource};

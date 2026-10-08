@@ -3,6 +3,7 @@ import { initialRelationExtras } from './diplomacy.js';
 import { initialEventSchedule } from './events.js';
 import { initialGovernance } from './governance.js';
 import { PLANET_SEEDS, FACTIONS, SAVE_VERSION, RESOURCE_KEYS } from './data.js';
+import { initializeIntelligence } from './intelligence.js';
 export { terrainClassAt as terrainAt } from './surface.js';
 
 export const makeStock = (overrides = {}) => Object.assign(Object.fromEntries(RESOURCE_KEYS.map(k => [k, 0])), overrides);
@@ -15,7 +16,7 @@ export function makePlanet(p) {
 }
 export function createGame() {
   const planets = PLANET_SEEDS.map(makePlanet);
-  return {
+  const state = {
     factions:initialFactions(), contracts:[], tradeLedger:[], effects: [], eventSchedule: initialEventSchedule(0), strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
     player: { name: FACTIONS.player.name, ideology: 'democracy', tax: .16, stability: 75, term: 60, rulingSupport: 55 },
     planets, tech: [], research: null,
@@ -23,6 +24,9 @@ export function createGame() {
     fleets: [ { id: 'starter-c', name: 'NU Vigil', type: 'corvette', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, servicing:false, supplySettings:{threshold:40,target:95,repairBelow:50,repairTo:95,homePort:'nereid',smart:false}, cargo:makeStock(), mission: null, route: null }, { id: 'starter-f', name: 'NU Meridian', type: 'freighter', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, servicing:false, supplySettings:{threshold:40,target:95,repairBelow:50,repairTo:95,homePort:'nereid',smart:false}, cargo:makeStock(), mission: null, route: null } ],
     logs: [{ day: 0, text: 'Nereid ist bereit. Baue deine Wirtschaft auf und erschließe die Sterne.', type: 'info' }], event: null, aiNext: 45
   };
+  initializeIntelligence(state);
+  state.communications = { messages: [], cooldowns: {}, nextOffer: 12, cursor: 0 };
+  return state;
 }
 export function uid(state, prefix) { return `${prefix}-${state.nextId++}`; }
 export function log(state, text, type = 'info', sound = null) {
@@ -31,6 +35,6 @@ export function log(state, text, type = 'info', sound = null) {
 }
 export const getPlanet = (state, id) => state.planets.find(p => p.id === id);
 export const ownedPlanets = state => state.planets.filter(p => p.owner === 'player');
-export function canAfford(state, planet, cost) { return Object.entries(cost).every(([k, v]) => (k === 'credits' ? state.credits : planet.stock[k] ?? 0) + 1e-8 >= v); }
-export function pay(state, planet, cost) { for (const [k, v] of Object.entries(cost)) { if (k === 'credits') state.credits -= v; else planet.stock[k] -= v; } }
+export function canAfford(state, planet, cost, owner = 'player') { return Object.entries(cost).every(([k, v]) => (k === 'credits' ? owner === 'player' ? state.credits : state.factions[owner].credits : planet.stock[k] ?? 0) + 1e-8 >= v); }
+export function pay(state, planet, cost, owner = 'player') { for (const [k, v] of Object.entries(cost)) { if (k === 'credits') { if (owner === 'player') state.credits -= v; else state.factions[owner].credits -= v; } else planet.stock[k] -= v; } }
 export function dateLabel(day) { const d = new Date(Date.UTC(3077, 0, 1 + day)); return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`; }

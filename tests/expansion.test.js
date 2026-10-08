@@ -57,13 +57,13 @@ test('version 1 saves migrate without losing buildings, stocks, population or mi
   const s = createGame(); orderFleet(s, ['starter-c'], 'cinder'); days(s, 2);
   const old = structuredClone(s); old.version = 1; old.planets = old.planets.slice(0, 7); delete old.governance; delete old.surveys;
   const loaded = parseImport(JSON.stringify(old));
-  assert.equal(loaded.version, 6); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
+  assert.equal(loaded.version, 7); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   assert.equal(loaded.credits, old.credits); assert.equal(loaded.day, 2);
   days(loaded, 5); assert.equal(loaded.fleets[0].planetId, 'cinder');
   loaded.governance.laws.economy = 'fake'; assert.throws(() => parseImport(exportGame(loaded)));
 });
-test('all eleven ship types build using current policy times and effective armor reduces battle damage', () => {
-  assert.equal(Object.keys(SHIPS).length, 11);
+test('all twelve ship types build using current policy times and effective armor reduces battle damage', () => {
+  assert.equal(Object.keys(SHIPS).length, 12);
   for (const type of Object.keys(SHIPS)) {
     const s = createGame(); s.credits = 10000; s.tech = SHIPS[type].requiredTech ? [SHIPS[type].requiredTech] : []; home(s).population = 240;
     for (const k of Object.keys(home(s).stock)) home(s).stock[k] = 10000;

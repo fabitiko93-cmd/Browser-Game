@@ -4,6 +4,20 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Erkundung & Kommunikation · 0.7
+
+- Zwölf Sterne und 37 Planeten. Drei neue Systeme mit neun unbewohnten Welten liegen außerhalb der kartierten Flugrouten. In der Sternenkarte einen unkartierten Stern wählen und einen Erkunder losschicken; nach erfolgreicher Übertragung können andere Schiffe folgen. Flüge ohne vorhandene Sprungkorridore kosten mehr Energie und dauern länger. Neue Raumtore werden noch nicht gebaut.
+- Erkunder sind unbewaffnet und melden vor allem Bewohnung. Sie halten Abstand zu fremden Bewohnern und ziehen sich zurück; aggressive Abwehr kann sie vor der Datenübertragung zerstören. Ein Verlust erteilt keine kostenlosen Informationen.
+- „Planetare Analyseverfahren“ schaltet Analysesonden frei. Ein manueller Scan kostet 60 Credits, 8 Energie und 2 Optik zusätzlich zur Startenergie, dauert nach der Ankunft sechs Tage und erschließt Geologie und Gelände. Die Sonde kehrt zurück. Bevölkerung, Regierung und Militär bleiben davon verborgen.
+- Das Planetendossier trennt Astronomie, Bewohnung, Zugehörigkeit, Gesellschaft, Oberfläche und Gefechtsbeobachtung. Informationen erhalten Quelle, Datum und Qualität; ältere Beobachtungen bleiben als solche gespeichert. Eigene Planeten zeigen aktuelle Verwaltungsdaten. Ein tatsächlicher Hafenbesuch bei einem Handelspartner erschließt zivile Einblicke, keine geheimen Militäranlagen.
+- Karten, Oberflächen, Diplomatie, Märkte und Zielauswahl berücksichtigen denselben Wissensstand. Fremde interne Vorräte und Produktionsketten sind verborgen; öffentliche Marktpreise und konkrete Handelsangebote bleiben verfügbar. Beim Betrachten fremder Planeten zeigt das HUD weiterhin die Vorräte einer eigenen Kolonie.
+- Die KI besitzt getrennte Wissensarchive und nutzt dieselben Schiffsbau-, Erkundungs- und Scanaufträge mit eigenen Kosten, Reisezeiten und Forschungsvoraussetzungen. Angriffsziele werden aus bekannten Beobachtungen gewählt; Gefechte selbst werden anhand der tatsächlichen Verteidigung aufgelöst.
+- Subraum-Kommunikation schaltet die Kommunikationszentrale frei: maximal eine je Planet, gemeinsam genutzter reichsweiter Posteingang, Zugang durch Antippen des Gebäudes. Die Dachzahl zählt gültige, unbeantwortete Anfragen/Angebote: 0 in Blaugrau, offene Anfragen in Amber, bei höchstens sieben Tagen Restfrist in Orange. Ein separater blauer Punkt kennzeichnet ungelesene Erklärungen.
+- Handels- und Paktangebote können angenommen, abgelehnt oder zurückgezogen werden. Unbeantwortete Angebote laufen nach 30 Tagen aus; eigene Angebote werden nach drei Tagen geprüft. Ignorieren verursacht keine pauschale Beziehungsstrafe. Neue Korrespondenz erzeugt nur einen kurzen Hinweis. Eine Reichsanfrage höchstens alle 48 Tage; je Absender mindestens 120 Tage Abstand und keine parallelen Doppelverhandlungen.
+- Abbau, Verlust oder Neubau einer Zentrale löscht die Korrespondenz nicht. v1–v6-Spielstände werden auf v7 übernommen; bestehende Kolonien, Bestände und laufende Handelsrouten bleiben erhalten. Kacheln, Gebäude und Forschungsgrafik behalten den bisherigen Stil.
+
+Spionage, Informationsabkommen, automatische Scans, Misstrauen/Angst, Space News, Cluster-Dominanz und Täuschungskampagnen sind für spätere Patches vorgesehen.
+
 ## Planetarer Basenbau
 
 - Die Karte verwendet die bisherigen Kacheln und Gebäudegrafiken. Erzflächen sind kühl eingefärbt und nutzen die vorhandene Steinform; Wärmequellen sind warm eingefärbt und zeigen einfache Gelände-Striche. Helle Erzkerne liefern den stärkeren Bonus. Eine kleine Legende erklärt die Farben.
@@ -27,7 +41,7 @@ Arbeitstitel: ORBIT 3077.
 - Ereignisse mit Entscheidungen, automatische lokale Speicherung und Spielstanddateien.
 - Pause und Zeitbeschleunigung; nach erfolgreicher Installation der Offline-Dateien auch ohne Netz spielbar.
 
-Die erste Fassung ist ein spielbarer Grundstock. Gegner bauen noch keine eigenen neuen Kolonien und keine frei beweglichen Flottenverbände.
+Die erste Fassung ist ein spielbarer Grundstock. Gegner bauen noch keine eigenen neuen Kolonien oder frei organisierten Kampfverbände; ihre Erkundungs- und Analyseschiffe reisen bereits selbstständig.
 Ihre Gegenangriffe werden als Überfälle berechnet. Komplexe Befehlshierarchien, eigene Parteienorganisationen, Bodenkampfzonen,
 vollständige Sternenreisen und Multiplayer sind noch nicht implementiert.
 Ideologien und Zahlen sind Spielregeln der fiktiven Welt und keine historischen Modelle.
@@ -54,7 +68,7 @@ Automatische Speicherung gehört zum jeweiligen Browser und Gerät. Vor Gerätew
 4. Unter **Flotte → Raumwerft** ein Kolonieschiff fertigen.
 5. Unter **Flottenbefehle** das fertige Kolonieschiff auswählen, Cinder als Ziel wählen und kolonisieren.
 6. Waren zwischen Kolonien mit Frachtern bewegen. Für fremde Planeten zunächst ein Handelsabkommen schließen.
-7. Für Angriffe Krieg erklären; Korvetten und Landungsschiffe gemeinsam schicken. Gegnerische Verteidigung ist in den Planetendetails sichtbar.
+7. Für Angriffe Krieg erklären; Korvetten und Landungsschiffe gemeinsam schicken. Das Planetendossier zeigt nur tatsächlich bekannte Informationen; Gefechtsbeobachtungen können Hinweise auf die Verteidigung liefern.
 
 Gebäude antippen, um Betrieb oder Abbau zu verwalten. Zwei Finger zoomen, ein Finger verschiebt die Karte.
 Alle wichtigen Verwaltungsaktionen liegen im unteren Bildschirmbereich. Das Detailfenster lässt sich über den Griff vergrößern.

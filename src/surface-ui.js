@@ -40,12 +40,13 @@ export function compactSiteMarkup(state, ui, planet, costs) {
     if (!tile) return '';
     const type = tile.vent ? 'geothermal' : tile.ore ? 'mine' : null, def = BUILDINGS[type];
     const bonus = siteBonus(planet, type, tile.x, tile.y), issue = placementIssue(planet, tile.x, tile.y);
-    const tech = planet.owner && planet.owner !== 'player' ? state.factions?.[planet.owner]?.tech ?? [] : state.tech;
+    const tech = state.tech;
     const locked = def?.requiredTech && !tech.includes(def.requiredTech);
     header = heading(featureName(tile), `${sector(tile)}${bonus ? ` · ${bonusValue(bonus)} Ertrag` : ''}`, 'close', true);
     content = issue ? `<p class="site-warning">${issue}</p>` : def ? `<p class="site-card-note">${def.name}</p>${locked ? `<p class="site-warning">Benötigt: ${TECHNOLOGIES[def.requiredTech].name}</p>` : `<p class="site-card-output">${potentialMarkup(state, planet, { type, x: tile.x, y: tile.y })} / Tag</p>`}` : '<p class="site-card-note">Freie Baufläche · kein Standortbonus</p>';
     action = def && !issue && planet.owner === 'player' ? `<button class="button secondary site-card-action" data-action="build-start" data-type="${type}" data-x="${tile.x}" data-y="${tile.y}" ${locked ? 'disabled' : ''}>Planen</button>` : detailsButton();
   }
+  if(planet.knowledge&&!planet.own)content+='<p class="site-card-note">Oberflächenaufnahme · Bebauung nur teilweise bekannt</p>';
   return `<div class="compact-site">${header}<div class="site-card-row"><div class="site-card-summary">${content}</div>${action}</div></div>${surfaceLegend()}`;
 }
 export function siteMarkup(planet, type, x, y) {
@@ -55,7 +56,7 @@ export function siteMarkup(planet, type, x, y) {
   return `<div class="stat-line"><span>${feature}</span><strong>${bonus ? `Standortertrag <span class="effect-benefit">+${Math.round((bonus.factor - 1) * 100)} %</span>` : 'Kein Standortbonus'}</strong></div>`;
 }
 export function potentialMarkup(state, planet, building) {
-  const output = buildingPotential(state, planet.owner ? planet : { ...planet, owner: 'player' }, building);
+  const output = buildingPotential(state, planet.owner === 'player' ? planet : { ...planet, owner: 'player' }, building);
   return Object.entries(output).map(([resource, value]) => `<span><strong>${decimal(value)}</strong> ${RESOURCES[resource].name}</span>`).join(' · ');
 }
 export function constructionMarkup(building) {
@@ -74,7 +75,7 @@ export function terrainPanel(state, ui, planet) {
   if (!tile) return '<p class="empty">Wähle eine Fläche auf der Karte.</p>';
   const recommended = tile.vent ? 'geothermal' : tile.ore ? 'mine' : null, def = BUILDINGS[recommended];
   const issue = placementIssue(planet, tile.x, tile.y);
-  const tech = planet.owner && planet.owner !== 'player' ? state.factions?.[planet.owner]?.tech ?? [] : state.tech;
+  const tech = state.tech;
   const locked = def?.requiredTech && !tech.includes(def.requiredTech);
-  return `<p class="lede">${surfaceName(planet)} · Sektor ${tile.x + 1} / ${tile.y + 1}</p>${siteMarkup(planet, recommended, tile.x, tile.y)}${issue ? `<div class="alert">${issue}</div>` : recommended ? `<div class="detail-card"><strong>${def.name}</strong><div class="stat-line"><span>Ertrag bei Betrieb / Tag</span><strong>${potentialMarkup(state, planet, { type: recommended, x: tile.x, y: tile.y })}</strong></div>${locked ? `<p class="research-condition unmet">Benötigt: ${TECHNOLOGIES[def.requiredTech].name}</p>` : ''}${planet.owner === 'player' ? `<button class="button secondary" data-action="build-start" data-type="${recommended}" data-x="${tile.x}" data-y="${tile.y}" ${locked ? 'disabled' : ''}>Hier ${def.name} planen</button>` : ''}</div>` : '<p class="note">Freie Baufläche für Wohnraum, Industrie und planetare Basen.</p>'}<p class="note">Verbindungen entstehen automatisch. Sie belegen keine Bauflächen; die Versorgung erfolgt aus dem gemeinsamen Planetenvorrat.</p>`;
+  return `<p class="lede">${surfaceName(planet)} · Sektor ${tile.x + 1} / ${tile.y + 1}</p>${siteMarkup(planet, recommended, tile.x, tile.y)}${issue ? `<div class="alert">${issue}</div>` : recommended ? `<div class="detail-card"><strong>${def.name}</strong><div class="stat-line"><span>Ertrag deiner Anlage bei Betrieb / Tag</span><strong>${potentialMarkup(state, planet, { type: recommended, x: tile.x, y: tile.y })}</strong></div>${locked ? `<p class="research-condition unmet">Benötigt: ${TECHNOLOGIES[def.requiredTech].name}</p>` : ''}${planet.owner === 'player' ? `<button class="button secondary" data-action="build-start" data-type="${recommended}" data-x="${tile.x}" data-y="${tile.y}" ${locked ? 'disabled' : ''}>Hier ${def.name} planen</button>` : ''}</div>` : '<p class="note">Freie Baufläche für Wohnraum, Industrie und planetare Basen.</p>'}<p class="note">Verbindungen entstehen automatisch. Sie belegen keine Bauflächen; die Versorgung erfolgt aus dem gemeinsamen Planetenvorrat.</p>`;
 }

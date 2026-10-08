@@ -2,6 +2,7 @@ import { routePlanets } from './routing.js';
 import { serviceCount } from './infrastructure.js';
 import { FACTIONS } from './data.js';
 import { log, ownedPlanets } from './state.js';
+import { declareMessage } from './communications.js';
 export const initialRelationExtras = () => ({ pactUntil: 0, cooperation: false, embargo: false, envoyReady: 0, aidReady: 0, portAccess:false, researchPact:false, defensePact:false });
 export const cooperationCount = state => Object.values(state.relations).filter(r => r.cooperation && !r.war && !r.embargo).length;
 export const diplomacyScience = state => 1 + cooperationCount(state) * .08 + Object.values(state.relations).filter(r=>r.researchPact&&!r.war&&!r.embargo).length*.06;
@@ -28,6 +29,7 @@ export function treatyAction(state, faction, action) {
   } else if (action === 'cancel-pact') {
     if (r.pactUntil <= state.day) return 'Es besteht kein Nichtangriffspakt.';
     r.pactUntil = 0; r.score = Math.max(-100, r.score - 15); log(state, `Nichtangriffspakt mit ${FACTIONS[faction].name} gekündigt; Beziehungen −15.`, 'politics');
+    declareMessage(state,faction,'Pakt gekündigt','Unsere Regierung hat den Nichtangriffspakt gekündigt.');
   } else if (action === 'cancel-cooperation') {
     if (!r.cooperation) return 'Es besteht keine Partnerschaft.';
     r.cooperation = false; r.score = Math.max(-100, r.score - 10); log(state, `Partnerschaft mit ${FACTIONS[faction].name} beendet.`, 'politics');
@@ -43,7 +45,7 @@ export function treatyAction(state, faction, action) {
 }
 export function tickDiplomacy(state) {
   for (const [id,r] of Object.entries(state.relations)) {
-    if (r.pactUntil && r.pactUntil <= state.day) { r.pactUntil = 0; log(state, `Nichtangriffspakt mit ${FACTIONS[id].name} ausgelaufen.`, 'politics'); }
+    if (r.pactUntil && r.pactUntil <= state.day) { r.pactUntil = 0; declareMessage(state,id,'Nichtangriffspakt ausgelaufen','Der vereinbarte Nichtangriffspakt ist ausgelaufen. Es besteht weiterhin Frieden.',true); }
     if (!state.planets.some(p=>p.owner===id)) { r.cooperation = false; r.trade = false;r.portAccess=false;r.researchPact=false;r.defensePact=false; }
     if ((r.cooperation||r.defensePact) && !r.war && !r.embargo && state.day >= r.aidReady && Object.values(state.relations).some(q=>q.war)) {
       const supplier = state.planets.find(p=>p.owner===id && p.stock.alloy>=12 && p.stock.weapons>=4), target = ownedPlanets(state)[0];

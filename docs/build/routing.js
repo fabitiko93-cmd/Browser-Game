@@ -1,3 +1,4 @@
+import { reachablePlanet } from './intelligence.js';
 import { RESOURCE_KEYS, SHIPS } from './data.js';
 import { getPlanet, makeStock, log, uid } from './state.js';
 import { cargoCapacity, departureFuel, fleetTravelDays, orderFleet } from './fleets.js';
@@ -39,7 +40,7 @@ export function startCircuit(state,id,draft) {
  const stops=structuredClone(draft.stops);
  for(let i=0;i<stops.length;i++){
   const stop=stops[i],p=getPlanet(state,stop.planet),next=stops[(i+1)%stops.length];
-  if(!p||p.destroyed||!p.owner||p.owner!=='player'&&!tradingAccess(state,p))return 'Ein Stopp ist nicht zugänglich.';
+  if(!p||!reachablePlanet(state,p)||p.destroyed||!p.owner||p.owner!=='player'&&!tradingAccess(state,p))return 'Ein Stopp ist nicht zugänglich.';
   if(stop.planet===next.planet)return 'Aufeinanderfolgende Stopps müssen verschiedene Planeten sein.';
   if(!Array.isArray(stop.actions)||stop.actions.length>8)return 'Höchstens acht Warenaufträge je Stopp.';
   for(const a of stop.actions){

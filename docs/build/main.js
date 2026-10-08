@@ -1,4 +1,7 @@
-import { resourcePages } from './hud.js';
+import { resourcePages, hudPlanet } from './hud.js';
+import { planetView, systemKnown } from './intelligence.js';
+import { exploreSystem } from './exploration.js';
+import { readInbox, answerMessage, withdrawMessage, sendOffer, centers, inboxSignal } from './communications.js';
 import { SUPPLY_DEFAULTS, configureSupply, serviceFleet, unloadCargo, startCircuit } from './routing.js';
 import { defaultCircuit, circuitPlanets } from './circuit-ui.js';
 import { createContract, cancelContract } from './trade.js';
@@ -37,13 +40,15 @@ const ui = {
 const $ = id => document.getElementById(id);
 const map = new MapRenderer($('map'), state, ui, hit => {
   if (!state.started) return;
-  if (hit.kind === 'system') { ui.systemId = hit.id; ui.view = 'system'; ui.panel = null; }
+  if (hit.kind === 'system') { ui.systemId = hit.id; ui.view = 'system'; ui.panel = systemKnown(state,hit.id)?null:'exploration';ui.expanded=false; }
   else if (hit.kind === 'planet') { ui.planetId = hit.id; ui.systemId = getPlanet(state, hit.id).system; ui.panel = 'planet-info'; ui.expanded = false; }
   else if (hit.kind === 'tile') {
     if (ui.buildType) { ui.buildTile = { x: hit.tx, y: hit.ty }; }
     else {
-      const b = currentPlanet().buildings.find(b => b.x === hit.tx && b.y === hit.ty);
-      if (b) { ui.selectedBuilding = b.id; ui.panel = 'building'; ui.expanded = false; }
+      const view=planetView(state,currentPlanet());
+      const b = view?.buildings.find(b => b.x === hit.tx && b.y === hit.ty);
+      if (b?.type==='commCenter'&&view.own&&!b.remaining) {const signal=inboxSignal(state);ui.communicationBuilding=b.id;ui.panel='communications';ui.inboxMode=signal.unread&&!signal.count?'archive':'open';ui.expanded=true;readInbox(state,ui.inboxMode);persist();}
+      else if (b) { ui.selectedBuilding = b.id; ui.panel = 'building'; ui.expanded = false; }
       else { ui.surfaceTile = { x: hit.tx, y: hit.ty }; ui.panel = 'terrain'; ui.expanded = false; }
     }
   }
@@ -86,7 +91,7 @@ function render() {
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
   $('resources').innerHTML = renderResources(state, ui);
-  const pages=resourcePages(state,currentPlanet());ui.resourcePage%=pages.length;$('resources').setAttribute('aria-label',`${pages[ui.resourcePage].name}: antippen für ${pages[(ui.resourcePage+1)%pages.length].name}`);
+  const shown=hudPlanet(state,ui),pages=resourcePages(state,shown);ui.resourcePage%=pages.length;$('resources').setAttribute('aria-label',`Vorräte von ${shown.name}. ${pages[ui.resourcePage].name}: antippen für ${pages[(ui.resourcePage+1)%pages.length].name}`);
   $('map-head').innerHTML = renderMapHead(state, ui);
   $('map-foot').innerHTML = renderMapFoot(state, ui);
   const compact = compactSurface(ui);
@@ -96,12 +101,14 @@ function render() {
   const sheet = $('sheet');
   const oldScroll = sheet.querySelector('.sheet-content')?.scrollTop ?? 0;
   const openTech = [...sheet.querySelectorAll('details[data-tech-id][open]')].map(el => el.dataset.techId);
+  const openDescriptions = [...sheet.querySelectorAll('details[data-planet-description][open]')].map(el => el.dataset.planetDescription);
   const activeField = document.activeElement?.dataset.field;
   const selectionStart = document.activeElement?.selectionStart;
   sheet.hidden = !ui.panel || compact; sheet.classList.toggle('expanded', ui.expanded);
   if (!sheet.hidden) {
     sheet.innerHTML = renderSheet(state, ui);
     for (const id of openTech) { const card = sheet.querySelector(`[data-tech-id="${id}"]`); if (card) card.open = true; }
+    for (const id of openDescriptions) { const card=sheet.querySelector(`[data-planet-description="${id}"]`);if(card)card.open=true; }
     sheet.querySelector('.sheet-content').scrollTop = oldScroll;
     if (ui.focusTech) { const card = sheet.querySelector(`[data-tech-id="${ui.focusTech}"]`); if (card) { card.open = true; card.scrollIntoView({ block: 'center' }); } ui.focusTech = null; }
     if (activeField) {
@@ -122,7 +129,13 @@ document.addEventListener('click', e => {
   void audio.unlock();
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
-  else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,p).length; }
+  else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
+  else if (action === 'exploration-start') return act(exploreSystem(state,el.dataset.id,el.dataset.system),'Erkundungsflug gestartet.');
+  else if (action === 'analysis-start') return act(orderFleet(state,[el.dataset.id],el.dataset.target,'analyze'),'Analyseauftrag erteilt.');
+  else if (action === 'message-answer') return act(answerMessage(state,el.dataset.id,el.dataset.choice),'Antwort übermittelt.');
+  else if (action === 'message-withdraw') return act(withdrawMessage(state,el.dataset.id),'Angebot zurückgezogen.');
+  else if (action === 'message-send') return act(sendOffer(state,el.dataset.faction,el.dataset.type),'Angebot übermittelt.');
+  else if (action === 'communication-manage') {panel('building');ui.selectedBuilding=el.dataset.id;}
   else if (action === 'audio-test') { void audio.unlock().then(()=>audio.play('research')); }
   else if (action === 'build-category') { ui.buildCategory = el.dataset.category; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'build-categories') { ui.buildCategory = null; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
@@ -137,7 +150,7 @@ document.addEventListener('click', e => {
   else if (action === 'view') { ui.view = el.dataset.view; ui.systemId = p.system; panel(null); }
   else if (action === 'recenter') map.resetCamera();
   else if (action === 'home') { ensureOwned(); ui.view = 'planet'; panel(null); }
-  else if (action === 'surface') { ui.view = 'planet'; panel(null); }
+  else if (action === 'surface') { if(!planetView(state,p)?.surfaceKnown)return toast('Die Oberfläche muss zuerst analysiert werden.',true);ui.view = 'planet'; panel(null); }
   else if (action === 'planet-info') { panel('planet-info'); }
   else if (action === 'inspect-site') { panel('terrain'); ui.view = 'planet'; ui.surfaceTile = { x: Number(el.dataset.x), y: Number(el.dataset.y) }; }
   else if (action === 'build') { ensureOwned(); panel('build'); }
@@ -156,7 +169,7 @@ document.addEventListener('click', e => {
   else if (action === 'demolish') {
     if (ui.demolishConfirm !== el.dataset.id) ui.demolishConfirm = el.dataset.id;
     else { const error = demolish(state, p, el.dataset.id); if (!error) panel('build'); return act(error, 'Anlage abgebaut.'); }
-  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value; if (el.dataset.field === 'economyMode' && el.dataset.value === 'research') ui.expanded = true; if (el.dataset.field === 'fleetMode' && ['shipyard', 'bases', 'arsenal'].includes(el.dataset.value)) ensureOwned(); }
+  } else if (action === 'subtab') { ui[el.dataset.field] = el.dataset.value;if(el.dataset.field==='inboxMode'){readInbox(state,ui.inboxMode);persist();} if (el.dataset.field === 'economyMode' && el.dataset.value === 'research') ui.expanded = true; if (el.dataset.field === 'fleetMode' && ['shipyard', 'bases', 'arsenal'].includes(el.dataset.value)) ensureOwned(); }
   else if (action === 'research') { ensureOwned(); panel('economy'); ui.economyMode = 'research'; ui.expanded = true; }
   else if (action === 'research-branch') { ui.researchBranch = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'research-focus') { ui.researchBranch = TECHNOLOGIES[el.dataset.id]?.branch ?? 'energy'; ui.focusTech = el.dataset.id; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
@@ -260,7 +273,7 @@ function frame(now) {
   const delta = Math.min(500, now - previousTime); previousTime = now;
   if (state.started && ui.speed && !document.hidden) {
     accumulator += delta * ui.speed;
-    if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state); audio.notify(state.logs.filter(e=>!previous.has(e))); persist(); render(); }
+    if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state);const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render(); }
   }
   map.render(now); requestAnimationFrame(frame);
 }

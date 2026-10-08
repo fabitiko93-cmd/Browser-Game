@@ -6,6 +6,8 @@ import { SOUND_CUES } from './audio.js';
 import { EVENTS, initialEventSchedule } from './events.js';
 import { initialRelationExtras } from './diplomacy.js';
 import { makePlanet } from './state.js';
+import { initializeIntelligence, networkSeeds } from './intelligence.js';
+import { validateExploration } from './exploration-save.js';
 import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
 import { LAWS, DECISIONS, initialGovernance, normalizeLaws, lawBlock } from './governance.js';
@@ -26,7 +28,7 @@ export function validateSave(value) {
   if (value?.version === 3) {
     value = structuredClone(value);
     const legacyIds = PLANET_SEEDS.slice(0, 7).map(p => p.id);
-    if (!Array.isArray(value.planets) || ![7, 25, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
+    if (!Array.isArray(value.planets) || ![7, 25, 28, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
     for (const p of value.planets) { p.shield = 0; p.destroyed = false; }
     for (const seed of PLANET_SEEDS) if (!value.planets.some(p=>p.id===seed.id)) value.planets.push(makePlanet(seed));
     value.strikes = []; value.destroyedSystems = []; value.milestones = []; value.version = 4;
@@ -38,7 +40,7 @@ export function validateSave(value) {
   }
   if(value?.version===5){
     value=structuredClone(value);
-    if(!Array.isArray(value.planets)||![25,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||PLANET_SEEDS.slice(0,25).some(p=>!value.planets.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
+    if(!Array.isArray(value.planets)||![25,28,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||PLANET_SEEDS.slice(0,25).some(p=>!value.planets.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
     for(const seed of PLANET_SEEDS)if(!value.planets.some(p=>p.id===seed.id)){
       const planet=makePlanet(seed);
       if(value.destroyedSystems.includes(planet.system)){planet.owner=null;planet.population=0;planet.buildings=[];planet.queues=[];planet.shield=0;planet.defense=0;planet.garrison=0;planet.destroyed=true;for(const k of RESOURCE_KEYS)planet.stock[k]=0;}
@@ -53,6 +55,15 @@ export function validateSave(value) {
     const home=value.planets.find(p=>p.owner==='player')?.id;
     for(const f of value.fleets){f.cargo??=Object.fromEntries(RESOURCE_KEYS.map(k=>[k,0]));for(const k of Object.keys(NEW_RESOURCES))f.cargo[k]??=0;f.supplySettings??={...SUPPLY_DEFAULTS,homePort:f.route&&value.planets.find(p=>p.id===f.route.source)?.owner==='player'?f.route.source:home};f.servicing??=false;}
     if(value.lastDayReport?.resources)for(const rates of Object.values(value.lastDayReport.resources))for(const k of Object.keys(NEW_RESOURCES))rates[k]??={recurring:0,oneOff:0};
+    value.version=6;
+  }
+  if(value?.version===6){
+    value=structuredClone(value);
+    const oldSeeds=networkSeeds();
+    if(!Array.isArray(value.planets)||![oldSeeds.length,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||oldSeeds.some(p=>!value.planets.some(q=>q.id===p.id))||value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
+    for(const seed of PLANET_SEEDS)if(!value.planets.some(p=>p.id===seed.id))value.planets.push(makePlanet(seed));
+    initializeIntelligence(value,true);
+    value.communications={messages:[],cooldowns:{},nextOffer:value.day+12,cursor:0};
     value.version=SAVE_VERSION;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
@@ -82,6 +93,7 @@ export function validateSave(value) {
     const tiles = new Set(), buildings = new Set();
     for (const b of p.buildings) {
       if (!known(BUILDINGS, b.type) || !text(b.id, 64) || buildings.has(b.id) || !Number.isInteger(b.x) || !finite(b.x, 0, GRID.width - 1) || !Number.isInteger(b.y) || !finite(b.y, 0, GRID.height - 1) || !finite(b.remaining, 0, 30) || typeof b.enabled !== 'boolean' || !text(b.status, 64) || tiles.has(`${b.x},${b.y}`)) throw new Error('Ungültiges Gebäude.');
+      if(BUILDINGS[b.type].unique&&p.buildings.filter(q=>q.type===b.type).length>BUILDINGS[b.type].unique)throw new Error('Zu viele einzigartige Anlagen.');
       buildings.add(b.id); tiles.add(`${b.x},${b.y}`);
     }
     for (const q of p.queues) if (!known(SHIPS, q.type) || !finite(q.remaining, 1, 30) || !text(q.id, 64)) throw new Error('Ungültiger Werftauftrag.');
@@ -93,17 +105,19 @@ export function validateSave(value) {
   for (const f of value.fleets) {
     if (!known(SHIPS, f.type) || !ids.has(f.planetId) || !text(f.id, 64) || fleetIds.has(f.id) || !text(f.name, 64) || !known(FACTIONS, f.owner) || !finite(f.hp, 0, 100) || !finite(f.supply, 0, 100)) throw new Error('Ungültige Flotte.');
     fleetIds.add(f.id);
-    if((f.mission?.cargo?.amount??0)+Object.values(f.cargo??{}).reduce((n,v)=>n+v,0)>Math.floor(SHIPS[f.type].cargo*technologyEffects(value).cargoCapacity)+.000001)throw new Error('Überladener Frachtraum.');
+    if((f.mission?.cargo?.amount??0)+Object.values(f.cargo??{}).reduce((n,v)=>n+v,0)>Math.floor(SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity)+.000001)throw new Error('Überladener Frachtraum.');
     const m = f.mission, r = f.route;
-    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','circuit'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if(m?.kind==='analyze'&&(f.type!=='probe'||m.phase!=null&&m.phase!=='scan'||m.phase==='scan'&&f.planetId!==m.target)||m?.kind==='explore'&&f.type!=='scout')throw new Error('Ungültiger Erkundungsauftrag.');
     if (m?.kind==='circuit'&&(!Number.isInteger(m.stopIndex)||!finite(m.stopIndex,0,7)))throw new Error('Ungültiger Routenstopp.');
-    if(f.cargo!=null&&(typeof f.cargo!=='object'||Array.isArray(f.cargo)||Object.keys(f.cargo).length!==RESOURCE_KEYS.length||RESOURCE_KEYS.some(k=>!finite(f.cargo[k]))||Object.values(f.cargo).reduce((n,v)=>n+v,0)>SHIPS[f.type].cargo*technologyEffects(value).cargoCapacity+.000001))throw new Error('Ungültige Bordfracht.');
-    if(f.supplySettings){const s=f.supplySettings;if(!['threshold','target','repairBelow','repairTo'].every(k=>finite(s[k],0,100))||s.target<=s.threshold||s.repairTo<=s.repairBelow||value.planets.find(p=>p.id===s.homePort)?.owner!=='player'||typeof s.smart!=='boolean')throw new Error('Ungültige Versorgungseinstellungen.');}
+    if(f.cargo!=null&&(typeof f.cargo!=='object'||Array.isArray(f.cargo)||Object.keys(f.cargo).length!==RESOURCE_KEYS.length||RESOURCE_KEYS.some(k=>!finite(f.cargo[k]))||Object.values(f.cargo).reduce((n,v)=>n+v,0)>SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity+.000001))throw new Error('Ungültige Bordfracht.');
+    if(f.supplySettings){const s=f.supplySettings;if(!['threshold','target','repairBelow','repairTo'].every(k=>finite(s[k],0,100))||s.target<=s.threshold||s.repairTo<=s.repairBelow||value.planets.find(p=>p.id===s.homePort)?.owner!==f.owner||typeof s.smart!=='boolean')throw new Error('Ungültige Versorgungseinstellungen.');}
     if(f.servicing!=null&&typeof f.servicing!=='boolean'||f.repairing!=null&&typeof f.repairing!=='boolean'||f.pauseReason!=null&&(typeof f.pauseReason!=='string'||f.pauseReason.length>180))throw new Error('Ungültiger Wartungszustand.');
     if(r?.type==='circuit')validateCircuit(value,f,r,ids);
-    if (r && r.type!=='circuit' && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || r.reserve!=null&&!finite(r.reserve) || !finite(r.amount, 1, Math.floor(SHIPS[f.type].cargo * technologyEffects(value).cargoCapacity)))) throw new Error('Ungültige Handelsroute.');
+    if (r && r.type!=='circuit' && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || r.reserve!=null&&!finite(r.reserve) || !finite(r.amount, 1, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültige Handelsroute.');
   }
   validateDevelopment(value,ids);
+  validateExploration(value,ids);
   if (!value.planets.some(p => p.owner === 'player')) throw new Error('Der Spielstand enthält keinen eigenen Planeten.');
   if (value.event && (!known(EVENTS,value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
   const schedule = value.eventSchedule;
@@ -125,7 +139,7 @@ function validateCircuit(state,f,r,ids){
  if(!f.cargo||!Array.isArray(r.stops)||r.stops.length<2||r.stops.length>8||!Number.isInteger(r.index)||r.index<0||r.index>=r.stops.length||typeof r.processed!=='boolean'||!finite(r.interval)||r.interval>120||!finite(r.nextReady)||r.nextReady>state.day+120||!finite(r.lastCycle)||r.lastCycle>state.day)throw new Error('Ungültiger Handelskreislauf.');
  for(let i=0;i<r.stops.length;i++){
   const s=r.stops[i];if(!ids.has(s.planet)||s.planet===r.stops[(i+1)%r.stops.length].planet||!Array.isArray(s.actions)||s.actions.length>8)throw new Error('Ungültiger Handelsstopp.');
-  for(const a of s.actions)if(!['load','unload','buy','sell'].includes(a.kind)||!RESOURCE_KEYS.includes(a.resource)||!finite(a.amount)||a.amount<1||a.amount>Math.floor(SHIPS[f.type].cargo*technologyEffects(state).cargoCapacity)||!finite(a.reserve)||!finite(a.minPrice)||!finite(a.maxPrice))throw new Error('Ungültiger Warenauftrag.');
+  for(const a of s.actions)if(!['load','unload','buy','sell'].includes(a.kind)||!RESOURCE_KEYS.includes(a.resource)||!finite(a.amount)||a.amount<1||a.amount>Math.floor(SHIPS[f.type].cargo*technologyEffects(state,f.owner).cargoCapacity)||!finite(a.reserve)||!finite(a.minPrice)||!finite(a.maxPrice))throw new Error('Ungültiger Warenauftrag.');
  }
  if(f.mission?.kind==='circuit'&&r.stops[f.mission.stopIndex]?.planet!==f.mission.target)throw new Error('Ungültiger Anflugstopp.');
 }

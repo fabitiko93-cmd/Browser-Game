@@ -1,6 +1,8 @@
 import { GRID, SYSTEMS, FACTIONS } from './data.js';
 import { SurfaceRenderer } from './surface-renderer.js';
 import { compactSurface } from './surface-ui.js';
+import { planetView, systemKnown } from './intelligence.js';
+import { inboxSignal } from './communications.js';
 
 export class MapRenderer {
   constructor(canvas, state, ui, tap) {
@@ -78,7 +80,9 @@ export class MapRenderer {
     ctx.globalAlpha = 1;
   }
   surface(ctx, w, h, time) {
-    const p = this.state.planets.find(p => p.id === this.ui.planetId);
+    const actual = this.state.planets.find(p => p.id === this.ui.planetId), view=planetView(this.state,actual);
+    if (!view?.surfaceKnown) { ctx.fillStyle='#9bacca';ctx.font='16px system-ui';ctx.textAlign='center';ctx.fillText('Oberfläche unbekannt',w/2,h*.4);return; }
+    const p=view.own?actual:view;
     if (p.destroyed) { ctx.fillStyle = '#c8a7c7'; ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.fillText('TRÜMMERFELD', w / 2, h / 2); return; }
     const insets = this.surfaceInsets ?? { top: compactSurface(this.ui) ? 148 : 84, bottom: this.ui.hints && p.owner === 'player' && !this.ui.panel ? 78 : 67 };
     const top = Math.max(0, insets.top), available = Math.max(0, h - top - insets.bottom);
@@ -97,7 +101,7 @@ export class MapRenderer {
     this.surfaceFocusKey = focusKey;
     this.tileSize = size; this.origin = { x: ox, y: oy };
     ctx.save(); ctx.beginPath(); ctx.rect(0, top, w, available); ctx.clip();
-    this.surfaceRenderer.render(ctx, p, this.ui, { x: ox, y: oy, size }, time); ctx.restore();
+    this.surfaceRenderer.render(ctx, p, this.ui, { x: ox, y: oy, size }, view.own?inboxSignal(this.state):null); ctx.restore();
     for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
       const px = Math.max(0, ox + x * size), py = Math.max(top, oy + y * size);
       const right = Math.min(w, ox + (x + 1) * size), bottom = Math.min(top + available, oy + (y + 1) * size);
@@ -123,11 +127,11 @@ export class MapRenderer {
     ctx.restore();
     ctx.strokeStyle = p.id === this.ui.planetId ? '#c7caff' : `${owner}80`; ctx.lineWidth = p.id === this.ui.planetId ? 1.8 : 1; ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = owner; ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.fillText(p.name, x, y + r + 24);
-    if (p.owner === 'player') { ctx.fillStyle = '#aab4ff'; ctx.beginPath(); ctx.arc(x, y - r - 12, 2, 0, Math.PI * 2); ctx.fill(); }
+    if (p.own) { ctx.fillStyle = '#aab4ff'; ctx.beginPath(); ctx.arc(x, y - r - 12, 2, 0, Math.PI * 2); ctx.fill(); }
     this.hits.push({ kind: 'planet', x, y, r: Math.max(25, r + 7), id: p.id });
   }
   system(ctx, w, h, time) {
-    const system = SYSTEMS.find(s => s.id === this.ui.systemId), planets = this.state.planets.filter(p => p.system === system.id);
+    const system = SYSTEMS.find(s => s.id === this.ui.systemId), planets = this.state.planets.filter(p => p.system === system.id).map(p=>planetView(this.state,p)).filter(Boolean);
     const cx = w / 2 + this.camera.x, cy = h * .43 + this.camera.y, zoom = this.camera.zoom;
     const orbitRadius = Math.min(w * .38, h * .28) * zoom;
     for (let i = 0; i < planets.length; i++) {
@@ -145,6 +149,7 @@ export class MapRenderer {
   }
   drawMissions(ctx, planets, cx, cy, r, positions, zoom) {
     for (const f of this.state.fleets) {
+      if (f.owner !== 'player') continue;
       const index = planets.findIndex(p => p.id === f.planetId);
       if (index < 0) continue;
       const [dx, dy] = positions[index], x = cx + dx * r + 33 * zoom, y = cy + dy * r - 24 * zoom;
@@ -160,17 +165,20 @@ export class MapRenderer {
     }
   }
   galaxy(ctx, w, h, time) {
-    const points = SYSTEMS.map(s => ({ ...s, px: w / 2 + w * (s.x - .5) * this.camera.zoom + this.camera.x, py: h / 2 + h * (s.y - .5) * this.camera.zoom + this.camera.y }));
+    const top=this.surfaceInsets?.top??84,bottom=this.surfaceInsets?.bottom??67;
+    const span=Math.max(390,h-top-bottom-65),mid=top+(h-top-bottom-65)/2;
+    const points = SYSTEMS.map(s => ({ ...s, px: w / 2 + w * (s.x - .5) * this.camera.zoom + this.camera.x, py: mid + span * (s.y - .5) * this.camera.zoom + this.camera.y }));
     ctx.strokeStyle = '#85b3c329'; ctx.setLineDash([2, 7]);
-    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { if (Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y)>.46) continue; ctx.beginPath(); ctx.moveTo(points[i].px, points[i].py); ctx.lineTo(points[j].px, points[j].py); ctx.stroke(); }
+    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { if (points[i].uncharted||points[j].uncharted||Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y)>.46) continue; ctx.beginPath(); ctx.moveTo(points[i].px, points[i].py); ctx.lineTo(points[j].px, points[j].py); ctx.stroke(); }
+    for(const route of this.state.intelligence.player.routes){const a=points.find(s=>s.id===route.from),b=points.find(s=>s.id===route.to);if(a&&b){ctx.strokeStyle='#a3b9ff70';ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.stroke();}}
     ctx.setLineDash([]);
     for (const s of points) {
       const glow = ctx.createRadialGradient(s.px, s.py, 0, s.px, s.py, 60); glow.addColorStop(0, `${s.color}45`); glow.addColorStop(1, `${s.color}00`); ctx.fillStyle = glow; ctx.fillRect(s.px - 60, s.py - 60, 120, 120);
-      ctx.strokeStyle = '#878dcc45'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.px, s.py, 27, 0, Math.PI * 2); ctx.stroke();
+      const charted=systemKnown(this.state,s.id);ctx.strokeStyle = charted?'#878dcc45':'#e3b07380'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.px, s.py, 27, 0, Math.PI * 2); ctx.stroke();
       ctx.fillStyle = this.state.destroyedSystems.includes(s.id) ? '#473954' : s.color; ctx.beginPath(); ctx.arc(s.px, s.py, 9, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#e3e6ff'; ctx.font = '600 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText(s.name, s.px, s.py + 48);
-      const planets = this.state.planets.filter(p => p.system === s.id); const count = planets.filter(p => p.owner === 'player').length;
-      ctx.font = '10px system-ui'; ctx.fillStyle = '#8e9cc7'; ctx.fillText(`${planets.filter(p=>!p.destroyed).length} Planeten${count ? ` · ${count} eigene` : ''}`, s.px, s.py + 65);
+      const planets = this.state.planets.filter(p => p.system === s.id).map(p=>planetView(this.state,p)).filter(Boolean); const count = planets.filter(p => p.own).length;
+      ctx.font = '10px system-ui'; ctx.fillStyle = charted?'#8e9cc7':'#e3b073'; ctx.fillText(charted?`${planets.filter(p=>!p.destroyed).length} Planeten${count ? ` · ${count} eigene` : ''}`:'Unkartiert', s.px, s.py + 65);
       this.hits.push({ kind: 'system', x: s.px, y: s.py, r: 32, id: s.id });
     }
   }

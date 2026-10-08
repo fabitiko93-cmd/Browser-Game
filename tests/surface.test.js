@@ -1,3 +1,4 @@
+import { chartSystem } from '../src/intelligence.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, getPlanet, makeStock, terrainAt } from '../src/state.js';
@@ -176,6 +177,7 @@ test('every system draws all its planets, including the fourth capital worlds, w
   const state = createGame();
   const ctx = new Proxy({ createRadialGradient: () => ({ addColorStop() {} }) }, { get: (target, key) => target[key] ?? (() => {}) });
   for (const system of SYSTEMS) {
+    chartSystem(state,'player',system.id);
     const map = Object.create(MapRenderer.prototype);
     Object.assign(map, { state, ui: { systemId: system.id, planetId: 'nereid' }, camera: { x: 0, y: 0, zoom: 1 }, hits: [] });
     map.system(ctx, 320, 520, 0);

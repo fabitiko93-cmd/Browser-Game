@@ -1,9 +1,10 @@
+import { reachablePlanet } from './intelligence.js';
 import { RESOURCES, RESOURCE_KEYS, FACTIONS } from './data.js';
 import { tradingAccess } from './trade.js';
 import { cargoCapacity, fleetTravelDays } from './fleets.js';
 import { getPlanet } from './state.js';
 import { esc,fmt,opts,button } from './ui-format.js';
-export function circuitPlanets(state) {return state.planets.filter(p=>!p.destroyed&&(p.owner==='player'||tradingAccess(state,p)));}
+export function circuitPlanets(state) {return state.planets.filter(p=>reachablePlanet(state,p)&&!p.destroyed&&(p.owner==='player'||tradingAccess(state,p)));}
 export function defaultCircuit(state,p,target,amount=40,resource='ore') {
  return {interval:0,stops:[{planet:p.id,actions:[{kind:'unload',resource:'food',amount,reserve:0,minPrice:0,maxPrice:1000000},{kind:'load',resource,amount,reserve:40,minPrice:0,maxPrice:1000000}]},{planet:target.id,actions:target.owner==='player'?[{kind:'unload',resource,amount,reserve:0,minPrice:0,maxPrice:1000000}]:[{kind:'sell',resource,amount,reserve:0,minPrice:0,maxPrice:1000000},{kind:'buy',resource:'food',amount,reserve:0,minPrice:0,maxPrice:1000000}]}]};
 }

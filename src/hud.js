@@ -2,6 +2,8 @@ import { RESOURCES, BUILDINGS } from './data.js';
 import { getPlanet } from './state.js';
 import { forecastDay } from './budget.js';
 import { icon } from './icons.js';
+import { esc } from './ui-format.js';
+export const hudPlanet=(state,ui)=>{const p=getPlanet(state,ui.planetId);return p?.owner==='player'&&!p.destroyed?p:state.planets.find(p=>p.owner==='player'&&!p.destroyed);};
 const number=v=>v>9999?`${Math.floor(v/1000)}k`:v.toLocaleString('de-DE',{maximumFractionDigits:1});
 const signed=v=>`${v>=0?'+':'−'}${Math.abs(v).toFixed(1).replace('.',',')}`;
 export function resourcePages(state,p) {
@@ -36,11 +38,11 @@ export function resourceRisk(state,p,key,projection) {
  return {warning:false,days:incoming.length?null:Math.ceil(stock/-rate),rate};
 }
 export function renderResourceHUD(state,ui) {
- const p=getPlanet(state,ui.planetId),projection=ui.projection??forecastDay(state),pages=resourcePages(state,p);
+ const p=hudPlanet(state,ui),projection=ui.projection??forecastDay(state),pages=resourcePages(state,p);
  const page=pages[(Number(ui.resourcePage)||0)%pages.length],keys=['credits',...page.keys];
  const all=['credits',...pages.flatMap(p=>p.keys)];
  const hiddenWarning=all.some(k=>!keys.includes(k)&&resourceRisk(state,p,k,projection).warning);
- return `<div class="resource-bank">${keys.map(k=>{
+ return `<div class="resource-bank" title="Vorräte auf ${esc(p.name)}">${keys.map(k=>{
   const risk=resourceRisk(state,p,k,projection),amount=k==='credits'?state.credits:k==='science'?state.science:p.stock[k],label=k==='credits'?'Credits':k==='science'?'Forschung':RESOURCES[k].name;
   const runway=risk.warning?risk.days===0?' · Mangel':` · ${risk.days} T`:'';
   return `<div class="resource-pill ${risk.warning?'warning':''}" data-resource="${k}" aria-label="${label}: ${number(amount)}, ${signed(risk.rate)} pro Spieltag${runway}"><div class="resource-top">${icon(k,15)}<span class="resource-value">${number(amount)}</span></div><div class="resource-label">${label}${runway}</div><div class="resource-trend ${risk.rate<0?'negative':''}">${signed(risk.rate)}${k==='credits'?' ¢':''}<span>/T</span></div></div>`;

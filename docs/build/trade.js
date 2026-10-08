@@ -4,6 +4,7 @@ import { BUILDINGS, RESOURCE_KEYS } from './data.js';
 import { BASE_PRICES } from './development-data.js';
 import { serviceCount } from './infrastructure.js';
 import { getPlanet, log, uid } from './state.js';
+import { portKnown } from './intelligence.js';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function marketDemand(state,p,key) {
  if(p.lastReport?.demandByResource)return p.lastReport.demandByResource[key]??0;
@@ -29,7 +30,7 @@ export function exportPrice(state,resource,faction) {
  const p=state.planets.find(p=>p.owner===faction&&!p.destroyed);
  return p?marketPrice(state,p,resource):0;
 }
-export function tradingAccess(state,p) { return Boolean(p&&!p.destroyed&&p.owner&&p.owner!=='player'&&state.relations[p.owner]?.trade&&!state.relations[p.owner]?.war&&!state.relations[p.owner]?.embargo); }
+export function tradingAccess(state,p) { return Boolean(p&&!p.destroyed&&portKnown(state,p)&&p.owner!=='player'&&state.relations[p.owner]?.trade&&!state.relations[p.owner]?.war&&!state.relations[p.owner]?.embargo); }
 function affordable(limit,cash,totalFor){
  if(totalFor(limit)<=cash)return limit;
  let lo=0,hi=limit;for(let i=0;i<36;i++){const mid=(lo+hi)/2;if(totalFor(mid)<=cash)lo=mid;else hi=mid;}return lo;

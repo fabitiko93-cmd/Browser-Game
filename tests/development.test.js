@@ -123,7 +123,7 @@ test('long simulations progress AI research and construction with finite resourc
 
 test('a genuine v5 save retains credits, colonies, inventories and an in-flight route while adding the new world systems',async()=>{
  const {readFileSync}=await import('node:fs');const old=JSON.parse(readFileSync(new URL('./fixtures-v5.json',import.meta.url),'utf8'));const loaded=parseImport(JSON.stringify(old));
- assert.equal(loaded.version,6);assert.equal(loaded.planets.length,28);assert.equal(loaded.credits,1234.5);assert.equal(loaded.science,old.science);assert.equal(loaded.day,old.day);
+ assert.equal(loaded.version,7);assert.equal(loaded.planets.length,37);assert.equal(loaded.credits,1234.5);assert.equal(loaded.science,old.science);assert.equal(loaded.day,old.day);
  for(const p of old.planets){const migrated=getPlanet(loaded,p.id);assert.equal(migrated.owner,p.owner);assert.equal(migrated.population,p.population);assert.deepEqual(migrated.buildings,p.buildings);for(const k of Object.keys(p.stock))assert.equal(migrated.stock[k],p.stock[k]);}
  for(let i=0;i<old.fleets.length;i++){assert.deepEqual(loaded.fleets[i].mission,old.fleets[i].mission);assert.deepEqual(loaded.fleets[i].route,old.fleets[i].route);}
  assert.equal(loaded.governance.laws.borders,'controlled');assert.equal(loaded.player.ideology,'nationalSocialism');assert.deepEqual(validateSave(structuredClone(loaded)),loaded);

@@ -3,6 +3,8 @@ import { technologyEffects } from './technology.js';
 import { policyEffects, governmentChangeCost, normalizeLaws } from './governance.js';
 import { IDEOLOGIES, FACTIONS } from './data.js';
 import { ownedPlanets, log } from './state.js';
+import { declareMessage } from './communications.js';
+import { recordContact } from './intelligence.js';
 
 export function changeGovernment(state, ideology) {
   if (!Object.hasOwn(IDEOLOGIES, ideology)) return 'Unbekannte Regierungsform.';
@@ -31,11 +33,13 @@ export function diplomaticAction(state, faction, action) {
     if (rel.pactUntil > state.day) return 'Kündige zuerst den aktiven Nichtangriffspakt.';
     rel.war = true; rel.trade = false; rel.cooperation = false;rel.portAccess=false;rel.researchPact=false;rel.defensePact=false; cancelForeignRoutes(state,faction); rel.score = Math.max(-100, rel.score - 40);
     log(state, `Krieg erklärt: ${FACTIONS[faction].name}. Frachtrouten in dieses Gebiet werden beendet.`, 'war');
+    declareMessage(state,faction,'Kriegserklärung','Unsere Regierung erklärt diesem Reich den Krieg. Handels- und Hafenabkommen sind aufgehoben.');
   } else if (action === 'peace') {
     if (!rel.war) return 'Es besteht kein Krieg.';
     if (state.credits < 120) return 'Für einen Waffenstillstand fehlen 120 Credits.';
     state.credits -= 120; rel.war = false; rel.score = Math.min(0, rel.score + 15);
     log(state, `Waffenstillstand mit ${FACTIONS[faction].name}.`, 'politics');
+    declareMessage(state,faction,'Waffenstillstand','Die Regierungen haben die Kampfhandlungen eingestellt.');
   } else if (action === 'envoy') {
     if (rel.war) return 'Während eines Krieges sind Gesandtschaften nicht möglich.';
     if (rel.envoyReady > state.day) return `Die nächste Gesandtschaft ist in ${rel.envoyReady-state.day} Tagen möglich.`;
@@ -48,6 +52,7 @@ export function diplomaticAction(state, faction, action) {
     if (rel.war || rel.score < 0) return 'Ein Handelsabkommen braucht Frieden und Beziehungen von mindestens 0.';
     if (state.credits < 50) return 'Für das Handelsabkommen fehlen 50 Credits.';
     state.credits -= 50; rel.trade = true;
+    const capital=state.planets.find(p=>p.owner===faction&&!p.destroyed);if(capital)recordContact(state,'player',capital);
     log(state, `Handelsabkommen mit ${FACTIONS[faction].name}. Frachter können Waren verkaufen.`, 'politics');
   } else return 'Unbekannte diplomatische Aktion.';
   return null;

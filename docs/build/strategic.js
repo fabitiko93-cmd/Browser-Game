@@ -3,6 +3,7 @@ import { BUILDINGS, SYSTEMS } from './data.js';
 import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
 import { getPlanet, canAfford, pay, uid, log, makeStock } from './state.js';
+import { reachablePlanet, knownTargets, recordContact } from './intelligence.js';
 export function baseStats(state, p) {
   const stats = { capacity: 0, regen: 0, orbital: 0, fortification: 0, interception: 0, starBarrier: 0 };
   for (const b of p.buildings) if (!b.remaining && b.enabled && b.status === 'aktiv') {
@@ -20,6 +21,7 @@ export function strikeDistance(source, target) { const a = SYSTEMS.find(s => s.i
 export function strikeError(state, source, target, type, owner = 'player') {
   const w = STRATEGIC_WEAPONS[type];
   if (!w || !source || !target || source.destroyed || target.destroyed || source.owner !== owner) return 'Wähle einen eigenen Startplaneten und ein intaktes Ziel.';
+  if (!reachablePlanet(state,target,owner)) return 'Die Flugroute zum Zielsystem ist nicht kartiert.';
   if (owner === 'player' && !state.tech.includes(w.tech)) return 'Die erforderliche Waffentechnologie fehlt.';
   if (target.owner === owner || !target.owner || !(owner === 'player' ? state.relations[target.owner]?.war : target.owner === 'player' && state.relations[owner]?.war)) return 'Fernangriffe setzen Krieg mit dem Zielreich voraus.';
   if (w.starKiller && state.planets.some(p => p.system === target.system && p.owner && (p.owner === owner || owner === 'player' && !state.relations[p.owner]?.war))) return 'In diesem System liegen eigene oder nicht feindliche Kolonien.';
@@ -37,7 +39,7 @@ export function launchStrike(state, sourceId, targetId, type, { confirmed = fals
   pay(state, source, owner === 'player' ? w.cost : Object.fromEntries(Object.entries(w.cost).filter(([k]) => k !== 'credits')));
   const flight = source.system === target.system ? 4 : 10 + Math.ceil(strikeDistance(source, target) * 6);
   state.strikes.push({ id: uid(state, 'strike'), type, owner, source: source.id, target: target.id, facilityId: facility.id, phase: 'charge', remaining: w.charge, total: w.charge, flight });
-  log(state, `${source.name}: ${w.name} gegen ${target.name} wird geladen (${w.charge} Tage).`, 'war'); return null;
+  if(owner==='player')log(state, `${source.name}: ${w.name} gegen ${target.name} wird geladen (${w.charge} Tage).`, 'war'); return null;
 }
 export function cancelStrike(state, id) { const s = state.strikes.find(s => s.id === id); if (!s || s.owner !== 'player' || s.phase !== 'charge') return 'Nur eigene Ladeaufträge können abgebrochen werden.'; state.strikes = state.strikes.filter(s => s.id !== id); log(state, 'Ladeauftrag abgebrochen. Verbrauchte Materialien werden nicht erstattet.', 'warning'); return null; }
 export function destroyPlanet(state, p) {
@@ -88,13 +90,14 @@ export function tickStrikes(state) {
       const p = getPlanet(state, s.source), b = p.buildings.find(b => b.id === s.facilityId);
       if (p.destroyed || p.owner !== s.owner || !b) { completed.add(s.id); log(state, 'Waffenladung verloren: Startanlage zerstört oder besetzt.', 'warning'); continue; }
       if (b.status !== 'aktiv' || !b.enabled || b.remaining) continue;
-      if (--s.remaining <= 0) { s.phase = 'flight'; s.remaining = s.total = s.flight; log(state, `${p.name}: ${STRATEGIC_WEAPONS[s.type].name} gestartet. Einschlag in ${s.flight} Tagen.`, 'war'); }
+      if (--s.remaining <= 0) { s.phase = 'flight'; s.remaining = s.total = s.flight; if(s.owner==='player'||getPlanet(state,s.target).owner==='player'){recordContact(state,'player',p,'combat');log(state, `${p.name}: ${STRATEGIC_WEAPONS[s.type].name} gestartet. Einschlag in ${s.flight} Tagen.`, 'war');} }
     } else if (--s.remaining <= 0) { impact(state, s); completed.add(s.id); }
   }
   state.strikes = state.strikes.filter(s => !completed.has(s.id));
   if (state.day >= 180 && state.day % 30 === 0) for (const owner of Object.keys(state.relations).filter(id => state.relations[id].war)) {
     const source = state.planets.find(p => p.owner === owner && p.buildings.some(b => b.type === 'missileSilo'));
-    const target = state.planets.find(p => p.owner === 'player' && source && !strikeError(state, source, p, 'missile', owner));
+    const known = knownTargets(state,owner).filter(p=>p.owner==='player'&&!p.destroyed);
+    const target = known.map(p=>getPlanet(state,p.id)).find(p => source && !strikeError(state, source, p, 'missile', owner));
     if (source && target) launchStrike(state, source.id, target.id, 'missile', { owner });
   }
 }
