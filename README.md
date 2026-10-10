@@ -4,6 +4,13 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Musik & Aktionssounds · 0.8.1
+
+- Neuer eigener Space-Soundtrack „Transit 3077“: zwei Minuten mit Synth-Flächen, Melodien, Arpeggios, ruhigen und rhythmischen Passagen. Nahtloser Audioloop unabhängig von Spieltempo, Pause und UI-Timern; durchgehend hörbare Klangflächen auch beim anfänglichen Live-Score.
+- Musik pausiert bei App-/Tabwechsel und versucht bei Rückkehr automatisch an derselben Stelle weiterzuspielen. Falls der Browser eine neue Bedienaktion verlangt, aktiviert jeder Tipp die Wiedergabe, auch auf der Karte. Safari-Unterbrechungen und verspätete Hintergrundpausen werden abgefangen; keine doppelten Musikinstanzen.
+- Unterschiedliche kurze Sounds für Bau, Forschung, Schiffbau, Lieferung, Kolonisierung, Angriffe und neue Korrespondenz. Warnungen und Meldungen werden begrenzt, gewöhnliche Protokolleinträge erzeugen keinen zusätzlichen Ton. Musik und Effekte behalten ihre getrennten Lautstärke- und Stummschaltungen.
+- Spielstände und Gameplay bleiben unverändert; kein Neustart erforderlich.
+
 ## Kleine Reiche & eigenständige Wirtschaft · 0.8
 
 - Neue Partien starten mit 18 fremden Reichen, je einer Heimatwelt. Insgesamt 49 Planeten in zwölf Sonnensystemen; mehrere Staaten teilen sich Systeme. Alte Spielstände behalten sämtliche Besitzverhältnisse und erhalten zwölf zusätzliche Hauptwelten.

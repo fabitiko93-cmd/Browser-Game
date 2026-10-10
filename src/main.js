@@ -125,9 +125,10 @@ function render() {
 function panel(name) { ui.panel = name; ui.expanded = false; ui.buildType = null; ui.buildTile = null; ui.demolishConfirm = null; ui.warConfirm = null; ui.resetConfirm = false; }
 function ensureOwned() { if (currentPlanet().owner !== 'player') { ui.planetId = ownedPlanets(state)[0]?.id ?? 'nereid'; ui.systemId = currentPlanet().system; } }
 function selectedTarget(field) { const el = document.querySelector(`[data-field="${field}"]`); return el?.value ?? ui[field]; }
+document.addEventListener('pointerdown',()=>{void audio.unlock();},{passive:true});
+document.addEventListener('click',()=>{void audio.unlock();},{capture:true});
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
-  void audio.unlock();
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
   else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
@@ -270,6 +271,7 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', e=>{if(e.target.id==='resources'&&['Enter',' '].includes(e.key)){e.preventDefault();e.target.click();}});
 document.addEventListener('visibilitychange', () => { audio.setHidden(document.hidden); if (document.hidden) { ui.speed = 0; accumulator = 0; persist(); render(); } });
 window.addEventListener('pageshow',()=>audio.setHidden(document.hidden));
+window.addEventListener('focus',()=>{if(!document.hidden)void audio.recover();});
 window.addEventListener('pagehide', ()=>{audio.setHidden(true);persist();});
 let previousTime = performance.now(), accumulator = 0;
 function frame(now) {
