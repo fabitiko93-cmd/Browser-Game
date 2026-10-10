@@ -177,3 +177,11 @@ test('losing the final player world records a valid defeat and stops further sim
   const s=createGame(),attack=army(s,'aster'),p=getPlanet(s,'nereid');s.relations.aster.war=true;p.defense=0;p.garrison=0;s.fleets=s.fleets.filter(f=>f.owner!=='player');for(const f of attack)f.planetId=p.id;
   resolveBattle(s,attack,p);assert.equal(p.owner,'aster');assert.equal(s.galaxy.defeat.conqueror,'aster');validateSave(s);const before=exportGame(s);stepDay(s);assert.equal(exportGame(s),before);
 });
+test('a captured former home keeps its recorded terrain and buildings, without tracking the occupier later',()=>{
+  const s=createGame(),attack=army(s,'aster'),p=getPlanet(s,'nereid');s.relations.aster.war=true;
+  getPlanet(s,'cinder').owner='player';p.defense=0;p.garrison=0;const original=structuredClone(p.buildings);
+  for(const f of attack)f.planetId=p.id;resolveBattle(s,attack,p);
+  assert.equal(p.owner,'aster');assert.equal(s.galaxy.defeat,null);const k=knowledgeOf(s,p,'player');
+  assert.equal(k.identity.value,'aster');assert.equal(k.surface.value.seed,p.seed);assert.deepEqual(k.installations.value,original);assert.equal(k.civil,undefined);
+  const military=structuredClone(k.military.value);p.defense=999;p.garrison=999;p.buildings.pop();assert.deepEqual(knowledgeOf(s,p,'player').military.value,military);assert.deepEqual(knowledgeOf(s,p,'player').installations.value,original);validateSave(s);
+});

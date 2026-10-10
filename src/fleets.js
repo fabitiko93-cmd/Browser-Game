@@ -10,7 +10,7 @@ import { technologyEffects } from './technology.js';
 import { policyEffects } from './governance.js';
 import { SHIPS, FACTIONS, BUILDINGS, SYSTEMS } from './data.js';
 import { SCAN_COST, SCAN_DAYS } from './exploration-data.js';
-import { reachablePlanet, knowledgeOf, knownTargets, observePlanet, visitArrival, portKnown } from './intelligence.js';
+import { reachablePlanet, knowledgeOf, observePlanet, visitArrival, portKnown, rememberOwnedPlanet } from './intelligence.js';
 import { finishScout } from './exploration.js';
 import { canAfford, pay, uid, getPlanet, log, makeStock } from './state.js';
 import { workforce } from './economy.js';
@@ -148,10 +148,12 @@ export function resolveBattle(state, fleets, target) {
     const landers=survivors.filter(f=>f.type==='lander'),troops=landers.reduce((n,f)=>n+SHIPS[f.type].troops,0);
     if(landers.length&&troops>=target.garrison+base.fortification) {
       captured=true;
+      rememberOwnedPlanet(state,target);
       for(const b of target.buildings)if(BUILDINGS[b.type].group==='Planetare Basen'){b.enabled=false;b.status='pausiert';}
       target.shield=0;target.owner=owner;target.garrison=troops;target.happiness=Math.max(15,target.happiness-25);
       target.queues=[];target.lastReport=null;
       const consumed=new Set(landers.map(f=>f.id));state.fleets=state.fleets.filter(f=>!consumed.has(f.id));
+      observePlanet(state,previous,target,'combat');
       relationBetween(state,owner,previous).score=-100;
       for(const f of state.fleets)if(f.supplySettings?.homePort===target.id&&f.owner!==owner){const home=state.planets.find(p=>p.owner===f.owner&&!p.destroyed);if(home)f.supplySettings.homePort=home.id;else delete f.supplySettings;}
       for(const f of state.fleets)if(f.owner===previous&&f.route)f.route=null;

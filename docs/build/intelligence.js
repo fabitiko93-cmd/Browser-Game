@@ -74,6 +74,11 @@ export function knowledgeOf(state, p, viewer = 'player') {
     installations: p.buildings, military: { defense: p.defense, shield: p.shield, garrison: p.garrison } };
   return Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, { value, day: state.day, source: 'own', precision: 'exact' }]));
 }
+export function rememberOwnedPlanet(state,p) {
+  const viewer=p.owner,book=state.intelligence?.[viewer];if(!viewer||!book)return;
+  const own=knowledgeOf(state,p,viewer),record=book.planets[p.id]??={};
+  for(const key of ['geology','surface','installations','military'])record[key]=structuredClone(own[key]);
+}
 export function planetView(state, p, viewer = 'player') {
   if (!reachablePlanet(state, p, viewer)) return null;
   const k = knowledgeOf(state, p, viewer);
