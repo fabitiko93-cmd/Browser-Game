@@ -6,7 +6,7 @@ import { SOUND_CUES } from './audio.js';
 import { EVENTS, initialEventSchedule } from './events.js';
 import { initialRelationExtras } from './diplomacy.js';
 import { makePlanet } from './state.js';
-import { initializeIntelligence, networkSeeds } from './intelligence.js';
+import { initializeIntelligence, networkSeeds, recordContact } from './intelligence.js';
 import { validateExploration } from './exploration-save.js';
 import { STRATEGIC_WEAPONS, CAMPAIGN_GOALS } from './military-data.js';
 import { technologyEffects } from './technology.js';
@@ -28,7 +28,7 @@ export function validateSave(value) {
   if (value?.version === 3) {
     value = structuredClone(value);
     const legacyIds = PLANET_SEEDS.slice(0, 7).map(p => p.id);
-    if (!Array.isArray(value.planets) || ![7, 25, 28, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
+    if (!Array.isArray(value.planets) || ![7, 25, 28, 37, PLANET_SEEDS.length].includes(value.planets.length) || new Set(value.planets.map(p=>p.id)).size !== value.planets.length || legacyIds.some(id=>!value.planets.some(p=>p.id===id)) || value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id))) throw new Error('Ungültige alte Sternenkarte.');
     for (const p of value.planets) { p.shield = 0; p.destroyed = false; }
     for (const seed of PLANET_SEEDS) if (!value.planets.some(p=>p.id===seed.id)) value.planets.push(makePlanet(seed));
     value.strikes = []; value.destroyedSystems = []; value.milestones = []; value.version = 4;
@@ -40,7 +40,7 @@ export function validateSave(value) {
   }
   if(value?.version===5){
     value=structuredClone(value);
-    if(!Array.isArray(value.planets)||![25,28,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||PLANET_SEEDS.slice(0,25).some(p=>!value.planets.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
+    if(!Array.isArray(value.planets)||![25,28,37,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||PLANET_SEEDS.slice(0,25).some(p=>!value.planets.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
     for(const seed of PLANET_SEEDS)if(!value.planets.some(p=>p.id===seed.id)){
       const planet=makePlanet(seed);
       if(value.destroyedSystems.includes(planet.system)){planet.owner=null;planet.population=0;planet.buildings=[];planet.queues=[];planet.shield=0;planet.defense=0;planet.garrison=0;planet.destroyed=true;for(const k of RESOURCE_KEYS)planet.stock[k]=0;}
@@ -59,11 +59,29 @@ export function validateSave(value) {
   }
   if(value?.version===6){
     value=structuredClone(value);
-    const oldSeeds=networkSeeds();
-    if(!Array.isArray(value.planets)||![oldSeeds.length,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||oldSeeds.some(p=>!value.planets.some(q=>q.id===p.id))||value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
+    const oldSeeds=networkSeeds().filter(p=>!p.expansion);
+    if(!Array.isArray(value.planets)||![oldSeeds.length,37,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||oldSeeds.some(p=>!value.planets.some(q=>q.id===p.id))||value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
     for(const seed of PLANET_SEEDS)if(!value.planets.some(p=>p.id===seed.id))value.planets.push(makePlanet(seed));
     initializeIntelligence(value,true);
     value.communications={messages:[],cooldowns:{},nextOffer:value.day+12,cursor:0};
+    value.version=7;
+  }
+
+  if(value?.version===7){
+    value=structuredClone(value);
+    const oldSeeds=PLANET_SEEDS.filter(p=>!p.expansion);
+    if(!Array.isArray(value.planets)||![37,PLANET_SEEDS.length].includes(value.planets.length)||new Set(value.planets.map(p=>p.id)).size!==value.planets.length||oldSeeds.some(p=>!value.planets.some(q=>q.id===p.id))||value.planets.some(p=>!PLANET_SEEDS.some(q=>q.id===p.id)))throw new Error('Ungültige alte Sternenkarte.');
+    for(const seed of PLANET_SEEDS)if(!value.planets.some(p=>p.id===seed.id)){
+      const p=makePlanet(seed);
+      if(value.destroyedSystems.includes(p.system)){p.owner=null;p.population=0;p.buildings=[];p.queues=[];p.shield=0;p.defense=0;p.garrison=0;p.destroyed=true;for(const key of RESOURCE_KEYS)p.stock[key]=0;}
+      value.planets.push(p);
+    }
+    const defaults=initialFactions();
+    const fresh={...value};initializeIntelligence(fresh);
+    for(const [id,f] of Object.entries(defaults))if(!value.factions[id]){value.factions[id]=f;f.nextBuild=value.day+30;value.relations[id]={...initialRelationExtras(),score:15,war:false,trade:false};value.intelligence[id]=fresh.intelligence[id];}
+    for(const p of value.planets.filter(p=>p.expansion&&p.owner))for(const id of Object.keys(value.intelligence))recordContact(value,id,p);
+    for(const p of value.planets)p.localMarket??={cash:Math.min(150,p.population*.6),day:-1,sold:0};
+    for(const f of Object.values(value.factions))if(f.governance.laws.administration==='expert')f.governance.laws.administration='experts';
     value.version=SAVE_VERSION;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
@@ -71,7 +89,7 @@ export function validateSave(value) {
   const known = (dict, key) => typeof key === 'string' && Object.hasOwn(dict, key);
   const validCargo = (cargo, capacity) => !cargo || RESOURCE_KEYS.includes(cargo.resource) && finite(cargo.amount, 1, capacity);
   if (!value || value.version !== SAVE_VERSION || !Array.isArray(value.planets) || value.planets.length !== PLANET_SEEDS.length || !Array.isArray(value.fleets) || value.fleets.length > 2000) throw new Error('Unbekanntes Spielstandformat.');
-  if (!Number.isInteger(value.day) || !finite(value.day, 0, 1e6) || !finite(value.credits) || !finite(value.science) || !Number.isInteger(value.nextId) || !finite(value.nextId, 1) || typeof value.started !== 'boolean' || !known(IDEOLOGIES, value.player?.ideology) || !text(value.player.name, 32) || !finite(value.player.tax, 0, .5) || !finite(value.player.stability, 0, 100) || !finite(value.player.rulingSupport, 0, 100) || !finite(value.player.term) || !finite(value.aiNext)) throw new Error('Der Spielstand enthält ungültige Werte.');
+  if (!Number.isInteger(value.day) || !finite(value.day, 0, 1e6) || !finite(value.credits,-1e12) || !finite(value.science) || !Number.isInteger(value.nextId) || !finite(value.nextId, 1) || typeof value.started !== 'boolean' || !known(IDEOLOGIES, value.player?.ideology) || !text(value.player.name, 32) || !finite(value.player.tax, 0, .5) || !finite(value.player.stability, 0, 100) || !finite(value.player.rulingSupport, 0, 100) || !finite(value.player.term) || !finite(value.aiNext)) throw new Error('Der Spielstand enthält ungültige Werte.');
   const g = value.governance;
   if (!g || !g.laws || Object.keys(g.laws).length !== Object.keys(LAWS).length || Object.entries(LAWS).some(([id, law]) => !known(law.options, g.laws[id]) || Boolean(lawBlock(value,id,g.laws[id]))) || !finite(g.lawReady, 0, value.day + 5) || !Array.isArray(g.decisions) || g.decisions.length > Object.keys(DECISIONS).length || new Set(g.decisions.map(d => d.id)).size !== g.decisions.length || g.decisions.some(d => !known(DECISIONS, d.id) || DECISIONS[d.id].ideologies&&!DECISIONS[d.id].ideologies.includes(value.player.ideology) || DECISIONS[d.id].requiredTech&&!value.tech.includes(DECISIONS[d.id].requiredTech) || !finite(d.until, value.day, value.day + DECISIONS[d.id].duration)) || !g.cooldowns || typeof g.cooldowns !== 'object' || Array.isArray(g.cooldowns) || Object.entries(g.cooldowns).some(([id, until]) => !known(DECISIONS, id) || !finite(until, 0, value.day + DECISIONS[id].cooldown))) throw new Error('Ungültige Regierungspolitik.');
   if (!Array.isArray(value.surveys) || new Set(value.surveys).size !== value.surveys.length || value.surveys.some(id => !PLANET_SEEDS.some(p => p.id === id))) throw new Error('Ungültige Erkundungsdaten.');
@@ -86,6 +104,7 @@ export function validateSave(value) {
   const ids = new Set();
   for (const p of value.planets) {
     if (!finite(p.shield) || typeof p.destroyed !== 'boolean' || p.destroyed && (p.owner !== null || p.population !== 0 || p.buildings?.length || p.queues?.length || p.shield !== 0) || !PLANET_SEEDS.some(seed => seed.id === p.id) || ids.has(p.id) || !text(p.name, 64) || !SYSTEMS.some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
+    if(p.localMarket!=null&&(typeof p.localMarket!=='object'||Array.isArray(p.localMarket)||!finite(p.localMarket.cash,0,200)||!Number.isInteger(p.localMarket.day)||!finite(p.localMarket.day,-1,value.day)||!finite(p.localMarket.sold,0,50)))throw new Error('Ungültiger örtlicher Markt.');
     if(!known(PRIORITIES,p.priority)||!Array.isArray(p.needs)||new Set(p.needs).size!==p.needs.length||p.needs.some(k=>!['goods','medicine'].includes(k)))throw new Error('Ungültige planetare Versorgung.');
     ids.add(p.id);
     if(p.lastReport){for(const field of ['demandByResource','productionByResource'])if(p.lastReport[field]&&(typeof p.lastReport[field]!=='object'||Object.entries(p.lastReport[field]).some(([key,v])=>!RESOURCE_KEYS.includes(key)||!finite(v))))throw new Error('Ungültige Produktionsabrechnung.');if(p.lastReport.missingResources&&(!Array.isArray(p.lastReport.missingResources)||p.lastReport.missingResources.some(k=>!RESOURCE_KEYS.includes(k))))throw new Error('Ungültige Engpässe.');}
@@ -107,7 +126,9 @@ export function validateSave(value) {
     fleetIds.add(f.id);
     if((f.mission?.cargo?.amount??0)+Object.values(f.cargo??{}).reduce((n,v)=>n+v,0)>Math.floor(SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity)+.000001)throw new Error('Überladener Frachtraum.');
     const m = f.mission, r = f.route;
-    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit','commerce'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if(m?.kind==='commerce'&&(f.owner==='player'||f.type!=='freighter'||!known(FACTIONS,m.buyer)||m.buyer==='player'||m.buyer===f.owner||!m.cargo))throw new Error('Ungültige fremde Handelslieferung.');
+    if(f.tradeReady!=null&&!finite(f.tradeReady,0,value.day+20))throw new Error('Ungültige Handelsplanung.');
     if(m?.kind==='analyze'&&(f.type!=='probe'||m.phase!=null&&m.phase!=='scan'||m.phase==='scan'&&f.planetId!==m.target)||m?.kind==='explore'&&f.type!=='scout')throw new Error('Ungültiger Erkundungsauftrag.');
     if (m?.kind==='circuit'&&(!Number.isInteger(m.stopIndex)||!finite(m.stopIndex,0,7)))throw new Error('Ungültiger Routenstopp.');
     if(f.cargo!=null&&(typeof f.cargo!=='object'||Array.isArray(f.cargo)||Object.keys(f.cargo).length!==RESOURCE_KEYS.length||RESOURCE_KEYS.some(k=>!finite(f.cargo[k]))||Object.values(f.cargo).reduce((n,v)=>n+v,0)>SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity+.000001))throw new Error('Ungültige Bordfracht.');
@@ -148,7 +169,7 @@ function validateDevelopment(state,ids){
  if(!state.factions||Object.keys(state.factions).length!==Object.keys(FACTIONS).length-1)throw new Error('Ungültige fremde Reiche.');
  for(const id of Object.keys(FACTIONS).filter(id=>id!=='player')){
   const f=state.factions[id],g=f?.governance;
-  if(!f||!finite(f.credits)||!finite(f.science)||!finite(f.nextBuild,0,state.day+60)||!Array.isArray(f.tech)||new Set(f.tech).size!==f.tech.length||f.tech.some(key=>!TECHNOLOGIES[key]||TECHNOLOGIES[key].requires.some(q=>!f.tech.includes(q))||(TECHNOLOGIES[key].excludes??[]).some(q=>f.tech.includes(q))||TECHNOLOGIES[key].requiresAny&&!TECHNOLOGIES[key].requiresAny.some(q=>f.tech.includes(q)))||!g||Object.keys(g.laws??{}).length!==Object.keys(LAWS).length||Object.entries(LAWS).some(([key,law])=>!law.options[g.laws[key]]||law.options[g.laws[key]].ideologies&&!law.options[g.laws[key]].ideologies.includes(FACTIONS[id].ideology)||law.options[g.laws[key]].requiredTech&&!f.tech.includes(law.options[g.laws[key]].requiredTech)))throw new Error('Ungültige fremde Wirtschaft oder Forschung.');
+  if(!f||!finite(f.credits,-1e12)||!finite(f.science)||!finite(f.nextBuild,0,state.day+60)||!Array.isArray(f.tech)||new Set(f.tech).size!==f.tech.length||f.tech.some(key=>!TECHNOLOGIES[key]||TECHNOLOGIES[key].requires.some(q=>!f.tech.includes(q))||(TECHNOLOGIES[key].excludes??[]).some(q=>f.tech.includes(q))||TECHNOLOGIES[key].requiresAny&&!TECHNOLOGIES[key].requiresAny.some(q=>f.tech.includes(q)))||!g||Object.keys(g.laws??{}).length!==Object.keys(LAWS).length||Object.entries(LAWS).some(([key,law])=>!law.options[g.laws[key]]||law.options[g.laws[key]].ideologies&&!law.options[g.laws[key]].ideologies.includes(FACTIONS[id].ideology)||law.options[g.laws[key]].requiredTech&&!f.tech.includes(law.options[g.laws[key]].requiredTech)))throw new Error('Ungültige fremde Wirtschaft oder Forschung.');
   if(!finite(g.lawReady,0,state.day+5)||!Array.isArray(g.decisions)||g.decisions.length||!g.cooldowns||Object.keys(g.cooldowns).length)throw new Error('Ungültige fremde Regierungspolitik.');
   if(f.research&&(!TECHNOLOGIES[f.research.id]||f.tech.includes(f.research.id)||!Number.isInteger(f.research.remaining)||!finite(f.research.remaining,1,45)||TECHNOLOGIES[f.research.id].requires.some(q=>!f.tech.includes(q))||(TECHNOLOGIES[f.research.id].excludes??[]).some(q=>f.tech.includes(q))||TECHNOLOGIES[f.research.id].requiresAny&&!TECHNOLOGIES[f.research.id].requiresAny.some(q=>f.tech.includes(q))))throw new Error('Ungültige fremde Forschung.');
  }

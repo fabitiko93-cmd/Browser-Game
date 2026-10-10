@@ -1,9 +1,11 @@
+import { NEW_PROFILES, NEW_REASONS } from './political-expansion.js';
 import { technologyEffects } from './technology.js';
 import { FACTIONS } from './data.js';
 import { log } from './state.js';
 
 // Multipliers combine; approval and daily expenses add. No hidden moral score.
 export const PROFILES = {
+  ...NEW_PROFILES,
   democracy: { workers:1.02, happiness:8, trade: 1.18, envoy: 1.2, science: 1.12, shipTime: 1.12, reformCost: 1.15 },
   communism: { science:1.06, happiness:3, production: 1.12, workers: 1.12, trade: .85, upkeep: 1.08 },
   monarchy: { science:1.04, workers:1.04, happiness:6, upkeep: .88, tax: 1.1, reformStability: .75, reformCost: 1.2 },
@@ -12,6 +14,7 @@ export const PROFILES = {
   nationalSocialism: { science:1.10, workers:1.10, happiness:2, shipTime: .82, militaryProduction: 1.2, combat: 1.08, reformCost: .8, trade: .85, upkeep: 1.12 }
 };
 export const PROFILE_REASONS = {
+  ...NEW_REASONS,
   democracy: 'Wettbewerb und offene Fachdebatten fördern Handel, Diplomatie und Forschung; Mitbestimmung hebt Zustimmung und Beschäftigung. Parlamentarische Abstimmung erhöht Reformkosten und verzögert Werftentscheidungen.',
   communism: 'Zentrale Produktionsplanung und breite Beschäftigung erhöhen Ausstoß und Personalangebot; soziale Grundversorgung stützt Zustimmung und Ausbildung. Verwaltungsaufwand und staatlich geregelter Außenhandel kosten Unterhalt und Exporterlös.',
   monarchy: 'Eine dauerhafte Verwaltung reduziert laufende Kosten und verbessert Abgabenerhebung; Kontinuität stärkt Zustimmung, Ausbildung und Beschäftigung. Eingespielte Machtstrukturen machen Reformen teurer, aber weniger destabiliserend.',
@@ -106,10 +109,10 @@ export function lawChangeCost(state) { return Math.ceil(60 * policyEffects(state
 export function governmentChangeCost(state) { return Math.ceil(100 * policyEffects(state).reformCost * technologyEffects(state).reformCost); }
 
 // Shared fundamentals remain available; constitutional and economic reforms have prerequisites.
-LAWS.borders.options.open.ideologies = ['democracy','communism','monarchy'];
-LAWS.economy.options.free.ideologies = ['democracy','monarchy','technocracy'];
+LAWS.borders.options.open.ideologies = ['democracy','communism','monarchy','federation'];
+LAWS.economy.options.free.ideologies = ['democracy','monarchy','technocracy','corporate','oligarchy','federation'];
 Object.assign(LAWS.borders.options, {
- skilled:{name:'Fachkräftevisa',ideologies:['technocracy','democracy','monarchy'],effects:{workers:1.06,growth:1.1,upkeep:1.03}},
+ skilled:{name:'Fachkräftevisa',ideologies:['technocracy','democracy','monarchy','federation','corporate'],effects:{workers:1.06,growth:1.1,upkeep:1.03}},
  selective:{name:'Speziesgebundene Einreise',ideologies:['nationalSocialism'],effects:{workers:1.05,growth:.9,envoy:.97}},
  permits:{name:'Militärische Einreisegenehmigung',ideologies:['military'],effects:{workers:1.03,growth:.85,upkeep:1.03}}
 });
@@ -136,6 +139,25 @@ Object.assign(DECISIONS, {
  expertBudget:reform('Fachgremienprogramm','Forschungsbudgets und energieeffiziente Produktionsverfahren.','technocracy',{science:1.15,inputEnergy:.95,upkeep:1.08}),
  industrialDirective:reform('Industrielle Mobilisierung','Zusätzliche industrielle Beschäftigung und gelenkte Rüstungsaufträge.','nationalSocialism',{workers:1.08,militaryProduction:1.12,upkeep:1.08})
 });
+
+Object.assign(LAWS.administration.options, {
+ compact:{name:'Planetarer Föderationsvertrag',ideologies:['federation'],requiredTech:'politicalReforms',effects:{happiness:5,envoy:1.08,tax:.95}},
+ concessions:{name:'Infrastrukturkonzessionen',ideologies:['corporate'],requiredTech:'politicalReforms',effects:{civilianProduction:1.08,trade:1.08,happiness:-3}},
+ houses:{name:'Häuserkontingente',ideologies:['oligarchy'],requiredTech:'politicalReforms',effects:{upkeep:.94,tax:1.06,reformCost:1.1}},
+ synod:{name:'Gemeinschaftliche Stiftungen',ideologies:['theocracy'],requiredTech:'politicalReforms',effects:{happiness:4,foodDemand:.94,upkeep:1.06}}
+});
+Object.assign(LAWS.science.options, {
+ network:{name:'Föderale Forschungsnetze',ideologies:['federation'],effects:{science:1.12,upkeep:1.05}},
+ patent:{name:'Patentfinanzierte Entwicklung',ideologies:['corporate','oligarchy'],effects:{science:1.12,trade:1.04,upkeep:1.1}},
+ doctrine:{name:'Synodale Forschungskollegien',ideologies:['theocracy'],effects:{science:1.1,researchTime:1.05,happiness:2}}
+});
+Object.assign(DECISIONS, {
+ federalFund:reform('Föderaler Ausgleichsfonds','Kolonien finanzieren gemeinsame Fach- und Versorgungsnetze.','federation',{happiness:5,science:1.08,tax:.96}),
+ enterpriseFund:reform('Industrielle Investitionsrunde','Konzernkapital finanziert zivile Produktionsverbesserungen.','corporate',{civilianProduction:1.15,trade:1.08,upkeep:1.08}),
+ houseAccord:reform('Häuservereinbarung','Handelshäuser standardisieren Abgaben und Flottenlogistik.','oligarchy',{tax:1.08,fleetUpkeep:.95,reformCost:1.08}),
+ synodRelief:reform('Synodaler Versorgungsdienst','Gemeinschaftsnetze koordinieren Nahrung und öffentliche Dienste.','theocracy',{foodDemand:.9,happiness:5,upkeep:1.05})
+});
+
 export function lawBlock(state, category, choice, ideology = state.player.ideology) {
  const option=LAWS[category]?.options[choice];
  if(!option)return 'Unbekanntes Gesetz.';

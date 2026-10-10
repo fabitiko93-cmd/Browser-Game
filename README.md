@@ -4,6 +4,17 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Kleine Reiche & eigenständige Wirtschaft · 0.8
+
+- Neue Partien starten mit 18 fremden Reichen, je einer Heimatwelt. Insgesamt 49 Planeten in zwölf Sonnensystemen; mehrere Staaten teilen sich Systeme. Alte Spielstände behalten sämtliche Besitzverhältnisse und erhalten zwölf zusätzliche Hauptwelten.
+- Zehn Staatsformen: neu Föderale Republik, Konzernherrschaft, Oligarchie und Theokratie. Eigene Produktions-, Forschungs-, Steuer-, Versorgungs- und Reformfaktoren sowie passende Gesetze und Regierungsprogramme.
+- Credits können negativ werden. Ungedeckte laufende Kosten bleiben Schulden, mit 0,1 % Zins je Spieltag. Bei Zahlungsunfähigkeit warten nicht notwendige Baustellen, Industrie liefert 80 %, Labore 50 %, Forschungsprojekte pausieren und Flotten verlieren täglich drei Versorgung ohne automatische Wartung. Oberhalb von max. 150 Credits bzw. 1,5 Credits je Einwohner Schulden stehen nicht notwendige Anlagen still, bei 25 % Restunterhalt. Nahrung, Energie, Wohnraum, öffentliche Gesundheit und Kommunikation bleiben geschützt. Einnahmen tilgen Schulden automatisch.
+- Wirtschaft → Finanzen bietet Sparbetrieb, Haushaltshilfen und örtliche Sofortverkäufe ohne Frachter. Maximal 50 Einheiten je Planet und Spieltag, ein begrenztes ziviles Käuferbudget mit langsamer Erholung, 38 % des Waren-Grundpreises. Kleine regelmäßige Gebühren aus versorgter und zufriedener Binnenwirtschaft; Handelshäfen erhöhen sie begrenzt. Keine permanente Geldquelle ohne Bevölkerung oder Versorgung.
+- Preise reagieren stärker auf echte Bestandsreichweite und Überschussproduktion. Engpässe, Nachfrage und Überangebot sind als öffentliche Marktsignale sichtbar. Tatsächliche Lieferungen verschieben Preise; interne Vorräte bleiben verborgen.
+- Fremde Staaten starten mit unterschiedlichen Vorräten und Produktionsschwerpunkten. Sie investieren in eigene Engpässe, prüfen dauerhafte Kosten, pausieren Anlagen bei Schulden und betreiben echte Frachter mit begrenztem Laderaum, gebuchter Ware, Hin-/Rückflugenergie, Reisezeiten und endlichen Haushalten. Erkundete leere Welten können sie nach Forschung mit bezahlten Kolonieschiffen und Siedlern besiedeln; höchstens drei eigene Kolonien je Reich.
+- Das eigene Planetendossier öffnet durch Antippen des Planetennamens über der Karte. Es ist nicht mehr zwischen Baukategorien untergebracht. Systeme mit fünf Welten werden vollständig gezeichnet.
+- Speicherformat v8: v1–v7 werden migriert, bestehende Kolonien, Güter, Archive und Flottenaufträge bleiben erhalten. Die kleinteilige Startverteilung erfordert eine neue Partie.
+
 ## Erkundung & Kommunikation · 0.7
 
 - Zwölf Sterne und 37 Planeten. Drei neue Systeme mit neun unbewohnten Welten liegen außerhalb der kartierten Flugrouten. In der Sternenkarte einen unkartierten Stern wählen und einen Erkunder losschicken; nach erfolgreicher Übertragung können andere Schiffe folgen. Flüge ohne vorhandene Sprungkorridore kosten mehr Energie und dauern länger. Neue Raumtore werden noch nicht gebaut.
@@ -41,7 +52,7 @@ Spionage, Informationsabkommen, automatische Scans, Misstrauen/Angst, Space News
 - Ereignisse mit Entscheidungen, automatische lokale Speicherung und Spielstanddateien.
 - Pause und Zeitbeschleunigung; nach erfolgreicher Installation der Offline-Dateien auch ohne Netz spielbar.
 
-Die erste Fassung ist ein spielbarer Grundstock. Gegner bauen noch keine eigenen neuen Kolonien oder frei organisierten Kampfverbände; ihre Erkundungs- und Analyseschiffe reisen bereits selbstständig.
+Die erste Fassung ist ein spielbarer Grundstock. Gegner erkunden, analysieren, transportieren Waren und gründen eigene Kolonien. Frei organisierte gegnerische Kampfverbände und umfassende zwischenstaatliche Kriegsplanung bleiben ein weiterer Entwicklungsschritt.
 Ihre Gegenangriffe werden als Überfälle berechnet. Komplexe Befehlshierarchien, eigene Parteienorganisationen, Bodenkampfzonen,
 vollständige Sternenreisen und Multiplayer sind noch nicht implementiert.
 Ideologien und Zahlen sind Spielregeln der fiktiven Welt und keine historischen Modelle.

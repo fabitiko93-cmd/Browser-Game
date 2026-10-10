@@ -132,15 +132,16 @@ export class MapRenderer {
   }
   system(ctx, w, h, time) {
     const system = SYSTEMS.find(s => s.id === this.ui.systemId), planets = this.state.planets.filter(p => p.system === system.id).map(p=>planetView(this.state,p)).filter(Boolean);
-    const cx = w / 2 + this.camera.x, cy = h * .43 + this.camera.y, zoom = this.camera.zoom;
-    const orbitRadius = Math.min(w * .38, h * .28) * zoom;
+    const top=this.surfaceInsets?.top??84,bottom=this.surfaceInsets?.bottom??67,available=Math.max(160,h-top-bottom);
+    const cx = w / 2 + this.camera.x, cy = top + available * .36 + this.camera.y, zoom = this.camera.zoom;
+    const orbitRadius = Math.min(w * .38, available * .25) * zoom;
     for (let i = 0; i < planets.length; i++) {
       ctx.strokeStyle = '#94b6c415'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy, orbitRadius * (.6 + i * .4), orbitRadius * (.85 + i * .42), -.2, 0, Math.PI * 2); ctx.stroke();
     }
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 78 * zoom); glow.addColorStop(0, `${system.color}65`); glow.addColorStop(1, `${system.color}00`); ctx.fillStyle = glow; ctx.fillRect(cx - 78 * zoom, cy - 78 * zoom, 156 * zoom, 156 * zoom);
     ctx.shadowColor = system.color; ctx.shadowBlur = 20; ctx.fillStyle = this.state.destroyedSystems.includes(system.id) ? '#473954' : system.color; ctx.beginPath(); ctx.arc(cx, cy, 14 * zoom, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#ddc99e'; ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillText(system.name.toUpperCase(), cx, cy + 33 * zoom);
-    const positions = [ [-.9, -.65], [.82, .35], [-.37, 1.6], [.9, -1.05] ];
+    const positions = [ [-.9, -.65], [.82, .35], [-.37, 1.6], [.9, -1.05], [-.75, .65] ];
     for (let i = 0; i < planets.length; i++) {
       const [dx, dy] = positions[i], x = cx + dx * orbitRadius, y = cy + dy * orbitRadius;
       this.planetBody(ctx, x, y, 20 * zoom, planets[i], time);

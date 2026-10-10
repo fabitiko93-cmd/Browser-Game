@@ -1,7 +1,8 @@
+import { NEW_IDEOLOGIES, NEW_FACTIONS, NEW_PLANETS } from './political-expansion.js';
 import { NEW_RESOURCES, DEVELOPMENT_BUILDINGS, BULK_SHIPS } from './development-data.js';
 import { MILITARY_BUILDINGS } from './military-data.js';
 import { DEEP_SYSTEMS, DEEP_PLANETS, EXPLORATION_BUILDINGS, EXPLORATION_SHIPS } from './exploration-data.js';
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {
@@ -30,6 +31,7 @@ export const BUILDINGS = {
   shipyard: { name: 'Raumwerft', group: 'Militär', glyph: 'W', color: '#7fadb8', cost: { credits: 140, alloy: 45 }, days: 5, workers: 16, upkeep: 5, input: { energy: 2 }, description: 'Baut zwölf spezialisierte Klassen von Raumfahrzeugen. Baupläne werden durch Forschung erschlossen.' }
 };
 export const IDEOLOGIES = {
+  ...NEW_IDEOLOGIES,
   democracy: { name: 'Demokratie', description: 'Gewählte Regierung, politische Opposition und gleiche Bürgerrechte für alle Spezies.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'open', citizenship: 'Gleiche Bürgerrechte', leadership: 'Gewählte Regierung', repression: 'Gering', term: 60 },
   communism: { name: 'Kommunismus', description: 'Staatliche Produktion und zentral gelenkte Versorgung. Politischer Wettbewerb ist eingeschränkt.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'collective', citizenship: 'Gleiche wirtschaftliche Rechte', leadership: 'Zentralrat', repression: 'Hoch' },
   monarchy: { name: 'Monarchie', description: 'Erbliche Herrschaft mit ständischer Ordnung und begrenzter politischer Beteiligung.', science: 1, workers: 1, tax: 1, happiness: 0, affinity: 'traditional', citizenship: 'Untertanenstatus', leadership: 'Erbliches Staatsoberhaupt', repression: 'Mittel' },
@@ -74,16 +76,17 @@ export const PLANET_SEEDS = [
 ];
 const frontierNames = [['Solace','Ember','Pelagos'],['Lumen','Aeris','Iris'],['Ferrum','Pyra','Dusk'],['Arcadia','Rime','Halo'],['Cobalt','Verdant','Haven'],['Obsidian','Ash','Zenith']];
 frontierSystems.forEach((s,i)=>{
-  for(let orbit=0;orbit<3;orbit++) PLANET_SEEDS.push({id:`${s.id}-${orbit}`,name:frontierNames[i][orbit],system:s.id,owner:orbit===0?['ilyri','khepri','aster'][i%3]:null,kind:['Temperiert','Vulkanisch','Kristallwelt'][orbit],color:['#82a0d4','#d69a7b','#b19cd9'][orbit],seed:110+i*13+orbit*7,oreFactor:.8+(i%3)*.25+orbit*.2,solarFactor:.75+(i%2)*.25+orbit*.15,population:orbit===0?180+i*15:0,aliens:orbit===0?.6:0,orbit,frontier:true});
+  for(let orbit=0;orbit<3;orbit++) PLANET_SEEDS.push({id:`${s.id}-${orbit}`,name:frontierNames[i][orbit],system:s.id,owner:null,kind:['Temperiert','Vulkanisch','Kristallwelt'][orbit],color:['#82a0d4','#d69a7b','#b19cd9'][orbit],seed:110+i*13+orbit*7,oreFactor:.8+(i%3)*.25+orbit*.2,solarFactor:.75+(i%2)*.25+orbit*.15,population:0,aliens:0,orbit,frontier:true});
 });
 PLANET_SEEDS.push(
   {id:'corona',name:'Corona',system:'orion',owner:'corona',kind:'Temperiert',color:'#e9cd95',seed:230,oreFactor:.85,solarFactor:1.1,population:220,aliens:.3,orbit:3,frontier:true},
   {id:'collective',name:'Synara',system:'caelum',owner:'collective',kind:'Industriewelt',color:'#e3a8bb',seed:241,oreFactor:1.15,solarFactor:.9,population:260,aliens:.7,orbit:3,frontier:true},
   {id:'vanguard',name:'Bastion',system:'erebus',owner:'vanguard',kind:'Eiswelt',color:'#9ac9c1',seed:252,oreFactor:1.2,solarFactor:.7,population:240,aliens:.4,orbit:3,frontier:true}
 );
-PLANET_SEEDS.push(...DEEP_PLANETS);
+PLANET_SEEDS.push(...DEEP_PLANETS, ...NEW_PLANETS);
 export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const FACTIONS = {
+  ...NEW_FACTIONS,
   corona:{name:'Sternenkrone Corona',species:'Menschen / Ilyri',color:'#e9cd95',ideology:'monarchy',goal:'Versorgung und stabile Handelsverbindungen',priority:'goods',research:'colonies'},
   collective:{name:'Synarisches Kollektiv',species:'Synari',color:'#e3a8bb',ideology:'communism',goal:'Industrielle Lieferketten und medizinische Versorgung',priority:'medicine',research:'industry'},
   vanguard:{name:'Vanguard-Kommando',species:'Menschen / Khepri',color:'#9ac9c1',ideology:'military',goal:'Flottenversorgung und gesicherte Grenzen',priority:'fuel',research:'defense'},

@@ -6,7 +6,7 @@ const network = () => SYSTEMS.filter(s => !s.uncharted).map(s => s.id);
 const observation = (value, day, source, precision = 'observed') => ({ value: structuredClone(value), day, source, precision });
 export function initializeIntelligence(state, legacy = false) {
   state.intelligence = Object.fromEntries(Object.keys(FACTIONS).map((id, index) => [id, {
-    chartedSystems: network(), routes: [], planets: {}, nextMission: state.day + 18 + index * 7
+    chartedSystems: network(), routes: [], planets: {}, nextMission: state.day + 18 + (index % 6) * 7
   }]));
   for (const id of Object.keys(FACTIONS)) {
     // Existing diplomatic addresses reveal capitals, never their economies or governments.

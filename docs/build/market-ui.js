@@ -1,6 +1,6 @@
 import { reachablePlanet } from './intelligence.js';
 import { RESOURCES, RESOURCE_KEYS, FACTIONS } from './data.js';
-import { tradingAccess, marketPrice } from './trade.js';
+import { tradingAccess, marketPrice, marketSignal } from './trade.js';
 import { getPlanet } from './state.js';
 import { esc,fmt,opts,button } from './ui-format.js';
 export function marketSelection(state,ui) {
@@ -9,9 +9,9 @@ export function marketSelection(state,ui) {
 const chooser=(planets,p)=>`<label class="form-label">Handelsmarkt</label><select class="select" data-field="marketPlanet">${opts(planets.map(q=>[q.id,`${q.name} · ${FACTIONS[q.owner].name}`]),p.id)}</select>`;
 export function marketPanel(state,ui) {
  const {planets,p}=marketSelection(state,ui);if(!p)return '<div class="alert">Schließe zuerst ein Handelsabkommen. Dann kannst du Preise, Vorräte und Bedarf vergleichen.</div>';
- return `${chooser(planets,p)}<p class="lede">${esc(FACTIONS[p.owner].goal)}. Preise reagieren auf den Vorrat in Verbrauchstagen. Regelmäßiger Verbrauch schafft dauerhafte Nachfrage; große Lieferungen drücken den Knappheitsaufschlag.</p>${RESOURCE_KEYS.map(k=>{
+ return `${chooser(planets,p)}<p class="lede">${esc(FACTIONS[p.owner].goal)}. Preise reagieren auf Bestandsreichweite und örtliche Überschussproduktion. Akute Engpässe erzeugen deutlich höhere Gebote. Regelmäßiger Verbrauch schafft dauerhafte Nachfrage; große Lieferungen drücken den Knappheitsaufschlag.</p>${RESOURCE_KEYS.map(k=>{
 
-  return `<div class="detail-card market-card"><strong>${RESOURCES[k].name}</strong><div class="stat-line"><span>Verkaufen / Einkaufen</span><strong>${fmt(marketPrice(state,p,k))} / ${fmt(marketPrice(state,p,k,'buy'))} ¢</strong></div><p class="note">Öffentliches Marktangebot · Preise vom Tag ${state.day}. Interne Vorräte, Verbrauch und Produktion sind nicht offengelegt.</p></div>`;
+  return `<div class="detail-card market-card"><strong>${RESOURCES[k].name}</strong><span class="status-badge">${marketSignal(state,p,k)}</span><div class="stat-line"><span>Verkaufen / Einkaufen</span><strong>${fmt(marketPrice(state,p,k))} / ${fmt(marketPrice(state,p,k,'buy'))} ¢</strong></div><p class="note">Öffentliches Marktangebot · Preise vom Tag ${state.day}. Interne Vorräte, Verbrauch und Produktion sind nicht offengelegt.</p></div>`;
  }).join('')}<p class="note">Preise gelten bei Ankunft. Abnahme ist durch örtlichen Bedarf und die finanziellen Mittel des Partners begrenzt. Frachter behalten unverkaufte Ware; klassische Einzelrouten bringen sie zurück. Lieferverträge sichern einen Preis und reservieren Geld je Lieferperiode.</p><div class="section-title">Letzte Handelsbuchungen</div>${state.tradeLedger.slice(0,8).map(e=>`<p class="note">Tag ${e.day} · ${esc(getPlanet(state,e.planet)?.name)} · ${fmt(e.amount)} ${RESOURCES[e.resource].name}<br>${e.revenue?`Erlös +${fmt(e.revenue)} ¢`:`Einkauf −${fmt(e.cost)} ¢`}</p>`).join('')||'<p class="note">Noch keine Verkäufe oder Einkäufe.</p>'}`;
 }
 export function contractsPanel(state,ui) {

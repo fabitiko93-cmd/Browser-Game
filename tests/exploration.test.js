@@ -25,7 +25,7 @@ const ui=(planetId='thalassa')=>({planetId,systemId:'helios',view:'planet',panel
 
 test('new games show astronomy and diplomatic addresses, while sensitive foreign fields stay unknown',()=>{
  const s=createGame(),p=getPlanet(s,'thalassa'),view=planetView(s,p);
- assert.equal(SYSTEMS.length,12);assert.equal(PLANET_SEEDS.length,37);
+ assert.equal(SYSTEMS.length,12);assert.equal(PLANET_SEEDS.length,49);
  assert.equal(view.kind,'Ozeanisch');assert.equal(view.inhabited,true);assert.equal(view.owner,'ilyri');
  for(const key of ['population','happiness','shield','seed','oreFactor','solarFactor'])assert.equal(view[key],undefined,key);
  assert.deepEqual(view.buildings,[]);assert.ok(!view.knowledge.civil);
@@ -66,7 +66,8 @@ test('scouts have no attack capability, only occupancy observations, and leave i
 test('hostile interception can destroy scouts before transmission without granting secret knowledge or rewards',()=>{
  let losses=0,survivors=0;
  for(let i=0;i<30;i++){
-  const s=createGame(),f=ship(s,'scout',`risk-${i}`),p=getPlanet(s,'draco-0');s.relations.aster.war=true;
+  const s=createGame(),f=ship(s,'scout',`risk-${i}`),p=getPlanet(s,'aster');s.relations.aster.war=true;
+  delete s.intelligence.player.planets[p.id];
   assert.equal(orderFleet(s,[f.id],p.id,'survey'),null);f.mission.remaining=1;tickFleets(s);
   if(!s.fleets.includes(f)){losses++;assert.equal(knowledgeOf(s,p).occupancy,undefined);assert.equal(s.science,0);}
   else{survivors++;assert.equal(knowledgeOf(s,p).occupancy.value,true);assert.equal(knowledgeOf(s,p).identity,undefined);assert.equal(f.mission.target,'nereid');}
@@ -94,7 +95,7 @@ test('recorded observations stay unchanged when the real planet changes and expo
  const q=planetView(s,p);assert.ok(!q.buildings.some(b=>b.type==='shipyard'));
 });
 test('trade selectors reveal only known harbor identities and a real visit can open another market',()=>{
- const s=createGame(),p=getPlanet(s,'aurora-0');diplomaticAction(s,'ilyri','trade');
+ const s=createGame(),p=getPlanet(s,'aurora-0');p.owner='ilyri';diplomaticAction(s,'ilyri','trade');
  assert.ok(!routeSelection(s,{},home(s)).targets.some(q=>q.id===p.id));assert.ok(!marketSelection(s,{}).planets.some(q=>q.id===p.id));
  recordContact(s,'player',p);assert.ok(routeSelection(s,{},home(s)).targets.some(q=>q.id===p.id));assert.ok(marketSelection(s,{}).planets.some(q=>q.id===p.id));
 });
@@ -164,14 +165,14 @@ test('AI request cadence is bounded, cannot duplicate a negotiation, and needs a
 test('v6 migration keeps running routes and balances, adds nine worlds, and records only plausible earlier visits',()=>{
  const s=createGame();diplomaticAction(s,'ilyri','trade');orderFleet(s,['starter-f'],'thalassa','transport',{resource:'ore',amount:20,repeat:true});
  const old=structuredClone(s);old.version=6;old.planets=old.planets.slice(0,28);delete old.intelligence;delete old.communications;
- const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,7);assert.equal(loaded.planets.length,37);assert.equal(loaded.credits,old.credits);
+ const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,8);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,old.credits);
  for(const p of old.planets)assert.deepEqual(getPlanet(loaded,p.id),p);assert.deepEqual(loaded.fleets,old.fleets);
  assert.equal(knowledgeOf(loaded,getPlanet(loaded,'thalassa')).civil,undefined);
  for(let i=0;i<20;i++)stepDay(loaded);assert.deepEqual(parseImport(exportGame(loaded)),loaded);
 });
 test('migration preserves an existing route to a previously visited frontier harbor without inventing its civil details',()=>{
  const s=createGame();s.relations.ilyri.trade=true;const f=s.fleets[1];f.route={source:'nereid',target:'aurora-0',resource:'ore',amount:20,reserve:0};
- const old=structuredClone(s);old.version=6;old.planets=old.planets.slice(0,28);delete old.intelligence;delete old.communications;
+ const old=structuredClone(s);old.version=6;old.planets=old.planets.slice(0,28);old.planets.find(p=>p.id==='aurora-0').owner='ilyri';delete old.intelligence;delete old.communications;
  const loaded=parseImport(JSON.stringify(old));assert.deepEqual(loaded.fleets[1].route,f.route);assert.equal(knowledgeOf(loaded,getPlanet(loaded,'aurora-0')).identity.value,'ilyri');assert.equal(knowledgeOf(loaded,getPlanet(loaded,'aurora-0')).civil,undefined);
  stepDay(loaded);assert.ok(loaded.fleets[1].route);assert.ok(loaded.fleets[1].mission);assert.deepEqual(parseImport(exportGame(loaded)),loaded);
 });

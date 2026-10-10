@@ -1,3 +1,4 @@
+import { localSale, austerity } from './finance.js';
 import { resourcePages, hudPlanet } from './hud.js';
 import { planetView, systemKnown } from './intelligence.js';
 import { exploreSystem } from './exploration.js';
@@ -130,6 +131,8 @@ document.addEventListener('click', e => {
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
   else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
+  else if (action === 'local-sale') return act(localSale(state,p,el.dataset.resource,25),'Waren an örtliche Privatkäufer verkauft.');
+  else if (action === 'austerity') return act(austerity(state),'Sparbetrieb aktiviert.');
   else if (action === 'exploration-start') return act(exploreSystem(state,el.dataset.id,el.dataset.system),'Erkundungsflug gestartet.');
   else if (action === 'analysis-start') return act(orderFleet(state,[el.dataset.id],el.dataset.target,'analyze'),'Analyseauftrag erteilt.');
   else if (action === 'message-answer') return act(answerMessage(state,el.dataset.id,el.dataset.choice),'Antwort übermittelt.');

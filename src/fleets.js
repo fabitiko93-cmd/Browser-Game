@@ -1,3 +1,4 @@
+import { finishCommerce } from './foreign-commerce.js';
 import { sellGoods, marketPrice } from './trade.js';
 import { serviceCount } from './infrastructure.js';
 import { SUPPLY_DEFAULTS, cargoUsed, tickCircuit, arriveCircuit } from './routing.js';
@@ -100,11 +101,11 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
 }
 function settle(state, fleet, target) {
   if (target.owner) { log(state, `${target.name} ist bereits besiedelt. Das Kolonieschiff bleibt im Orbit.`, 'warning'); return; }
-  target.owner = 'player'; target.population = 40; target.happiness = 70; target.aliens = .1;
+  target.owner = fleet.owner; target.population = 40; target.happiness = 70; target.aliens = .1;
   target.stock = makeStock({ food: 60, ore: 40, alloy: 60, energy: 70, crystal: 5 });
   target.buildings = [ { id: uid(state, 'b'), type: 'habitat', x: 5, y: 7, remaining: 0, enabled: true, status: 'aktiv' }, { id: uid(state, 'b'), type: 'solar', x: 5, y: 6, remaining: 0, enabled: true, status: 'aktiv' }, { id: uid(state, 'b'), type: 'farm', x: 4, y: 7, remaining: 0, enabled: true, status: 'aktiv' } ];
   state.fleets = state.fleets.filter(f => f.id !== fleet.id);
-  log(state, `Neue Kolonie auf ${target.name}. Das Kolonieschiff wurde zur Siedlung umgebaut.`, 'success', 'colony');
+  if(fleet.owner==='player') log(state, `Neue Kolonie auf ${target.name}. Das Kolonieschiff wurde zur Siedlung umgebaut.`, 'success', 'colony');
 }
 export function resolveBattle(state, fleets, target) {
   if (!target.owner || target.owner === 'player' || !state.relations[target.owner]?.war) { log(state, `Angriff auf ${target.name} abgebrochen: Es besteht kein Krieg.`, 'warning'); return; }
@@ -171,6 +172,8 @@ export function departureFuel(state, source, target, owner = 'player') { return 
 export function shipArmor(state, f) { return Math.min(.65, (SHIPS[f.type].armor ?? 0) + technologyEffects(state, f.owner).armor); }
 export function maintainFleets(state, funded = true, owner = 'player') {
   if (!funded) for (const f of state.fleets.filter(f => f.owner === owner)) f.supply = Math.max(0, f.supply - 3);
+  if (!funded) return;
+  const wallet=owner==='player'?state:state.factions[owner];
   for (const support of state.fleets.filter(f => f.type === 'support' && f.owner === owner && !f.mission)) {
     let budget = Math.min(12, support.supply);
     for (const other of state.fleets.filter(f => f.owner === support.owner && f.id !== support.id && f.type !== 'support' && !f.mission && f.planetId === support.planetId)) {
@@ -194,11 +197,11 @@ export function maintainFleets(state, funded = true, owner = 'player') {
     const amount=Math.max(0,Math.min(rate,100-fleet.supply,p.stock.energy*8,p.stock.food*80));
     if(amount>0){
       const fee=p.owner===owner?0:amount/8*marketPrice(state,p,'energy','buy')+amount/80*marketPrice(state,p,'food','buy')+1;
-      if(state.credits>=fee){p.stock.energy-=amount/8;p.stock.food-=amount/80;fleet.supply+=amount;state.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}
+      if(wallet.credits>=fee){p.stock.energy-=amount/8;p.stock.food-=amount/80;fleet.supply+=amount;wallet.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}
     }
     const repairRate=serviceCount(p,'repair')?10:4;
     const repaired=Math.min(repairRate,100-fleet.hp,p.stock.alloy*4);
-    if(repaired>0){const fee=p.owner===owner?0:repaired/4*marketPrice(state,p,'alloy','buy');if(state.credits>=fee){p.stock.alloy-=repaired/4;fleet.hp+=repaired;state.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}}
+    if(repaired>0){const fee=p.owner===owner?0:repaired/4*marketPrice(state,p,'alloy','buy');if(wallet.credits>=fee){p.stock.alloy-=repaired/4;fleet.hp+=repaired;wallet.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}}
     if(fleet.supply>=settings.target-.00001)fleet.servicing=false;
     if(fleet.hp>=settings.repairTo-.00001)fleet.repairing=false;
     if(fleet.servicing)fleet.pauseReason=p.stock.energy<.01?'Versorgung fehlt: Energie':p.stock.food<.01?'Versorgung fehlt: Nahrung':'Bordversorgung wird aufgefüllt';
@@ -207,7 +210,7 @@ export function maintainFleets(state, funded = true, owner = 'player') {
 export function tickFleets(state, options = {}) {
   if (!options.economyProcessed) {
     const upkeep = fleetUpkeep(state), funded = state.credits >= upkeep;
-    state.credits = Math.max(0, state.credits - upkeep); maintainFleets(state, funded);
+    state.credits -= upkeep; maintainFleets(state, funded);
   }
   const arrivals = new Map();
   for (const fleet of [...state.fleets]) {
@@ -240,6 +243,7 @@ export function tickFleets(state, options = {}) {
       continue;
     }
     if (m.kind === 'survey' || m.kind === 'explore') { finishScout(state, m, fleets, target); continue; }
+    if(m.kind==='commerce'){for(const f of fleets)finishCommerce(state,f,m,target);continue;}
     for (const f of fleets) visitArrival(state,f,target);
     if(m.kind==='circuit'){for(const f of fleets)arriveCircuit(state,f,m);}
     else if (m.kind === 'settle') {

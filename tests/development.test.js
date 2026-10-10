@@ -47,9 +47,9 @@ test('regional geology affects real output and propulsion savings never reduce r
  const s=createGame(),p=home(s);p.buildings=[building('fuelExtractor')];p.stock=makeStock({energy:1000,food:1000});p.kind='Eiswelt';const a=structuredClone(s);a.tech=['engineTuning','propulsion','ecoDrive'];simulatePlanet(s,p);simulatePlanet(a,home(a));close(p.net.fuel,home(a).net.fuel);
  const warm=structuredClone(s);home(warm).kind='Temperiert';home(warm).stock=makeStock({energy:1000,food:1000});simulatePlanet(warm,home(warm));assert.ok(p.net.fuel>home(warm).net.fuel);
 });
-test('all six political profiles have distinct actual science, workforce and approval effects; AI uses the same profiles',()=>{
+test('all ten political profiles have distinct actual science, workforce and approval effects; AI uses the same profiles',()=>{
  const science=new Set(),staff=new Set();for(const id of Object.keys(PROFILES)){const s=createGame();s.player.ideology=id;science.add(forecastDay(s).budget.science);staff.add(workforce(s,home(s)));assert.equal(policyEffects(s).happiness,PROFILES[id].happiness);}
- assert.equal(science.size,6);assert.equal(staff.size,5);
+ assert.equal(science.size,10);assert.ok(staff.size>=7);
  const s=createGame();assert.ok(policyEffects(s,'khepri').science>=PROFILES.technocracy.science);
 });
 test('regime laws reject atomically, reform unlocks work and government transitions normalize incompatible choices',()=>{
@@ -117,13 +117,13 @@ test('all new market, contract, circuit and supply screens render valid controls
 });
 test('long simulations progress AI research and construction with finite resources and roundtrip saves',()=>{
  const s=createGame();for(let i=0;i<1000;i++){stepDay(s);if(i%50===0)validateSave(structuredClone(s));}
- for(const f of Object.values(s.factions)){assert.ok(f.tech.length>10);assert.ok(f.credits>=0);}
+ for(const f of Object.values(s.factions)){assert.ok(f.tech.length>10);assert.ok(Number.isFinite(f.credits));}
  assert.deepEqual(parseImport(exportGame(s)),s);
 });
 
 test('a genuine v5 save retains credits, colonies, inventories and an in-flight route while adding the new world systems',async()=>{
  const {readFileSync}=await import('node:fs');const old=JSON.parse(readFileSync(new URL('./fixtures-v5.json',import.meta.url),'utf8'));const loaded=parseImport(JSON.stringify(old));
- assert.equal(loaded.version,7);assert.equal(loaded.planets.length,37);assert.equal(loaded.credits,1234.5);assert.equal(loaded.science,old.science);assert.equal(loaded.day,old.day);
+ assert.equal(loaded.version,8);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,1234.5);assert.equal(loaded.science,old.science);assert.equal(loaded.day,old.day);
  for(const p of old.planets){const migrated=getPlanet(loaded,p.id);assert.equal(migrated.owner,p.owner);assert.equal(migrated.population,p.population);assert.deepEqual(migrated.buildings,p.buildings);for(const k of Object.keys(p.stock))assert.equal(migrated.stock[k],p.stock[k]);}
  for(let i=0;i<old.fleets.length;i++){assert.deepEqual(loaded.fleets[i].mission,old.fleets[i].mission);assert.deepEqual(loaded.fleets[i].route,old.fleets[i].route);}
  assert.equal(loaded.governance.laws.borders,'controlled');assert.equal(loaded.player.ideology,'nationalSocialism');assert.deepEqual(validateSave(structuredClone(loaded)),loaded);

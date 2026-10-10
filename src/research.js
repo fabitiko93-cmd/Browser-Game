@@ -4,6 +4,7 @@ import { TECHNOLOGIES } from './data.js';
 import { log } from './state.js';
 export function startResearch(state, id) {
   const def = TECHNOLOGIES[id];
+  if (state.credits < 0) return 'Forschung wartet auf die Finanzierung: tilge zuerst die Schulden.';
   if (!Object.hasOwn(TECHNOLOGIES, id)) return 'Unbekannte Technologie.';
   if (state.tech.includes(id)) return 'Diese Technologie ist bereits erforscht.';
   if (state.research) return 'Es läuft bereits ein Forschungsprojekt.';
@@ -17,7 +18,7 @@ export function startResearch(state, id) {
   return null;
 }
 export function tickResearch(state) {
-  if (!state.research) return;
+  if (!state.research || state.credits < 0) return;
   if (--state.research.remaining <= 0) {
     const id = state.research.id;
     state.tech.push(id); state.research = null;

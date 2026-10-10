@@ -11,8 +11,15 @@ export function initialBuildings(prefix) {
   return [ ['habitat', 4, 7], ['habitat', 5, 7], ['habitat', 6, 7], ['farm', 4, 6], ['solar', 5, 6], ['mine', 6, 6], ['foundry', 4, 5], ['optics', 5, 5], ['lab', 6, 5], ['shipyard', 6, 8] ].map(([type, x, y], i) => ({ id: `${prefix}-b${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' }));
 }
 export function makePlanet(p) {
-  const extra=p.owner&&p.owner!=='player'?FOREIGN_FACILITIES[p.owner].map((type,i)=>({id:`${p.id}-civil${i}`,type,x:3+i,y:8,remaining:0,enabled:true,status:'aktiv'})):[];
-  return { ...p, priority:'balanced', needs:[], stock: makeStock(p.owner ? { food: 180, ore: 160, alloy: 200, energy: 180, crystal: 30, optics: 60, weapons: 45 } : {}), buildings: p.owner ? [...initialBuildings(p.id), ...(p.frontier ? [['solar', 7, 5], ['shield', 7, 7], ['missileSilo', 7, 6], ['crystal', 8, 5], ['laser', 8, 6]].map(([type, x, y], i) => ({ id: `${p.id}-base${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' })) : []), ...extra] : [], queues: [], happiness: 72, defense: p.owner && p.owner !== 'player' ? (p.owner === 'aster' ? 35 : 24) : 0, garrison: p.owner && p.owner !== 'player' ? 30 : 0, net: {}, lastReport: null, shield: 0, destroyed: false };
+  const extra=p.owner&&p.owner!=='player'?(FOREIGN_FACILITIES[p.owner]??[]).map((type,i)=>({id:`${p.id}-civil${i}`,type,x:3+i,y:8,remaining:0,enabled:true,status:'aktiv'})):[];
+  const base=p.owner?initialBuildings(p.id):[];
+  if(p.owner&&p.owner!=='player'){
+    // Early colonies specialize rather than duplicating complete industrial chains.
+    const removed=p.kind==='Ozeanisch'?['mine','foundry','optics']:p.kind==='Kristallwelt'?['mine','foundry']:p.kind==='Vulkanisch'?['optics']:['crystal'];
+    for(let i=base.length-1;i>=0;i--)if(removed.includes(base[i].type))base.splice(i,1);
+  }
+  const supply=p.owner&&p.owner!=='player'?{food:90+p.seed%90,ore:40+p.seed%70,alloy:50+p.seed%55,energy:65+p.seed%90,crystal:8+p.seed%25,optics:12+p.seed%30,weapons:10+p.seed%25,goods:20,medicine:8}:null;
+  return { ...p, priority:'balanced', needs:[], localMarket:{cash:Math.min(150,p.population*.6),day:-1,sold:0}, stock: makeStock(supply ?? (p.owner ? { food: 180, ore: 160, alloy: 200, energy: 180, crystal: 30, optics: 60, weapons: 45 } : {})), buildings: p.owner ? [...base, ...(p.frontier && !p.expansion ? [['solar', 7, 5], ['crystal', 8, 5]].map(([type, x, y], i) => ({ id: `${p.id}-base${i}`, type, x, y, remaining: 0, enabled: true, status: 'aktiv' })) : []), ...extra] : [], queues: [], happiness: 72, defense: p.owner && p.owner !== 'player' ? (p.owner === 'aster' ? 35 : 24) : 0, garrison: p.owner && p.owner !== 'player' ? 30 : 0, net: {}, lastReport: null, shield: 0, destroyed: false };
 }
 export function createGame() {
   const planets = PLANET_SEEDS.map(makePlanet);
@@ -24,6 +31,7 @@ export function createGame() {
     fleets: [ { id: 'starter-c', name: 'NU Vigil', type: 'corvette', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, servicing:false, supplySettings:{threshold:40,target:95,repairBelow:50,repairTo:95,homePort:'nereid',smart:false}, cargo:makeStock(), mission: null, route: null }, { id: 'starter-f', name: 'NU Meridian', type: 'freighter', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, servicing:false, supplySettings:{threshold:40,target:95,repairBelow:50,repairTo:95,homePort:'nereid',smart:false}, cargo:makeStock(), mission: null, route: null } ],
     logs: [{ day: 0, text: 'Nereid ist bereit. Baue deine Wirtschaft auf und erschließe die Sterne.', type: 'info' }], event: null, aiNext: 45
   };
+  for(const id of Object.keys(FACTIONS))if(id!=='player'&&!state.relations[id])state.relations[id]={...initialRelationExtras(),score:15,war:false,trade:false};
   initializeIntelligence(state);
   state.communications = { messages: [], cooldowns: {}, nextOffer: 12, cursor: 0 };
   return state;

@@ -57,7 +57,7 @@ test('version 1 saves migrate without losing buildings, stocks, population or mi
   const s = createGame(); orderFleet(s, ['starter-c'], 'cinder'); days(s, 2);
   const old = structuredClone(s); old.version = 1; old.planets = old.planets.slice(0, 7); delete old.governance; delete old.surveys;
   const loaded = parseImport(JSON.stringify(old));
-  assert.equal(loaded.version, 7); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
+  assert.equal(loaded.version, 8); assert.deepEqual(loaded.planets.slice(0, 7), old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   assert.equal(loaded.credits, old.credits); assert.equal(loaded.day, 2);
   days(loaded, 5); assert.equal(loaded.fleets[0].planetId, 'cinder');
   loaded.governance.laws.economy = 'fake'; assert.throws(() => parseImport(exportGame(loaded)));
@@ -88,6 +88,7 @@ test('slow ships determine group arrival; survey awards research once per planet
 test('heavy freighters deliver 200 units, save validation respects individual capacity', () => {
   const s = createGame(), f = addShip(s, 'heavyFreighter'); diplomaticAction(s, 'ilyri', 'trade');
   home(s).stock.ore = 500;
+  const destination=getPlanet(s,'thalassa');destination.buildings.push({id:'test-foundry',type:'foundry',x:9,y:9,remaining:0,enabled:true,status:'aktiv'});destination.stock.ore=0;
   assert.equal(orderFleet(s, [f.id], 'thalassa', 'transport', { resource: 'ore', amount: 200, repeat: true }), null);
   assert.deepEqual(parseImport(exportGame(s)), s);
   const initial = getPlanet(s, 'thalassa').stock.ore;

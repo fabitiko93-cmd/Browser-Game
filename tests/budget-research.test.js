@@ -18,7 +18,7 @@ const ship = (s, type = 'cruiser') => { const f = { id: type, type, name: type, 
 const progress = (s, n) => { for (let i = 0; i < n; i++) stepDay(s); };
 
 test('regression: a positive planetary surplus cannot conceal a negative imperial budget', () => {
-  const s = createGame(); ship(s); const before = s.credits;
+  const s = createGame(); s.player.tax=.15; ship(s); const before = s.credits;
   const snapshot = exportGame(s), forecast = forecastDay(s);
   assert.equal(exportGame(s), snapshot);
   const r = forecast.planets[0].lastReport;
@@ -35,7 +35,7 @@ test('all colonies share one budget; deficit and surplus do not depend on iterat
   const reversed = structuredClone(s); reversed.planets.reverse();
   const f = forecastDay(s); assert.ok(f.budget.income > home(s).population * s.player.tax);
   stepDay(s); stepDay(reversed); close(s.credits, reversed.credits);
-  close(s.lastDayReport.net, f.budget.net); assert.equal(s.credits, 0);
+  close(s.lastDayReport.net, f.budget.net); assert.ok(s.credits < 0);
 });
 test('HUD and economy rates predict the same next-day consumption, including maintenance and completed construction', () => {
   const s = createGame(); s.fleets[0].hp = 65; s.fleets[0].supply = 30;
@@ -57,7 +57,7 @@ test('next-day forecasts stay accurate through program expiry, growth, shortages
 });
 test('trade deliveries appear as single bookings instead of a misleading permanent credit rate', () => {
   const s = createGame(); diplomaticAction(s, 'ilyri', 'trade');
-  assert.equal(orderFleet(s, ['starter-f'], 'thalassa', 'transport', {resource:'ore',amount:20}), null);
+  assert.equal(orderFleet(s, ['starter-f'], 'thalassa', 'transport', {resource:'alloy',amount:20}), null);
   s.fleets[1].mission.remaining = 1; const f = forecastDay(s); const before = s.credits;
   stepDay(s); close(s.lastDayReport.oneOff, s.tradeLedger[0].revenue);
   close(s.credits - before, f.budget.actual + s.lastDayReport.oneOff);
@@ -117,7 +117,7 @@ test('technocracy has visible and actual science, development and energy-efficie
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 7);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 8);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};

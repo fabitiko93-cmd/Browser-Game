@@ -17,14 +17,22 @@ export function marketDemand(state,p,key) {
  if(key==='medicine'&&state.factions?.[p.owner]?.tech.includes('biomedicine'))demand+=p.population*.002;
  return demand;
 }
+export function marketMidpoint(state,p,key,extraStock=0) {
+ const daily=marketDemand(state,p,key),production=p.lastReport?.productionByResource?.[key]??0;
+ const coverage=(p.stock[key]+extraStock+Math.max(0,production-daily)*10)/Math.max(.5,daily);
+ const scarcity=daily>.01?clamp(.35+2.65/(1+Math.max(0,coverage)/9),.28,3):clamp(.7-(p.stock[key]+extraStock)/180,.25,.7);
+ return BASE_PRICES[key]*scarcity;
+}
 export function marketPrice(state,p,key,side='sell',extraStock=0) {
- const daily=marketDemand(state,p,key),target=Math.max(25,daily*45);
- const scarcity=clamp(1.1+(target-p.stock[key]-extraStock)/target*.65,.45,1.85);
- const midpoint=BASE_PRICES[key]*scarcity;
+ const midpoint=marketMidpoint(state,p,key,extraStock);
  if(side==='buy')return midpoint*1.12;
  const partnership=state.relations[p.owner]?.cooperation&&!state.relations[p.owner]?.embargo?1.12:1;
  const terms=Math.min(.92,.7*policyEffects(state).trade*technologyEffects(state).trade*(1+.04*Math.min(1,state.planets.filter(q=>q.owner==='player').reduce((n,q)=>n+serviceCount(q,'trade'),0))))*partnership;
  return midpoint*terms;
+}
+export function marketSignal(state,p,key) {
+ const ratio=marketMidpoint(state,p,key)/BASE_PRICES[key];
+ return ratio>=2?'Akuter Engpass':ratio>=1.2?'Hohe Nachfrage':ratio<.7?'Überangebot':'Ausgeglichen';
 }
 export function exportPrice(state,resource,faction) {
  const p=state.planets.find(p=>p.owner===faction&&!p.destroyed);
@@ -97,6 +105,6 @@ export function tickContracts(state) {
   const r=state.relations[p.owner];
   if(c.escrow+c.delivered*c.price>0){if(c.delivered>=c.quantity*.9){r.score=Math.min(100,r.score+4);c.fulfilled++;}else r.score=Math.max(-100,r.score-2);}
   f.credits+=c.escrow;c.periodStart=state.day;c.delivered=0;
-  c.escrow=Math.min(f.credits,c.quantity*c.price);f.credits-=c.escrow;
+  c.escrow=Math.min(Math.max(0,f.credits),c.quantity*c.price);f.credits-=c.escrow;
  }
 }

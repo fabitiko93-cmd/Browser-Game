@@ -46,16 +46,18 @@ export function tickExplorationAI(state) {
   for (const [owner,faction] of Object.entries(state.factions)) {
     const own = state.planets.filter(p => p.owner===owner&&!p.destroyed);
     if (!own.length) continue;
-    const upkeep=fleetUpkeep(state,owner),funded=faction.credits>=upkeep;
-    faction.credits=Math.max(0,faction.credits-upkeep); maintainFleets(state,funded,owner);
     const book=state.intelligence[owner]; if (state.day<book.nextMission) continue;
     book.nextMission=state.day+36;
     const home=own.find(p=>p.buildings.some(b=>b.type==='shipyard'&&b.status==='aktiv'))??own[0];
+    const knownEmpty=knownTargets(state,owner).filter(p=>p.inhabited===false&&!p.destroyed);
+    if(faction.tech.includes('habitats')&&own.length<3&&faction.credits>500&&knownEmpty.length&&!state.fleets.some(f=>f.owner===owner&&f.type==='colony')&&!own.some(p=>p.queues.some(q=>q.type==='colony')))buildShip(state,home,'colony',owner);
+    const colonist=state.fleets.find(f=>f.owner===owner&&f.type==='colony'&&!f.mission&&f.supply>=60);
+    if(colonist&&knownEmpty.length){const choice=knownEmpty.find(p=>p.system===home.system)??knownEmpty[0];orderFleet(state,[colonist.id],choice.id,'settle',{owner});}
     const ships=state.fleets.filter(f=>f.owner===owner);
     const analysis=faction.tech.includes('planetaryAnalysis');
     const wanted=ships.some(f=>f.type==='scout')&&analysis?'probe':'scout';
     if (!ships.some(f=>f.type===wanted)&&!own.some(p=>p.queues.some(q=>q.type===wanted))) buildShip(state,home,wanted,owner);
-    for (const ship of ships.filter(f=>!f.mission&&f.supply>=60)) {
+    for (const ship of ships.filter(f=>['scout','probe'].includes(f.type)&&!f.mission&&f.supply>=60)) {
       if (ship.planetId!==home.id) { orderFleet(state,[ship.id],home.id,'move',{owner}); continue; }
       const unknown=SYSTEMS.find(s=>s.uncharted&&!systemKnown(state,s.id,owner));
       if (ship.type==='scout'&&unknown) { exploreSystem(state,ship.id,unknown.id,owner); continue; }

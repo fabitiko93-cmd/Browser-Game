@@ -28,6 +28,7 @@ export function resourceRisk(state,p,key,projection) {
  const stock=key==='credits'?state.credits:key==='science'?state.science:p.stock[key];
  const rate=key==='credits'?projection.budget.net:key==='science'?projection.budget.science:predicted.net[key]??0;
  if(predicted.lastReport?.missingResources?.includes(key))return {warning:true,days:0,rate};
+ if(key==='credits'&&stock<0)return {warning:true,days:0,rate};
  if(rate>=0)return {warning:false,days:null,rate};
  const incoming=assuredDeliveries(state,p,key);let balance=stock;
  for(let day=1;day<=30;day++){
