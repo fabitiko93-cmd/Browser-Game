@@ -2,7 +2,7 @@ import { NEW_IDEOLOGIES, NEW_FACTIONS, NEW_PLANETS } from './political-expansion
 import { NEW_RESOURCES, DEVELOPMENT_BUILDINGS, BULK_SHIPS } from './development-data.js';
 import { MILITARY_BUILDINGS } from './military-data.js';
 import { DEEP_SYSTEMS, DEEP_PLANETS, EXPLORATION_BUILDINGS, EXPLORATION_SHIPS } from './exploration-data.js';
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 export const TITLE = 'ORBIT 3077';
 export const GRID = { width: 12, height: 14 };
 export const RESOURCES = {

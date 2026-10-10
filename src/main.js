@@ -1,8 +1,10 @@
+import { unreadNews, realmName } from './space-news.js';
+import { esc } from './ui-format.js';
 import { localSale, austerity } from './finance.js';
 import { resourcePages, hudPlanet } from './hud.js';
 import { planetView, systemKnown } from './intelligence.js';
 import { exploreSystem } from './exploration.js';
-import { readInbox, answerMessage, withdrawMessage, sendOffer, centers, inboxSignal } from './communications.js';
+import { readInbox, answerMessage, withdrawMessage, sendOffer, centers, inboxSignal, unreadCorrespondence } from './communications.js';
 import { SUPPLY_DEFAULTS, configureSupply, serviceFleet, unloadCargo, startCircuit } from './routing.js';
 import { defaultCircuit, circuitPlanets } from './circuit-ui.js';
 import { createContract, cancelContract } from './trade.js';
@@ -48,7 +50,7 @@ const map = new MapRenderer($('map'), state, ui, hit => {
     else {
       const view=planetView(state,currentPlanet());
       const b = view?.buildings.find(b => b.x === hit.tx && b.y === hit.ty);
-      if (b?.type==='commCenter'&&view.own&&!b.remaining) {const signal=inboxSignal(state);ui.communicationBuilding=b.id;ui.panel='communications';ui.inboxMode=signal.unread&&!signal.count?'archive':'open';ui.expanded=true;readInbox(state,ui.inboxMode);persist();}
+      if (b?.type==='commCenter'&&view.own&&!b.remaining) {const signal=inboxSignal(state);ui.communicationBuilding=b.id;ui.panel='communications';ui.inboxMode=signal.count?'open':unreadNews(state)&&!unreadCorrespondence(state)?'news':signal.unread?'archive':'open';ui.expanded=true;readInbox(state,ui.inboxMode);persist();}
       else if (b) { ui.selectedBuilding = b.id; ui.panel = 'building'; ui.expanded = false; }
       else { ui.surfaceTile = { x: hit.tx, y: hit.ty }; ui.panel = 'terrain'; ui.expanded = false; }
     }
@@ -82,6 +84,13 @@ function persist() {
 }
 function act(result, success) { audio.play(result?'error':'confirm'); if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
 function render() {
+  if(state.galaxy.defeat) {
+    ui.speed=0;ui.panel=null;$('sheet').hidden=true;$('sheet').innerHTML='';
+    const el=$('welcome');el.hidden=false;el.dataset.mode='defeat';
+    el.innerHTML=`<div class="welcome-header"><div class="brand-name">ORBIT 3077</div></div><div><h1 class="welcome-title">Reich <em>gefallen</em></h1><p>Die letzte eigene Welt wurde an Tag ${state.galaxy.defeat.day} durch ${esc(realmName(state,state.galaxy.defeat.conqueror))} verloren. Die Simulation ist beendet. Dein Spielstand bleibt gespeichert.</p></div><div class="welcome-footer"><button class="button secondary" data-action="export">Spielstand sichern</button><button class="button secondary" data-action="import">Spielstand laden</button><input class="file-input" id="import-file" type="file" accept=".json,application/json"><button class="button danger" data-action="reset">${ui.resetConfirm?'Neues Spiel bestätigen':'Neues Spiel'}</button></div>`;
+    return;
+  }
+  if($('welcome').dataset.mode==='defeat'){ $('welcome').innerHTML='';$('welcome').dataset.mode=''; }
   if (currentPlanet().destroyed) {
     ui.buildType = null; ui.buildTile = null;
     if (['terrain', 'building'].includes(ui.panel)) { ui.panel = 'planet-info'; ui.expanded = false; }
@@ -119,7 +128,7 @@ function render() {
     }
   }
   $('welcome').hidden = state.started;
-  if (!state.started && !$('welcome').innerHTML) $('welcome').innerHTML = welcomeMarkup();
+  if (!state.started && $('welcome').dataset.mode!=='start') { $('welcome').innerHTML=welcomeMarkup();$('welcome').dataset.mode='start'; }
   measureSurfaceViewport();
 }
 function panel(name) { ui.panel = name; ui.expanded = false; ui.buildType = null; ui.buildTile = null; ui.demolishConfirm = null; ui.warConfirm = null; ui.resetConfirm = false; }
@@ -276,7 +285,7 @@ window.addEventListener('pagehide', ()=>{audio.setHidden(true);persist();});
 let previousTime = performance.now(), accumulator = 0;
 function frame(now) {
   const delta = Math.min(500, now - previousTime); previousTime = now;
-  if (state.started && ui.speed && !document.hidden) {
+  if (state.started && !state.galaxy.defeat && ui.speed && !document.hidden) {
     accumulator += delta * ui.speed;
     if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state);const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render(); }
   }

@@ -1,3 +1,4 @@
+import { knownWarTarget } from '../src/realm-ai.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, getPlanet, makeStock } from '../src/state.js';
@@ -111,11 +112,11 @@ test('AI exploration construction and upkeep spend the owning empire budget',()=
  s.day=100;s.intelligence.ilyri.nextMission=0;const credits=s.credits;
  tickExplorationAI(s);assert.ok(p.queues.some(q=>q.type==='scout'));assert.equal(f.credits,before-65);assert.equal(s.credits,credits);
 });
-test('enemy raids choose from recorded targets and cannot prefer a secret richer colony',()=>{
+test('enemy targets come from recorded knowledge; no fabricated attack appears without a built fleet',()=>{
  const s=createGame(),p=getPlanet(s,'cinder');p.owner='player';p.population=40;p.stock.alloy=50000;
  s.day=1;s.aiNext=0;s.relations.ilyri.war=true;s.intelligence.ilyri.planets={};
  const before=structuredClone(p.stock);tickOpponents(s);assert.deepEqual(p.stock,before);assert.ok(!s.logs.some(e=>e.type==='war'));
- recordContact(s,'ilyri',home(s));s.aiNext=0;tickOpponents(s);assert.deepEqual(p.stock,before);assert.ok(s.logs.some(e=>e.text.startsWith('Nereid:')));
+ recordContact(s,'ilyri',home(s));s.aiNext=0;tickOpponents(s);assert.deepEqual(p.stock,before);assert.equal(knownWarTarget(s,'ilyri','player').id,'nereid');assert.ok(!s.logs.some(e=>e.type==='war'));assert.ok(!s.fleets.some(f=>f.owner==='ilyri'&&f.mission?.kind==='attack'));
 });
 test('one communication center per planet includes construction reservations and permits another planet',()=>{
  const s=createGame();s.tech=['communications'];s.credits=2000;home(s).stock.optics=100;
@@ -165,7 +166,7 @@ test('AI request cadence is bounded, cannot duplicate a negotiation, and needs a
 test('v6 migration keeps running routes and balances, adds nine worlds, and records only plausible earlier visits',()=>{
  const s=createGame();diplomaticAction(s,'ilyri','trade');orderFleet(s,['starter-f'],'thalassa','transport',{resource:'ore',amount:20,repeat:true});
  const old=structuredClone(s);old.version=6;old.planets=old.planets.slice(0,28);delete old.intelligence;delete old.communications;
- const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,8);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,old.credits);
+ const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,9);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,old.credits);
  for(const p of old.planets)assert.deepEqual(getPlanet(loaded,p.id),p);assert.deepEqual(loaded.fleets,old.fleets);
  assert.equal(knowledgeOf(loaded,getPlanet(loaded,'thalassa')).civil,undefined);
  for(let i=0;i<20;i++)stepDay(loaded);assert.deepEqual(parseImport(exportGame(loaded)),loaded);

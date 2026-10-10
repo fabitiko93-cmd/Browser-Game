@@ -1,3 +1,4 @@
+import { relationBetween } from './realm-relations.js';
 import { FACTIONS, SYSTEMS } from './data.js';
 import { getPlanet, uid, log } from './state.js';
 import { technologyEffects } from './technology.js';
@@ -20,7 +21,7 @@ function returnScout(state, fleet, target, source) {
 export function finishScout(state, mission, fleets, target) {
   for (const f of fleets) {
     if (f.type !== 'scout') continue;
-    const r = f.owner === 'player' ? state.relations[target.owner] : target.owner === 'player' ? state.relations[f.owner] : null;
+    const r = relationBetween(state,f.owner,target.owner);
     const hostile = target.owner && target.owner !== f.owner && (r?.war || r?.score <= -35);
     // Detection/attack is resolved using the defender's real resources; knowledge is sent only by survivors.
     if (hostile && target.stock.energy >= 3 && target.defense > 0) {

@@ -1,3 +1,4 @@
+import { relationBetween } from '../src/realm-relations.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame, getPlanet, initialBuildings } from '../src/state.js';
@@ -72,6 +73,7 @@ test('scarcity and surplus production create pronounced prices and deliveries ac
 });
 test('foreign trade uses a built ship, real fuel, physical cargo, arrival prices and both treasuries',()=>{
  const s=createGame(),origin=getPlanet(s,'aster'),target=getPlanet(s,'ilyri')??getPlanet(s,'thalassa');
+ relationBetween(s,'aster','ilyri').trade=true;
  origin.stock.ore=500;origin.stock.energy=1000;target.stock.ore=0;
  target.lastReport={demandByResource:{ore:10},productionByResource:{ore:0}};
  for(const p of s.planets)if(p!==target&&p.owner&&p.owner!=='aster')for(const key of Object.keys(p.stock))p.stock[key]=10000;
@@ -114,7 +116,7 @@ test('v7 migration retains ownership, archives, cargo and balances while adding 
  for(const id of Object.keys(s.factions))if(!['ilyri','khepri','aster','corona','collective','vanguard'].includes(id)){delete s.factions[id];delete s.relations[id];delete s.intelligence[id];}
  for(const b of Object.values(s.intelligence))for(const pid of Object.keys(b.planets))if(!s.planets.some(p=>p.id===pid))delete b.planets[pid];
  const p=getPlanet(s,'aurora-0');p.owner='player';p.population=100;p.buildings=initialBuildings(p.id);p.stock.ore=777;s.credits=333;
- const old=structuredClone(s),loaded=parseImport(exportGame(s));assert.equal(loaded.version,8);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,333);
+ const old=structuredClone(s),loaded=parseImport(exportGame(s));assert.equal(loaded.version,9);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,333);
  assert.deepEqual(getPlanet(loaded,'aurora-0'),p);assert.deepEqual(loaded.fleets,old.fleets);assert.deepEqual(loaded.intelligence.player.planets.thalassa,old.intelligence.player.planets.thalassa);
 });
 test('planet information is directly reachable from the map title and no longer buried in building choices',()=>{

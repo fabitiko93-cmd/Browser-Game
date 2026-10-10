@@ -1,3 +1,5 @@
+import { realmAtWar } from './realm-relations.js';
+import { realmBalance } from './realm-ai.js';
 import { essentialBuilding } from './finance.js';
 import { marketDemand } from './trade.js';
 import { FACTIONS, BUILDINGS, TECHNOLOGIES } from './data.js';
@@ -27,30 +29,37 @@ export function tickForeignDevelopment(state) {
    const cut=candidates.sort((a,b)=>(b.b.status==='aktiv'?0:20)-(a.b.status==='aktiv'?0:20)||b.cost-a.cost)[0];
    if(cut){cut.b.enabled=false;cut.b.status='pausiert';}continue;
   }
-  const balance=owned.reduce((n,p)=>n+(p.lastReport?.income??0)-(p.lastReport?.upkeep??0),0);
-  for(const p of owned){const resume=p.buildings.find(b=>!b.enabled&&b.remaining<=0&&!essentialBuilding(b.type)&&balance>BUILDINGS[b.type].upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+5);if(resume){resume.enabled=true;break;}}
+  const balance=realmBalance(state,id);
+  const focus=state.galaxy?.strategies[id]?.focus,doctrine=state.galaxy?.strategies[id]?.doctrine;
+  for(const p of owned){const resume=p.buildings.find(b=>!b.enabled&&b.remaining<=0&&!essentialBuilding(b.type)&&balance>BUILDINGS[b.type].upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+1);if(resume){resume.enabled=true;break;}}
 
+  if(['security','expansion'].includes(doctrine)&&f.credits>500&&owned.some(p=>p.buildings.some(b=>b.type==='shipyard'&&!b.enabled))){
+    const surplus=owned.flatMap(p=>p.buildings.filter(b=>b.enabled&&!b.remaining&&Object.entries(BUILDINGS[b.type].output??{}).some(([key,rate])=>p.stock[key]>rate*90)&&!essentialBuilding(b.type)).map(b=>({p,b}))).sort((a,b)=>BUILDINGS[b.b.type].upkeep-BUILDINGS[a.b.type].upkeep)[0];
+    if(surplus){surplus.b.enabled=false;surplus.b.status='pausiert';}
+  }
   if(f.research&&--f.research.remaining<=0){f.tech.push(f.research.id);f.research=null;}
   if(!f.research){
    const available=Object.entries(TECHNOLOGIES).filter(([key,t])=>!f.tech.includes(key)&&t.cost<=f.science&&t.requires.every(q=>f.tech.includes(q))&&(!t.requiresAny||t.requiresAny.some(q=>f.tech.includes(q)))&&!(t.excludes??[]).some(q=>f.tech.includes(q)));
-   available.sort((a,b)=>(a[0]==='planetaryAnalysis'?0:1)-(b[0]==='planetaryAnalysis'?0:1)||(a[1].branch===FACTIONS[id].research?0:1)-(b[1].branch===FACTIONS[id].research?0:1)||a[1].tier-b[1].tier||a[1].cost-b[1].cost);
+   const priorities=realmAtWar(state,id)||['security','expansion'].includes(doctrine)?['targeting','lasers','fortification','computing','newsNetwork','advancedDiplomacy']:['planetaryAnalysis','computing','newsNetwork','advancedDiplomacy'];
+   available.sort((a,b)=>(priorities.includes(a[0])?priorities.indexOf(a[0]):20)-(priorities.includes(b[0])?priorities.indexOf(b[0]):20)||(a[0]==='planetaryAnalysis'?0:1)-(b[0]==='planetaryAnalysis'?0:1)||(a[1].branch===FACTIONS[id].research?0:1)-(b[1].branch===FACTIONS[id].research?0:1)||a[1].tier-b[1].tier||a[1].cost-b[1].cost);
    if(available.length){const [key,t]=available[0];f.science-=t.cost;f.research={id:key,remaining:Math.max(2,Math.ceil(t.days*policyEffects(state,id).researchTime*technologyEffects(state,id).researchTime))};}
   }
   if(f.tech.includes('politicalReforms')&&f.governance.laws.administration==='local'&&f.governance.lawReady<=state.day){const cost=Math.ceil(60*policyEffects(state,id).reformCost*technologyEffects(state,id).reformCost);if(f.credits>=cost){f.credits-=cost;f.governance.laws.administration={democracy:'federal',communism:'councils',monarchy:'crown',military:'command',technocracy:'experts',nationalSocialism:'directive',federation:'compact',corporate:'concessions',oligarchy:'houses',theocracy:'synod'}[FACTIONS[id].ideology];f.governance.lawReady=state.day+5;}}
   if(state.day<f.nextBuild)continue;f.nextBuild=state.day+60;
-  const p=state.planets.filter(p=>p.owner===id&&!p.destroyed).sort((a,b)=>(a.lastReport?.missingResources?.length??0)-(b.lastReport?.missingResources?.length??0)||b.population-a.population).at(-1);
+  development: for(const p of owned.sort((a,b)=>b.population-a.population)){
   const housing=p.buildings.reduce((n,b)=>n+(b.remaining<=0?BUILDINGS[b.type].housing??0:0),0);
   const deficits=Object.keys(p.stock).map(key=>({key,days:p.stock[key]/Math.max(.1,marketDemand(state,p,key)),net:(p.lastReport?.productionByResource?.[key]??0)-marketDemand(state,p,key)})).filter(q=>q.days<20&&q.net<0).sort((a,b)=>a.days-b.days);
   const supply=deficits.flatMap(q=>Object.entries(BUILDINGS).filter(([,d])=>d.output?.[q.key]&&(!d.requiredTech||f.tech.includes(d.requiredTech))).map(([key])=>key));
-  const preferences=[...(state.relations[id]?.war?['shield','missileSilo','laser']:[]),...supply,...(!p.buildings.some(b=>b.type==='commCenter')?['commCenter']:[]),...(housing<p.population+30?['habitat']:[...FOREIGN_FACILITIES[id],'solar','academy','tradePort'])];
+  const preferences=[...(!p.buildings.some(b=>b.type==='commCenter')?['commCenter']:[]),...supply,...(realmAtWar(state,id)?['shield','missileSilo']:[]),...(['security','expansion'].includes(doctrine)&&focus!=='recovery'&&!p.buildings.some(b=>b.type==='laser')?['laser']:[]),...(f.tech.includes('advancedDiplomacy')&&!p.buildings.some(b=>b.type==='embassy')?['embassy']:[]),...(housing<p.population+30?[...(f.tech.includes('compactCities')?['tower']:[]),'habitat']:[...FOREIGN_FACILITIES[id],'solar','academy','tradePort'])];
   for(const type of preferences){
-   const d=BUILDINGS[type];if(d.requiredTech&&!f.tech.includes(d.requiredTech)||d.unique&&p.buildings.filter(b=>b.type===type).length>=d.unique||p.buildings.filter(b=>b.type===type).length>=3)continue;
-   if(!essentialBuilding(type)&&balance<d.upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+3)continue;
+   const d=BUILDINGS[type];if(d.requiredTech&&!f.tech.includes(d.requiredTech)||d.unique&&p.buildings.filter(b=>b.type===type).length>=d.unique||p.buildings.filter(b=>b.type===type).length>=(type==='habitat'?6:3))continue;
+   if(!essentialBuilding(type)&&balance<d.upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+1)continue;
    if(Object.entries(d.cost).some(([k,v])=>(k==='credits'?f.credits:p.stock[k])<v))continue;
    let tile=null;for(let y=3;y<12&&!tile;y++)for(let x=2;x<10;x++)if(!p.buildings.some(b=>b.x===x&&b.y===y)&&!['water','cliff','void'].includes(terrainAt(p,x,y))){tile={x,y};break;}
    if(!tile)break;
    for(const [k,v] of Object.entries(d.cost))if(k==='credits')f.credits-=v;else p.stock[k]-=v;
-   p.buildings.push({id:uid(state,'foreign'),type,...tile,remaining:d.days,enabled:true,status:'Bau'});break;
+   p.buildings.push({id:uid(state,'foreign'),type,...tile,remaining:d.days,enabled:true,status:'Bau'});break development;
+  }
   }
  }
 }

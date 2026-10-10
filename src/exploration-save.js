@@ -25,7 +25,7 @@ export function validateExploration(state,ids) {
         if(domain==='geology'&&(!exactKeys(v,['oreFactor','solarFactor'])||!finite(v.oreFactor,.1,10)||!finite(v.solarFactor,.1,10)))fail('Ungültige Geologiedaten.');
         if(domain==='surface'&&(!exactKeys(v,['seed','kind'])||!Number.isInteger(v.seed)||!finite(v.seed,0,1e9)||!text(v.kind,40)))fail('Ungültige Oberflächendaten.');
         if(domain==='civil'&&(!exactKeys(v,['population','happiness','aliens','ideology'])||!finite(v.population)||!finite(v.happiness,0,100)||!finite(v.aliens,0,1)||v.ideology!==null&&!Object.hasOwn(IDEOLOGIES,v.ideology)))fail('Ungültige Gesellschaftsdaten.');
-        if(domain==='military'&&(!exactKeys(v,['defense','shield','garrison'])||Object.values(v).some(n=>!finite(n))))fail('Ungültige Militärbeobachtung.');
+        if(domain==='military'&&(!object(v)||!['defense','shield','garrison'].every(k=>finite(v[k]))||Object.keys(v).some(k=>!['defense','shield','garrison','orbital','fortification','fleetStrength'].includes(k))||Object.values(v).some(n=>!finite(n))))fail('Ungültige Militärbeobachtung.');
         if(domain==='installations') {
           if(!Array.isArray(v)||v.length>GRID.width*GRID.height)fail('Ungültige Anlagenbeobachtung.');
           const tiles=new Set();

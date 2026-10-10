@@ -1,3 +1,4 @@
+import { initializeGalaxy } from './realm-relations.js';
 import { initialFactions, FOREIGN_FACILITIES } from './foreign.js';
 import { initialRelationExtras } from './diplomacy.js';
 import { initialEventSchedule } from './events.js';
@@ -33,6 +34,7 @@ export function createGame() {
   };
   for(const id of Object.keys(FACTIONS))if(id!=='player'&&!state.relations[id])state.relations[id]={...initialRelationExtras(),score:15,war:false,trade:false};
   initializeIntelligence(state);
+  initializeGalaxy(state);
   state.communications = { messages: [], cooldowns: {}, nextOffer: 12, cursor: 0 };
   return state;
 }

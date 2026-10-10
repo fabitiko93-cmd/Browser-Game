@@ -1,9 +1,10 @@
+import { reportTreaty } from './space-news.js';
 import { routePlanets } from './routing.js';
 import { serviceCount } from './infrastructure.js';
 import { FACTIONS } from './data.js';
 import { log, ownedPlanets } from './state.js';
 import { declareMessage } from './communications.js';
-export const initialRelationExtras = () => ({ pactUntil: 0, cooperation: false, embargo: false, envoyReady: 0, aidReady: 0, portAccess:false, researchPact:false, defensePact:false });
+export const initialRelationExtras = () => ({ truceUntil:0, warSince:0, pactUntil: 0, cooperation: false, embargo: false, envoyReady: 0, aidReady: 0, portAccess:false, researchPact:false, defensePact:false });
 export const cooperationCount = state => Object.values(state.relations).filter(r => r.cooperation && !r.war && !r.embargo).length;
 export const diplomacyScience = state => 1 + cooperationCount(state) * .08 + Object.values(state.relations).filter(r=>r.researchPact&&!r.war&&!r.embargo).length*.06;
 export const sanctionUpkeep = state => Object.values(state.relations).filter(r => r.embargo).length * 1.5 + Object.values(state.relations).filter(r=>r.defensePact&&!r.war&&!r.embargo).length*2;
@@ -41,6 +42,7 @@ export function treatyAction(state, faction, action) {
     if (!r.embargo) return 'Es bestehen keine Sanktionen.';
     r.embargo = false; log(state, `Sanktionen gegen ${FACTIONS[faction].name} aufgehoben. Handelsabkommen müssen neu geschlossen werden.`, 'politics');
   } else return 'Unbekannte diplomatische Aktion.';
+  if(action==='pact')reportTreaty(state,'player',faction,'pact');
   return null;
 }
 export function tickDiplomacy(state) {
@@ -67,5 +69,5 @@ export function advancedTreaty(state,faction,action){
  if(state.credits<cost)return 'Für das Abkommen fehlen Credits.';
  state.credits-=cost;r[field]=true;
  const label={ports:'Hafennutzung: Versorgung und Reparatur gegen örtliche Warenpreise','research-pact':'Forschungsaustausch: +6 % Forschung','defense-pact':'Beistand: verstärkte Versorgungshilfe alle 30 Kriegstage, 2 Credits Unterhalt pro Tag'}[clean];
- log(state,`${FACTIONS[faction].name}: ${label}.`,'politics');return null;
+ log(state,`${FACTIONS[faction].name}: ${label}.`,'politics');if(clean==='defense-pact')reportTreaty(state,'player',faction,'alliance');return null;
 }

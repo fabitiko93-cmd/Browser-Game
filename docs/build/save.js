@@ -1,3 +1,5 @@
+import { initializeGalaxy, relationBetween } from './realm-relations.js';
+import { validateGalaxy } from './realm-save.js';
 import { initialFactions } from './foreign.js';
 import { SUPPLY_DEFAULTS } from './routing.js';
 import { PRIORITIES } from './infrastructure.js';
@@ -82,6 +84,12 @@ export function validateSave(value) {
     for(const p of value.planets.filter(p=>p.expansion&&p.owner))for(const id of Object.keys(value.intelligence))recordContact(value,id,p);
     for(const p of value.planets)p.localMarket??={cash:Math.min(150,p.population*.6),day:-1,sold:0};
     for(const f of Object.values(value.factions))if(f.governance.laws.administration==='expert')f.governance.laws.administration='experts';
+    value.version=8;
+  }
+  if(value?.version===8){
+    value=structuredClone(value);initializeGalaxy(value);
+    for(const f of value.fleets??[])if(f.owner!=='player'&&f.mission?.kind==='commerce'&&f.mission.buyer!=='player'){const r=relationBetween(value,f.owner,f.mission.buyer);if(r){r.trade=true;r.score=Math.max(0,r.score);}}
+    for(const r of Object.values(value.relations??{})){r.truceUntil??=0;r.warSince??=0;}
     value.version=SAVE_VERSION;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
@@ -98,7 +106,7 @@ export function validateSave(value) {
   if (value.research && (!known(TECHNOLOGIES, value.research.id) || !Number.isInteger(value.research.total) || !finite(value.research.total, 2, 30) || !Number.isInteger(value.research.remaining) || !finite(value.research.remaining, 1, value.research.total) || value.tech.includes(value.research.id) || TECHNOLOGIES[value.research.id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[value.research.id].requiresAny && !TECHNOLOGIES[value.research.id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[value.research.id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültiger Forschungsauftrag.');
   for (const id of Object.keys(FACTIONS).filter(id => id !== 'player')) {
     const rel = value.relations?.[id];
-    if (!rel || !finite(rel.score, -100, 100) || typeof rel.war !== 'boolean' || typeof rel.trade !== 'boolean' || typeof rel.cooperation !== 'boolean' || typeof rel.embargo !== 'boolean' || ['portAccess','researchPact','defensePact'].some(k=>typeof rel[k]!=='boolean') || (rel.war||rel.embargo||!rel.trade)&&['portAccess','researchPact','defensePact'].some(k=>rel[k]) || !finite(rel.pactUntil,0,value.day+180) || !finite(rel.envoyReady,0,value.day+10) || !finite(rel.aidReady,0,value.day+60) || rel.war && (rel.trade || rel.cooperation || rel.pactUntil>value.day) || rel.embargo && (rel.trade || rel.cooperation) || rel.cooperation && !rel.trade) throw new Error('Ungültige diplomatische Beziehungen.');
+    if (!rel || !finite(rel.score, -100, 100) || typeof rel.war !== 'boolean' || typeof rel.trade !== 'boolean' || typeof rel.cooperation !== 'boolean' || typeof rel.embargo !== 'boolean' || ['portAccess','researchPact','defensePact'].some(k=>typeof rel[k]!=='boolean') || (rel.war||rel.embargo||!rel.trade)&&['portAccess','researchPact','defensePact'].some(k=>rel[k]) || !finite(rel.pactUntil,0,value.day+180) || !finite(rel.envoyReady,0,value.day+10) || !finite(rel.aidReady,0,value.day+60) || !finite(rel.truceUntil,0,value.day+180) || !finite(rel.warSince,0,value.day) || rel.war && (rel.trade || rel.cooperation || rel.pactUntil>value.day) || rel.embargo && (rel.trade || rel.cooperation) || rel.cooperation && !rel.trade) throw new Error('Ungültige diplomatische Beziehungen.');
   }
   if (Object.keys(value.relations).length !== Object.keys(FACTIONS).length-1 || !Array.isArray(value.logs) || value.logs.length > 60 || value.logs.some(e => !finite(e.day, 0, value.day) || !text(e.text, 600) || !text(e.type, 24) || e.sound != null && !SOUND_CUES.includes(e.sound))) throw new Error('Ungültiges Kommandoprotokoll.');
   const ids = new Set();
@@ -126,8 +134,9 @@ export function validateSave(value) {
     fleetIds.add(f.id);
     if((f.mission?.cargo?.amount??0)+Object.values(f.cargo??{}).reduce((n,v)=>n+v,0)>Math.floor(SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity)+.000001)throw new Error('Überladener Frachtraum.');
     const m = f.mission, r = f.route;
-    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit','commerce'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit','commerce','resupply'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
     if(m?.kind==='commerce'&&(f.owner==='player'||f.type!=='freighter'||!known(FACTIONS,m.buyer)||m.buyer==='player'||m.buyer===f.owner||!m.cargo))throw new Error('Ungültige fremde Handelslieferung.');
+    if(m?.kind==='resupply'&&(f.owner==='player'||f.type!=='freighter'||m.buyer!==f.owner||!m.cargo))throw new Error('Ungültige eigene Versorgungslieferung.');
     if(f.tradeReady!=null&&!finite(f.tradeReady,0,value.day+20))throw new Error('Ungültige Handelsplanung.');
     if(m?.kind==='analyze'&&(f.type!=='probe'||m.phase!=null&&m.phase!=='scan'||m.phase==='scan'&&f.planetId!==m.target)||m?.kind==='explore'&&f.type!=='scout')throw new Error('Ungültiger Erkundungsauftrag.');
     if (m?.kind==='circuit'&&(!Number.isInteger(m.stopIndex)||!finite(m.stopIndex,0,7)))throw new Error('Ungültiger Routenstopp.');
@@ -139,7 +148,7 @@ export function validateSave(value) {
   }
   validateDevelopment(value,ids);
   validateExploration(value,ids);
-  if (!value.planets.some(p => p.owner === 'player')) throw new Error('Der Spielstand enthält keinen eigenen Planeten.');
+  validateGalaxy(value,ids);
   if (value.event && (!known(EVENTS,value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
   const schedule = value.eventSchedule;
   if (!schedule || !Number.isInteger(schedule.nextDay) || !finite(schedule.nextDay,0,value.day+145) || !Number.isInteger(schedule.counter) || !finite(schedule.counter,0,1e6) || !Array.isArray(schedule.history) || schedule.history.length>4 || new Set(schedule.history).size!==schedule.history.length || schedule.history.some(id=>!known(EVENTS,id))) throw new Error('Ungültiger Ereignisplan.');

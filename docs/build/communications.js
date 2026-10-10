@@ -1,3 +1,5 @@
+import { offerEvaluation } from './realm-ai.js';
+import { unreadNews, readNews } from './space-news.js';
 import { FACTIONS } from './data.js';
 import { uid, log } from './state.js';
 import { diplomaticAction } from './politics.js';
@@ -8,9 +10,10 @@ export const OFFER_TERMS = { trade: { cost: 50, title: 'Handelsabkommen' }, pact
 export const centers = (state, owner = 'player') => state.planets.filter(p => p.owner === owner && !p.destroyed).flatMap(p => p.buildings.filter(b => b.type === 'commCenter' && !b.remaining && b.enabled).map(b => ({ p, b })));
 export const communicationReady = (state, owner = 'player') => centers(state,owner).some(({b})=>b.status==='aktiv');
 export const openRequests = state => state.communications.messages.filter(m => m.to==='player' && m.status==='open' && m.expires>state.day);
+export const unreadCorrespondence = state => state.communications.messages.some(m=>!m.read&&(m.to==='player'&&m.type==='declaration'||m.from==='player'&&m.status!=='open'));
 export function inboxSignal(state) {
   const pending=openRequests(state);
-  return { count:pending.length, urgent:pending.some(m=>m.expires-state.day<=7), unread:state.communications.messages.some(m=>m.to==='player'&&m.type==='declaration'&&!m.read) };
+  return { count:pending.length, urgent:pending.some(m=>m.expires-state.day<=7), unread:unreadCorrespondence(state)||unreadNews(state) };
 }
 function append(state, message) {
   const c=state.communications;
@@ -39,7 +42,7 @@ export function createOffer(state, faction, type, incoming = true) {
   if(state.communications.messages.filter(m=>m.status==='open').length>=12)return 'Es laufen bereits zu viele Verhandlungen.';
   if(state.communications.messages.some(m=>m.status==='open'&&[m.from,m.to].includes(faction)))return 'Mit diesem Reich läuft bereits eine Verhandlung.';
   const terms=OFFER_TERMS[type];
-  append(state,{from,to,type,status:'open',expires:state.day+OFFER_DAYS,title:terms.title,
+  append(state,{from,to,type,read:!incoming,status:'open',expires:state.day+OFFER_DAYS,title:terms.title,
     body:type==='trade'?'Gegenseitiger Marktzugang für Frachter. Preise und Abnahme richten sich nach den örtlichen Märkten.':'Beide Reiche verzichten für 180 Tage auf Kriegserklärungen. Eine Kündigung bleibt möglich und belastet die Beziehungen.'});
   return null;
 }
@@ -79,7 +82,7 @@ export function withdrawMessage(state,id) {
   if(!m)return 'Dieses Angebot kann nicht zurückgezogen werden.';
   finish(state,m,'withdrawn');return null;
 }
-export function readInbox(state,mode='all') { for(const m of state.communications.messages)if(m.to==='player'&&(mode==='all'||m.type==='declaration'&&mode==='archive'||m.type!=='declaration'&&mode==='open'))m.read=true; }
+export function readInbox(state,mode='all') { if(mode==='news'){readNews(state);return;} for(const m of state.communications.messages)if(mode==='all'||mode==='archive'&&m.status!=='open'||mode==='open'&&m.status==='open')m.read=true; }
 export function tickCommunications(state) {
   const c=state.communications;
   for(const m of c.messages.filter(m=>m.status==='open')) {
@@ -88,8 +91,9 @@ export function tickCommunications(state) {
     if(issue){finish(state,m,'withdrawn',issue);continue;}
     if(m.from==='player'&&state.day>=m.created+3) {
       // The other government evaluates its own budget and the shared diplomatic terms.
-      const result=agree(state,m);
+      const result=offerEvaluation(state,faction,m.type)??agree(state,m);
       if(result)finish(state,m,'rejected',result);
+      m.read=false;
       if(centers(state).length)log(state,'Antwort auf dein Angebot eingegangen.','communication');
     }
   }
@@ -99,7 +103,7 @@ export function tickCommunications(state) {
   for(let offset=0;offset<ids.length;offset++) {
     const index=(c.cursor+offset)%ids.length,id=ids[index],r=state.relations[id];
     const type=!r.trade?'trade':r.pactUntil<=state.day&&r.score>=35?'pact':null;
-    if(!type||c.cooldowns[id]>state.day||!communicationReady(state,id)||state.factions[id].credits<OFFER_TERMS[type].cost)continue;
+    if(!type||offerEvaluation(state,id,type)||c.cooldowns[id]>state.day||!communicationReady(state,id)||state.factions[id].credits<OFFER_TERMS[type].cost)continue;
     if(createOffer(state,id,type,true))continue;
     c.cooldowns[id]=state.day+120;c.nextOffer=state.day+48;c.cursor=(index+1)%ids.length;break;
   }

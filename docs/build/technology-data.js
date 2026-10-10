@@ -52,6 +52,7 @@ export const TECHNOLOGIES = {
   battleLogistics: node('Einsatzlogistik', 'defense', 4, 210, 8, ['engineTuning'], { fleetUpkeep: .95, supply: 1.1 }, { requiresAny: ['precisionFire', 'shielding'] }),
   coordination: node('Vernetzte Flottenführung', 'defense', 5, 350, 12, ['battleLogistics', 'computing'], { combat: 1.06, armor: .02 }),
   communications: node('Subraum-Kommunikation', 'trade', 1, 35, 3, [], { envoy: 1.06 }, { unlock: 'Kommunikationszentrale und diplomatischer Posteingang' }),
+  newsNetwork: node('Öffentliches Subraum-Nachrichtennetz', 'science', 3, 140, 6, ['communications', 'computing'], {}, { unlock: 'Space News in einer versorgten Kommunikationszentrale' }),
   logistics: node('Modulare Frachträume', 'trade', 2, 70, 5, ['communications'], { cargoCapacity: 1.1 }),
   merchant: node('Handelsgilden', 'trade', 3, 120, 6, ['logistics'], { trade: 1.1 }, { excludes: ['charter'], focus: 'Export' }),
   charter: node('Charterverbände', 'trade', 3, 120, 6, ['logistics'], { fleetUpkeep: .94, cargoCapacity: 1.05 }, { excludes: ['merchant'], focus: 'Transport' }),

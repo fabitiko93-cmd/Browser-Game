@@ -17,8 +17,16 @@ export function marketDemand(state,p,key) {
  if(key==='medicine'&&state.factions?.[p.owner]?.tech.includes('biomedicine'))demand+=p.population*.002;
  return demand;
 }
+// Funded public procurement bids cover upcoming buildings and ships; they are not daily consumption.
+export function marketTarget(state,p,key,days=30) {
+ const daily=marketDemand(state,p,key),f=state.factions?.[p.owner];
+ if(!f)return Math.max(30,daily*days);
+ const military=['security','expansion'].includes(state.galaxy?.strategies[p.owner]?.doctrine);
+ const reserve={alloy:80,optics:35,crystal:25,electronics:f.tech.includes('advancedDiplomacy')?20:8,weapons:military?65:25}[key]??0;
+ return Math.max(daily*days,reserve);
+}
 export function marketMidpoint(state,p,key,extraStock=0) {
- const daily=marketDemand(state,p,key),production=p.lastReport?.productionByResource?.[key]??0;
+ const daily=Math.max(marketDemand(state,p,key),marketTarget(state,p,key)/60),production=p.lastReport?.productionByResource?.[key]??0;
  const coverage=(p.stock[key]+extraStock+Math.max(0,production-daily)*10)/Math.max(.5,daily);
  const scarcity=daily>.01?clamp(.35+2.65/(1+Math.max(0,coverage)/9),.28,3):clamp(.7-(p.stock[key]+extraStock)/180,.25,.7);
  return BASE_PRICES[key]*scarcity;
@@ -45,7 +53,7 @@ function affordable(limit,cash,totalFor){
 }
 export function quoteSale(state,p,key,quantity) {
  if(!RESOURCE_KEYS.includes(key)||!tradingAccess(state,p)||!Number.isFinite(quantity)||quantity<=0)return {amount:0,price:0,total:0};
- const room=Math.max(0,Math.max(30,marketDemand(state,p,key)*60)*(1+.25*Math.min(1,serviceCount(p,'trade')))-p.stock[key]);
+ const room=Math.max(0,Math.max(30,marketTarget(state,p,key,60))*(1+.25*Math.min(1,serviceCount(p,'trade')))-p.stock[key]);
  const average=a=>(marketPrice(state,p,key)+marketPrice(state,p,key,'sell',a))/2;
  const amount=affordable(Math.min(quantity,room),state.factions[p.owner]?.credits??0,a=>a*average(a));
  return {amount,price:average(amount),total:amount*average(amount)};

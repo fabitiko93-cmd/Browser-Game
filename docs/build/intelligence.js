@@ -1,7 +1,10 @@
+import { baseStats } from './strategic.js';
+import { fleetStrength } from './fleets.js';
+import { relationBetween } from './realm-relations.js';
 import { FACTIONS, SYSTEMS, PLANET_SEEDS, BUILDINGS } from './data.js';
 
 export const KNOWLEDGE_DOMAINS = ['occupancy', 'identity', 'geology', 'surface', 'civil', 'installations', 'military'];
-export const KNOWLEDGE_SOURCES = { contact: 'Diplomatischer Kontakt', scout: 'Erkundung', probe: 'Analysesonde', visit: 'Hafenbesuch', combat: 'Gefechtsbeobachtung', legacy: 'Frühere Reise', own: 'Eigene Verwaltung' };
+export const KNOWLEDGE_SOURCES = { news: 'Öffentliches Nachrichtenregister', contact: 'Diplomatischer Kontakt', scout: 'Erkundung', probe: 'Analysesonde', visit: 'Hafenbesuch', combat: 'Gefechtsbeobachtung', legacy: 'Frühere Reise', own: 'Eigene Verwaltung' };
 const network = () => SYSTEMS.filter(s => !s.uncharted).map(s => s.id);
 const observation = (value, day, source, precision = 'observed') => ({ value: structuredClone(value), day, source, precision });
 export function initializeIntelligence(state, legacy = false) {
@@ -44,7 +47,9 @@ function put(state, viewer, planet, fields, source, precision = 'observed') {
   for (const [key, value] of Object.entries(fields)) record[key] = observation(value, state.day, source, precision);
 }
 export function recordContact(state, viewer, p, source = 'contact') {
-  put(state, viewer, p, { occupancy: Boolean(p.owner), identity: p.owner }, source, source === 'contact' ? 'reported' : 'observed');
+  const plan=state.galaxy?.strategies[viewer]?.warPlan;
+  if(plan?.target===p.id&&plan.enemy!==p.owner)state.galaxy.strategies[viewer].warPlan=null;
+  put(state, viewer, p, { occupancy: Boolean(p.owner), identity: p.owner }, source, ['contact','news'].includes(source) ? 'reported' : 'observed');
 }
 export function observePlanet(state, viewer, p, source) {
   if (source === 'scout') { put(state, viewer, p, { occupancy: Boolean(p.owner) }, source); return; }
@@ -59,7 +64,7 @@ export function observePlanet(state, viewer, p, source) {
       installations: p.buildings.filter(b => !['Planetare Basen', 'Militär'].includes(BUILDINGS[b.type].group))
     }, source);
   }
-  if (source === 'combat') put(state, viewer, p, { military: { defense: p.defense, shield: p.shield, garrison: p.garrison } }, source, 'estimate');
+  if (source === 'combat') put(state, viewer, p, { military: { defense: p.defense, shield: p.shield, garrison: p.garrison, orbital: baseStats(state,p).orbital, fortification: baseStats(state,p).fortification, fleetStrength: state.fleets.filter(f=>f.owner===p.owner&&!f.mission&&f.planetId===p.id).reduce((n,f)=>n+fleetStrength(state,f),0) } }, source, 'estimate');
 }
 export function knowledgeOf(state, p, viewer = 'player') {
   if (!p || !reachablePlanet(state, p, viewer)) return {};
@@ -87,7 +92,7 @@ export function visitArrival(state, fleet, p) {
   const viewer = fleet.owner;
   if (fleet.type === 'scout') { observePlanet(state, viewer, p, 'scout'); return; }
   if (fleet.type === 'probe') return;
-  const rel = viewer === 'player' ? state.relations[p.owner] : p.owner === 'player' ? state.relations[viewer] : null;
+  const rel = relationBetween(state,viewer,p.owner);
   observePlanet(state, viewer, p, rel?.trade && !rel.war && !rel.embargo ? 'visit' : 'contact');
 }
 export const knownTargets = (state, viewer = 'player') => state.planets.map(p => planetView(state, p, viewer)).filter(Boolean);

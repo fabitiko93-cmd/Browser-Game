@@ -15,6 +15,7 @@ import { tickExplorationAI } from './exploration.js';
 import { tickCommunications } from './communications.js';
 
 export function stepDay(state) {
+  if(state.galaxy?.defeat)return;
   state.day++;
   const before = new Map(state.planets.map(p => [p.id, { ...p.stock }]));
   const openingCredits = state.credits;

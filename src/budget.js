@@ -1,3 +1,5 @@
+import { relationBetween } from './realm-relations.js';
+import { FACTIONS } from './data.js';
 import { log } from './state.js';
 import { financialCondition, advanceLocalMarket } from './finance.js';
 import { diplomacyScience, sanctionUpkeep } from './diplomacy.js';
@@ -20,7 +22,7 @@ export function runDailyEconomy(state) {
     if(p.owner&&p.owner!=='player'&&state.factions?.[p.owner]){const f=foreignTotals[p.owner];f.credits+=p.lastReport.income-p.lastReport.upkeep;f.science+=p.lastReport.science;}
     if (p.owner === 'player') { income += p.lastReport.income; taxes += p.lastReport.taxes; commerce += p.lastReport.commerce; buildings += p.lastReport.upkeep; science += p.lastReport.science; }
   }
-  for(const [id,f] of Object.entries(state.factions)){ f.credits+=foreignTotals[id].credits-fleetUpkeep(state,id)-foreignInterest[id];f.science+=foreignTotals[id].science; maintainFleets(state,f.credits>=0,id); }
+  for(const [id,f] of Object.entries(state.factions)){ f.credits+=foreignTotals[id].credits-fleetUpkeep(state,id)-foreignInterest[id]-2*Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length;f.science+=foreignTotals[id].science; maintainFleets(state,f.credits>=0,id); }
   tickShields(state);
   science *= diplomacyScience(state);
   const sanctions = sanctionUpkeep(state), fleets = fleetUpkeep(state);let net = income - buildings - fleets - sanctions - interest;

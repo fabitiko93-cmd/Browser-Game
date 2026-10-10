@@ -4,6 +4,17 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Interessen & Rivalitäten · 0.9
+
+- 18 fremde Regierungen verfolgen Handels-, Forschungs-, Siedlungs-, Sicherheits- oder Einflussziele. Eigene Versorgungskrisen ändern ihre Priorität; politische Produktions-, Forschungs- und Militärfaktoren wirken weiterhin über dieselben Regeln. Erklärte Interessen und öffentliche Partner/Rivalen stehen in der Diplomatieansicht.
+- Fremde Reiche schließen untereinander bezahlte Handelsabkommen und Nichtangriffspakte. Entwickelte Vertragsdiplomatie plus aktives Diplomatisches Forum ermöglichen Schutzbündnisse: 2 Credits Unterhalt je Partner und Tag sowie begrenzte Hilfe aus tatsächlich vorhandenen Vorräten. Höchstens zwei Schutzpartner; begrenzte Handelsnetze statt automatisch aller 153 Verbindungen.
+- Regionale Konkurrenz kann zu Rivalitäten und vorbereiteten Kriegen führen. Konfliktbeginn frühestens ab Tag 180, mindestens 36 Tage Vorbereitung, ausreichend eigene Flotte und finanzierbarer Unterhalt. Ansprüche an den Spieler und Kriegserklärungen landen als Erklärung in der Kommunikationszentrale. Annäherung, Handel und Pakte können die Vorbereitung abbrechen. Wirtschaftliche Krisen und langanhaltende Kriege führen zwischen KI-Reichen zu Waffenstillständen mit 180 Tagen Eskalationspause.
+- Die KI baut reale Korvetten, Zerstörer, später Kreuzer und Landungsschiffe. Werftzeit, Forschung, Besatzung, lokale Waren, Credits, Flottenunterhalt, Startenergie, Bordversorgung, Reparatur und Schäden gelten für alle Reiche. Der frühere Überfall mit erfundener, automatisch wachsender Stärke entfällt. Physische Verteidigungsschiffe zählen im Gefecht; Eroberung verbraucht Landungsschiffe. Auch KI-Fernwaffen benötigen Forschung und den vollständigen Preis.
+- Öffentlich finanzierte Beschaffungsgebote decken neben laufendem Verbrauch geplante Gebäude und Schiffe ab. Diese Gebote beeinflussen Marktpreise und Liefermengen, nicht die HUD-Tagesraten. KI-Frachter benötigen Handelszugang; eigene Kolonien versorgen sie mit real gebuchten Waren und Reiseenergie. Zivile Reserven schützen vor ungebremsten Importkäufen. Anlagen- und Werftentscheidungen berücksichtigen laufende Flottenkosten.
+- „Öffentliches Subraum-Nachrichtennetz“ schaltet **Space News** innerhalb der Kommunikationszentrale frei. Öffentliche Abkommen, Rivalitäten, Kriege, Waffenstillstände, Kolonien, Eroberungen, Zerstörungen und beobachtbare Flottenbewegungen. Empfang nur über eine versorgte Zentrale und aus kartierten Systemen; keine rückwirkende Lieferung unbekannter Ereignisse. Gespeicherte Berichte bleiben bei Empfangsausfall erhalten. Neue Berichte markieren den blauen Dachpunkt, die Dachzahl zählt weiterhin ausschließlich unbeantwortete Angebote.
+- Nachrichten geben keine internen Vorräte, Bevölkerungszahlen, geheimen Anlagen oder Flottenstärken preis. Öffentliche neue Hafenadressen ergänzen nur Bewohnung und Zugehörigkeit. Militärische Planung nutzt eigene Wissensarchive; erst die tatsächliche Gefechtsauflösung verwendet die reale Verteidigung.
+- Verlust der letzten eigenen Welt beendet die Simulation mit einem gespeicherten Niederlagenzustand; Sichern, Laden und Neustart bleiben verfügbar. Speicherformat v9 übernimmt v1–v8 mit bestehenden Kolonien, Waren, Archiven und laufenden Aufträgen. Kein Neustart für diesen Patch erforderlich. Oberfläche, Gebäudegrafiken und Musik bleiben im bisherigen Stil.
+
 ## Musik & Aktionssounds · 0.8.1
 
 - Neuer eigener Space-Soundtrack „Transit 3077“: zwei Minuten mit Synth-Flächen, Melodien, Arpeggios, ruhigen und rhythmischen Passagen. Nahtloser Audioloop unabhängig von Spieltempo, Pause und UI-Timern; durchgehend hörbare Klangflächen auch beim anfänglichen Live-Score.
@@ -34,7 +45,7 @@ Arbeitstitel: ORBIT 3077.
 - Handels- und Paktangebote können angenommen, abgelehnt oder zurückgezogen werden. Unbeantwortete Angebote laufen nach 30 Tagen aus; eigene Angebote werden nach drei Tagen geprüft. Ignorieren verursacht keine pauschale Beziehungsstrafe. Neue Korrespondenz erzeugt nur einen kurzen Hinweis. Eine Reichsanfrage höchstens alle 48 Tage; je Absender mindestens 120 Tage Abstand und keine parallelen Doppelverhandlungen.
 - Abbau, Verlust oder Neubau einer Zentrale löscht die Korrespondenz nicht. v1–v6-Spielstände werden auf v7 übernommen; bestehende Kolonien, Bestände und laufende Handelsrouten bleiben erhalten. Kacheln, Gebäude und Forschungsgrafik behalten den bisherigen Stil.
 
-Spionage, Informationsabkommen, automatische Scans, Misstrauen/Angst, Space News, Cluster-Dominanz und Täuschungskampagnen sind für spätere Patches vorgesehen.
+Spionage, Informationsabkommen, automatische Scans, Misstrauen/Angst, Cluster-Dominanz und Täuschungskampagnen sind für spätere Patches vorgesehen.
 
 ## Planetarer Basenbau
 
