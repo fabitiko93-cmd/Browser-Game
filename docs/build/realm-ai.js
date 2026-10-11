@@ -1,3 +1,4 @@
+import { blocCosts, activeWar, peaceTerms, settlePeace, blocPartners, joinIssue } from './power.js';
 import { FACTIONS, SHIPS, BUILDINGS } from './data.js';
 import { policyEffects } from './governance.js';
 import { technologyEffects } from './technology.js';
@@ -10,7 +11,8 @@ import { getPlanet } from './state.js';
 
 const owned = (s,id) => s.planets.filter(p=>p.owner===id&&!p.destroyed);
 export function realmBalance(state,id) {
-  return owned(state,id).reduce((n,p)=>n+(p.lastReport?.income??0)-(p.lastReport?.upkeep??0),0)-fleetUpkeep(state,id)-Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length*2;
+  const bloc=blocCosts(state,id);
+  return bloc.income-bloc.cost+owned(state,id).reduce((n,p)=>n+(p.lastReport?.income??0)-(p.lastReport?.upkeep??0),0)-fleetUpkeep(state,id)-Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length*2;
 }
 const military = (s,id) => s.fleets.filter(f=>f.owner===id&&(SHIPS[f.type].strength>0||f.type==='lander'));
 const queued = (s,id) => owned(s,id).flatMap(p=>p.queues).filter(q=>SHIPS[q.type].strength>0||q.type==='lander');
@@ -24,6 +26,7 @@ export function refreshInterest(state,id) {
   return strategy;
 }
 export function offerEvaluation(state,id,type) {
+  if(type==='bloc')return joinIssue(state,'player',id);
   const r=state.relations[id],s=state.galaxy?.strategies[id];
   if(!r||state.factions[id].credits<(type==='pact'?220:130))return 'Die Regierung muss ihre eigene Versorgung finanzieren.';
   if(s?.warPlan?.enemy==='player'&&r.score<0)return 'Die Regierung hält an ihren regionalen Ansprüchen fest.';
@@ -49,6 +52,7 @@ function militaryBuild(state,id,strategy) {
 }
 function sharedSystem(state,id,view) { return owned(state,id).some(p=>p.system===view.system); }
 export function knownWarTarget(state,id,enemy) {
+  const w=activeWar(state,id,enemy);if(w?.attacker===id&&w.target){const claim=knownTargets(state,id).find(p=>p.id===w.target);return claim?.owner===enemy&&!claim.destroyed?claim:null;}
   return knownTargets(state,id).filter(p=>p.owner===enemy&&!p.destroyed).sort((a,b)=>Number(sharedSystem(state,id,b))-Number(sharedSystem(state,id,a))||(a.defense??60)-(b.defense??60)||a.id.localeCompare(b.id))[0]??null;
 }
 function estimateDefense(state,id,view) {
@@ -104,7 +108,7 @@ function bilateral(state,a,b,r) {
   if(state.day<r.nextAction)return;r.nextAction=state.day+30;
   const sa=state.galaxy.strategies[a],sb=state.galaxy.strategies[b];
   if(r.war) {
-    if(state.day-r.warSince>=120&&(sa.focus==='recovery'||sb.focus==='recovery'||state.day-r.warSince>=300)) {endWar(state,a,b);reportTreaty(state,a,b,'peace');}
+    if((sa.focus==='recovery'||sb.focus==='recovery'||state.day-r.warSince>=120)&&peaceTerms(state,a,b).accepted)settlePeace(state,a,b);
     return;
   }
   if(!state.factions[a].tech.includes('communications')||!state.factions[b].tech.includes('communications'))return;
@@ -125,13 +129,13 @@ function planConflict(state,id,strategy) {
     const r=relationBetween(state,id,plan.enemy),view=knownWarTarget(state,id,plan.enemy);
     if(!r||r.score>-35||r.pactUntil>state.day||r.trade||r.defensePact||!view||strategy.focus==='recovery'){strategy.warPlan=null;return;}
     if(state.day>=plan.declareAt&&enoughArmy(state,id,view)) {
-      if(beginWar(state,id,plan.enemy)){reportTreaty(state,id,plan.enemy,'war');if(plan.enemy==='player')declareMessage(state,id,'Kriegserklärung','Unsere Regierung erklärt den Krieg. Die zuvor angekündigten regionalen Ansprüche bestehen fort.',true);}
+      if(beginWar(state,id,plan.enemy,plan.target)){reportTreaty(state,id,plan.enemy,'war');if(plan.enemy==='player')declareMessage(state,id,'Kriegserklärung','Unsere Regierung erklärt den Krieg. Die zuvor angekündigten regionalen Ansprüche bestehen fort.',true);}
       strategy.warPlan=null;
     }
     return;
   }
   if(state.day<180||strategy.focus==='recovery'||!['expansion','security'].includes(strategy.doctrine)||!communicationReady(state,id)||realmBalance(state,id)<3)return;
-  const candidate=Object.keys(FACTIONS).filter(other=>other!==id&&realmExists(state,other)).map(enemy=>({enemy,r:relationBetween(state,id,enemy),view:knownWarTarget(state,id,enemy)})).filter(({r,view})=>r&&view&&r.score<=-35&&!r.trade&&!r.defensePact&&r.pactUntil<=state.day&&(r.truceUntil??0)<=state.day&&sharedSystem(state,id,view)).sort((a,b)=>a.r.score-b.r.score)[0];
+  const candidate=Object.keys(FACTIONS).filter(other=>other!==id&&realmExists(state,other)&&!blocPartners(state,id,other)).map(enemy=>({enemy,r:relationBetween(state,id,enemy),view:knownWarTarget(state,id,enemy)})).filter(({r,view})=>r&&view&&r.score<=-35&&!r.trade&&!r.defensePact&&r.pactUntil<=state.day&&(r.truceUntil??0)<=state.day&&sharedSystem(state,id,view)).sort((a,b)=>a.r.score-b.r.score)[0];
   if(!candidate||!enoughArmy(state,id,candidate.view))return;
   strategy.warPlan={enemy:candidate.enemy,target:candidate.view.id,declareAt:state.day+36};
   if(candidate.enemy==='player')declareMessage(state,id,'Regionale Ansprüche','Unsere Regierung beansprucht eine Neuordnung des gemeinsamen Heimatsystems. Ohne diplomatische Annäherung bereiten wir einen Konflikt vor. Ein Handelsabkommen, ein Pakt oder verbesserte Beziehungen können die Eskalation verhindern.',true);

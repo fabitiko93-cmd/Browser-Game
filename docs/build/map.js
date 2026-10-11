@@ -1,3 +1,4 @@
+import { systemsOf } from './world.js';
 import { GRID, SYSTEMS, FACTIONS } from './data.js';
 import { SurfaceRenderer } from './surface-renderer.js';
 import { compactSurface } from './surface-ui.js';
@@ -22,7 +23,10 @@ export class MapRenderer {
     this.canvas.width = Math.round(rect.width * dpr); this.canvas.height = Math.round(rect.height * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.dpr = dpr;
   }
-  resetCamera() { this.camera = { x: 0, y: 0, zoom: 1 }; this.surfaceFocusKey = ''; }
+  resetCamera() {
+    this.camera = { x: 0, y: 0, zoom: 1 }; this.surfaceFocusKey = '';
+    if(this.ui.view==='galaxy'&&this.state.world.generated){const s=systemsOf(this.state).find(s=>s.id===this.ui.systemId),top=this.surfaceInsets?.top??84,bottom=this.surfaceInsets?.bottom??67,span=Math.max(390,Math.ceil(systemsOf(this.state).length/3)*104,this.height-top-bottom-65);if(s){this.camera.x=-this.width*(s.x-.5);this.camera.y=-span*(s.y-.5);this.clampCamera();}}
+  }
   point(e) { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
   pointerDown(e) {
     this.canvas.setPointerCapture(e.pointerId);
@@ -131,7 +135,7 @@ export class MapRenderer {
     this.hits.push({ kind: 'planet', x, y, r: Math.max(25, r + 7), id: p.id });
   }
   system(ctx, w, h, time) {
-    const system = SYSTEMS.find(s => s.id === this.ui.systemId), planets = this.state.planets.filter(p => p.system === system.id).map(p=>planetView(this.state,p)).filter(Boolean);
+    const system = systemsOf(this.state).find(s => s.id === this.ui.systemId), planets = this.state.planets.filter(p => p.system === system.id).map(p=>planetView(this.state,p)).filter(Boolean);
     const top=this.surfaceInsets?.top??84,bottom=this.surfaceInsets?.bottom??67,available=Math.max(160,h-top-bottom);
     const cx = w / 2 + this.camera.x, cy = top + available * .36 + this.camera.y, zoom = this.camera.zoom;
     const orbitRadius = Math.min(w * .38, available * .25) * zoom;
@@ -167,8 +171,8 @@ export class MapRenderer {
   }
   galaxy(ctx, w, h, time) {
     const top=this.surfaceInsets?.top??84,bottom=this.surfaceInsets?.bottom??67;
-    const span=Math.max(390,h-top-bottom-65),mid=top+(h-top-bottom-65)/2;
-    const points = SYSTEMS.map(s => ({ ...s, px: w / 2 + w * (s.x - .5) * this.camera.zoom + this.camera.x, py: mid + span * (s.y - .5) * this.camera.zoom + this.camera.y }));
+    const span=Math.max(390,Math.ceil(systemsOf(this.state).length/3)*104,h-top-bottom-65),mid=top+(h-top-bottom-65)/2;
+    const points = systemsOf(this.state).map(s => ({ ...s, px: w / 2 + w * (s.x - .5) * this.camera.zoom + this.camera.x, py: mid + span * (s.y - .5) * this.camera.zoom + this.camera.y }));
     ctx.strokeStyle = '#85b3c329'; ctx.setLineDash([2, 7]);
     for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { if (points[i].uncharted||points[j].uncharted||Math.hypot(points[i].x-points[j].x,points[i].y-points[j].y)>.46) continue; ctx.beginPath(); ctx.moveTo(points[i].px, points[i].py); ctx.lineTo(points[j].px, points[j].py); ctx.stroke(); }
     for(const route of this.state.intelligence.player.routes){const a=points.find(s=>s.id===route.from),b=points.find(s=>s.id===route.to);if(a&&b){ctx.strokeStyle='#a3b9ff70';ctx.beginPath();ctx.moveTo(a.px,a.py);ctx.lineTo(b.px,b.py);ctx.stroke();}}

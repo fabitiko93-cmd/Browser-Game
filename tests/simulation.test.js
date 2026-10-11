@@ -11,7 +11,7 @@ const days = (s, n) => { for (let i = 0; i < n; i++) stepDay(s); };
 const home = s => getPlanet(s, 'nereid');
 
 test('local production consumes input, population consumes food, and forecast does not mutate the game', () => {
-  const s = createGame(), snapshot = JSON.stringify(s), p = home(s), initialAlloy = p.stock.alloy;
+  const s = createGame({ legacy: true }), snapshot = JSON.stringify(s), p = home(s), initialAlloy = p.stock.alloy;
   const projected = forecast(s, p);
   assert.equal(JSON.stringify(s), snapshot);
   assert.equal(projected.net.alloy, 5);
@@ -20,7 +20,7 @@ test('local production consumes input, population consumes food, and forecast do
   assert.ok(p.stock.food > 180); assert.ok(s.science > 0); assert.ok(s.credits > 800);
 });
 test('building orders are atomic and become functional only after construction', () => {
-  const s = createGame(), p = home(s);
+  const s = createGame({ legacy: true }), p = home(s);
   const before = JSON.stringify(s);
   assert.ok(placeBuilding(s, p, 'laser', 4, 7));
   assert.equal(JSON.stringify(s), before);
@@ -31,14 +31,14 @@ test('building orders are atomic and become functional only after construction',
   days(s, 1); assert.ok(p.stock.weapons > weaponBefore);
 });
 test('raw material shortages halt production instead of creating negative resources', () => {
-  const s = createGame(), p = home(s);
+  const s = createGame({ legacy: true }), p = home(s);
   p.stock.ore = 0; p.buildings.find(b => b.type === 'mine').enabled = false;
   days(s, 1);
   assert.equal(p.buildings.find(b => b.type === 'foundry').status, 'Rohstoffe fehlen');
   for (const v of Object.values(p.stock)) assert.ok(v >= 0);
 });
 test('research has a real delay and changes output after completion', () => {
-  const s = createGame(); s.science = 100; s.tech = ['grid'];
+  const s = createGame({ legacy: true }); s.science = 100; s.tech = ['grid'];
   assert.equal(startResearch(s, 'fusion'), null);
   assert.equal(s.science, 35);
   days(s, 4); assert.ok(!s.tech.includes('fusion'));
@@ -48,7 +48,7 @@ test('research has a real delay and changes output after completion', () => {
   assert.ok(boosted > normal);
 });
 test('a colony ship costs resources and settlers, travels, and is consumed into a functional colony', () => {
-  const s = createGame(), p = home(s); s.tech=['habitats'];
+  const s = createGame({ legacy: true }), p = home(s); s.tech=['habitats'];
   assert.equal(buildShip(s, p, 'colony'), null); assert.equal(p.population, 140);
   days(s, shipBuildDays(s, 'colony'));
   const f = s.fleets.find(f => f.type === 'colony'); assert.ok(f);
@@ -61,7 +61,7 @@ test('a colony ship costs resources and settlers, travels, and is consumed into 
   days(s, 10); assert.ok(colony.stock.food > 0); assert.ok(colony.population > 40);
 });
 test('invalid fleet groups and hostile targets leave fuel, cargo and missions unchanged', () => {
-  const s = createGame(); const before = JSON.stringify(s);
+  const s = createGame({ legacy: true }); const before = JSON.stringify(s);
   assert.ok(orderFleet(s, ['starter-f'], 'aster', 'transport', { resource: 'ore', amount: 30 }));
   assert.equal(JSON.stringify(s), before);
   assert.ok(orderFleet(s, ['starter-c', 'unknown'], 'cinder', 'move'));
@@ -70,7 +70,7 @@ test('invalid fleet groups and hostile targets leave fuel, cargo and missions un
   assert.equal(JSON.stringify(s), before);
 });
 test('cargo is reserved on departure and delivered only at arrival, without sharing planet inventories', () => {
-  const s = createGame(), source = home(s), target = getPlanet(s, 'cinder');
+  const s = createGame({ legacy: true }), source = home(s), target = getPlanet(s, 'cinder');
   target.owner = 'player'; target.population = 0; target.stock.energy = 100;
   const original = source.stock.ore;
   assert.equal(orderFleet(s, ['starter-f'], target.id, 'transport', { resource: 'ore', amount: 40 }), null);
@@ -80,7 +80,7 @@ test('cargo is reserved on departure and delivered only at arrival, without shar
   days(s, 1); assert.equal(target.stock.ore, 40);
 });
 test('a repeated cargo route reserves only available stock and completes multiple journeys', () => {
-  const s = createGame(), source = home(s), target = getPlanet(s, 'cinder');
+  const s = createGame({ legacy: true }), source = home(s), target = getPlanet(s, 'cinder');
   target.owner = 'player'; target.population = 0; target.stock.energy = 500;
   source.stock.energy = 1000;
   assert.equal(orderFleet(s, ['starter-f'], 'cinder', 'transport', { resource: 'ore', amount: 40, repeat: true }), null);
@@ -89,7 +89,7 @@ test('a repeated cargo route reserves only available stock and completes multipl
   assert.ok(s.fleets.find(f => f.id === 'starter-f').route);
 });
 test('cargo returns when diplomacy changes during transit', () => {
-  const s = createGame();
+  const s = createGame({ legacy: true });
   assert.equal(diplomaticAction(s, 'ilyri', 'trade'), null);
   assert.equal(orderFleet(s, ['starter-f'], 'thalassa', 'transport', { resource: 'crystal', amount: 20 }), null);
   assert.equal(home(s).stock.crystal, 10);
@@ -99,7 +99,7 @@ test('cargo returns when diplomacy changes during transit', () => {
   days(s, eta); assert.equal(home(s).stock.crystal, 30);
 });
 test('war, fleet combat and landers combine to capture a planet', () => {
-  const s = createGame();
+  const s = createGame({ legacy: true });
   const ships = [];
   for (let i = 0; i < 3; i++) ships.push({ id: 'extra' + i, name: 'Test', type: 'corvette', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, mission: null, route: null });
   ships.push({ id: 'landing', name: 'Landing', type: 'lander', owner: 'player', planetId: 'nereid', hp: 100, supply: 100, mission: null, route: null });
@@ -112,7 +112,7 @@ test('war, fleet combat and landers combine to capture a planet', () => {
   assert.equal(s.fleets.some(f => f.id === 'landing'), false);
 });
 test('government transition has costs without excluding population by ideology, taxes affect happiness, and elections advance', () => {
-  const s = createGame(), p = home(s), before = workforce(s, p);
+  const s = createGame({ legacy: true }), p = home(s), before = workforce(s, p);
   assert.equal(changeGovernment(s, 'nationalSocialism'), null);
   assert.ok(workforce(s, p) > before); assert.ok(s.player.stability < 75);
   assert.equal(changeGovernment(s, 'democracy'), null);
@@ -122,7 +122,7 @@ test('government transition has costs without excluding population by ideology, 
   days(s, 30); assert.equal(s.player.term, 120);
 });
 test('long simulations stay finite and save/import preserves all progress', () => {
-  const s = createGame(); days(s, 365);
+  const s = createGame({ legacy: true }); days(s, 365);
   for (const p of s.planets) {
     assert.ok(Number.isFinite(p.population)); assert.ok(Number.isFinite(p.happiness));
     for (const v of Object.values(p.stock)) assert.ok(Number.isFinite(v) && v >= 0);
@@ -143,13 +143,13 @@ test('import rejects incomplete shapes, invalid enums, duplicated tiles and brok
     s => { s.event = { kind: 'unknown', planet: 'nereid' }; },
     s => { s.planets[0].color = 'invalid'; }
   ]) {
-    const s = createGame(); mutate(s);
+    const s = createGame({ legacy: true }); mutate(s);
     assert.throws(() => parseImport(JSON.stringify(s)));
   }
 });
 
 test('a fleet cannot spend hostile stores when leaving an enemy orbit', () => {
-  const s = createGame(), f = s.fleets[0], enemy = getPlanet(s, 'aster');
+  const s = createGame({ legacy: true }), f = s.fleets[0], enemy = getPlanet(s, 'aster');
   diplomaticAction(s, 'aster', 'war'); f.planetId = 'aster';
   const energy = enemy.stock.energy, supply = f.supply;
   assert.equal(orderFleet(s, [f.id], 'nereid'), null);
@@ -157,7 +157,7 @@ test('a fleet cannot spend hostile stores when leaving an enemy orbit', () => {
 });
 
 test('a transport cannot double-book its cargo and propulsion energy', () => {
-  const s = createGame(), p = home(s), target = getPlanet(s, 'cinder'); target.owner = 'player';
+  const s = createGame({ legacy: true }), p = home(s), target = getPlanet(s, 'cinder'); target.owner = 'player';
   p.stock.energy = 40;
   const before = JSON.stringify(s);
   assert.ok(orderFleet(s, ['starter-f'], 'cinder', 'transport', { resource: 'energy', amount: 40 }));

@@ -98,3 +98,5 @@
 
 .planet-title-button { border:0; background:none; color:inherit; font:inherit; padding:0; cursor:pointer; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:32px; }
 .planet-title-button svg { color:var(--muted); }
+
+.management-fold>summary{min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text)}.management-fold>summary.section-title{align-items:flex-start;margin:4px 0;letter-spacing:.7px;font-size:11px}.management-fold>summary .minor{font-weight:400;font-size:10px;color:var(--muted)}.management-fold>summary:after{content:"+";align-self:flex-end;margin-top:-22px;color:var(--muted)}.management-fold[open]>summary:after{content:"−"}.management-fold[open]>summary{margin-bottom:10px}.input-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.input-pair .text-input{width:100%;min-width:0}

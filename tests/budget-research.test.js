@@ -18,7 +18,7 @@ const ship = (s, type = 'cruiser') => { const f = { id: type, type, name: type, 
 const progress = (s, n) => { for (let i = 0; i < n; i++) stepDay(s); };
 
 test('regression: a positive planetary surplus cannot conceal a negative imperial budget', () => {
-  const s = createGame(); s.player.tax=.15; ship(s); const before = s.credits;
+  const s = createGame({ legacy: true }); s.player.tax=.15; ship(s); const before = s.credits;
   const snapshot = exportGame(s), forecast = forecastDay(s);
   assert.equal(exportGame(s), snapshot);
   const r = forecast.planets[0].lastReport;
@@ -28,7 +28,7 @@ test('regression: a positive planetary surplus cannot conceal a negative imperia
   assert.ok(renderResources(s, {planetId:'nereid'}).includes('resource-trend negative'));
 });
 test('all colonies share one budget; deficit and surplus do not depend on iteration order', () => {
-  const s = createGame(), colony = getPlanet(s, 'cinder');
+  const s = createGame({ legacy: true }), colony = getPlanet(s, 'cinder');
   colony.owner = 'player'; colony.population = 10; colony.stock = {...home(s).stock};
   colony.buildings = structuredClone(home(s).buildings);
   s.credits = 1;
@@ -38,7 +38,7 @@ test('all colonies share one budget; deficit and surplus do not depend on iterat
   close(s.lastDayReport.net, f.budget.net); assert.ok(s.credits < 0);
 });
 test('HUD and economy rates predict the same next-day consumption, including maintenance and completed construction', () => {
-  const s = createGame(); s.fleets[0].hp = 65; s.fleets[0].supply = 30;
+  const s = createGame({ legacy: true }); s.fleets[0].hp = 65; s.fleets[0].supply = 30;
   home(s).buildings.push({id:'new',type:'solar',x:7,y:7,remaining:1,enabled:true,status:'Bau'});
   const forecast = forecastDay(s), before = {...home(s).stock}, credit = s.credits;
   const ui = {planetId:'nereid',projection:forecast,panel:'economy',economyMode:'production'};
@@ -48,7 +48,7 @@ test('HUD and economy rates predict the same next-day consumption, including mai
   for (const resource of Object.keys(before)) close(home(s).stock[resource] - before[resource], forecast.planets[0].net[resource]);
 });
 test('next-day forecasts stay accurate through program expiry, growth, shortages and bankruptcy', () => {
-  const s = createGame(); ship(s); decide(s, 'industry'); s.credits = 30;
+  const s = createGame({ legacy: true }); ship(s); decide(s, 'industry'); s.credits = 30;
   for (let i = 0; i < 40; i++) {
     const forecast = forecastDay(s), before = s.credits, stocks = {...home(s).stock}; stepDay(s);
     close(s.credits - before, forecast.budget.actual);
@@ -56,7 +56,7 @@ test('next-day forecasts stay accurate through program expiry, growth, shortages
   }
 });
 test('trade deliveries appear as single bookings instead of a misleading permanent credit rate', () => {
-  const s = createGame(); diplomaticAction(s, 'ilyri', 'trade');
+  const s = createGame({ legacy: true }); diplomaticAction(s, 'ilyri', 'trade');
   assert.equal(orderFleet(s, ['starter-f'], 'thalassa', 'transport', {resource:'alloy',amount:20}), null);
   s.fleets[1].mission.remaining = 1; const f = forecastDay(s); const before = s.credits;
   stepDay(s); close(s.lastDayReport.oneOff, s.tradeLedger[0].revenue);
@@ -78,7 +78,7 @@ test('79 technology nodes form an acyclic dependency graph with seven exclusive 
 });
 test('both directions in every specialization remain playable through advanced cross-branch research', () => {
   for (const reverse of [false, true]) {
-    const s = createGame(); const entries = Object.keys(TECHNOLOGIES); if (reverse) entries.reverse();
+    const s = createGame({ legacy: true }); const entries = Object.keys(TECHNOLOGIES); if (reverse) entries.reverse();
     for (let pass = 0; pass < 20; pass++) {
       let advanced = false;
       for (const id of entries) if (!researchBlock(s, id)) { s.science = 10000; assert.equal(startResearch(s, id), null); progress(s, s.research.remaining); advanced = true; }
@@ -89,7 +89,7 @@ test('both directions in every specialization remain playable through advanced c
   }
 });
 test('research prerequisites, exclusive choices and insufficient points reject without taking resources', () => {
-  const s = createGame(); s.science = 500;
+  const s = createGame({ legacy: true }); s.science = 500;
   let before = exportGame(s); assert.ok(startResearch(s, 'plasma')); assert.equal(exportGame(s), before);
   s.tech = ['grid','fusion','photovoltaics']; before = exportGame(s);
   assert.ok(startResearch(s, 'reactorLoops')); assert.equal(exportGame(s), before);
@@ -97,7 +97,7 @@ test('research prerequisites, exclusive choices and insufficient points reject w
   s.tech = ['grid','fusion','photovoltaics','reactorLoops']; assert.throws(() => parseImport(exportGame(s)));
 });
 test('technology effects change specific resource chains, cargo, damage and travel without instant maximal bonuses', () => {
-  const s = createGame(), base = forecastDay(s); s.tech = ['grid','fusion','targeting','lasers','communications','logistics'];
+  const s = createGame({ legacy: true }), base = forecastDay(s); s.tech = ['grid','fusion','targeting','lasers','communications','logistics'];
   const f = forecastDay(s); assert.ok(f.planets[0].net.energy > base.planets[0].net.energy);
   assert.ok(technologyEffects(s).energy < 1.2); assert.ok(technologyEffects(s).combat < 1.2);
   assert.equal(cargoCapacity(s, 'freighter'), 88); assert.ok(fleetStrength(s, s.fleets[0]) > 18);
@@ -106,7 +106,7 @@ test('technology effects change specific resource chains, cargo, damage and trav
   assert.equal(orderFleet(s,['starter-f'],'cinder'), null); close(before-home(s).stock.energy, 7.2);
 });
 test('technocracy has visible and actual science, development and energy-efficiency advantages', () => {
-  const normal = createGame(), tech = structuredClone(normal); tech.player.ideology = 'technocracy';
+  const normal = createGame({ legacy: true }), tech = structuredClone(normal); tech.player.ideology = 'technocracy';
   const baseline = forecastDay(normal), advanced = forecastDay(tech);
   close(advanced.budget.science, 5); assert.ok(advanced.budget.science > baseline.budget.science);
   assert.ok(researchDays(tech,'quantumModels') < researchDays(normal,'quantumModels'));
@@ -115,9 +115,9 @@ test('technocracy has visible and actual science, development and energy-efficie
   assert.ok(markup.includes('× 1.25')); assert.ok(markup.replace(/<[^>]*>/g, '').includes('Fabrik-Energiebedarf −8 %'));
 });
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
-  const old = createGame(); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
+  const old = createGame({ legacy: true }); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 9);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 10);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};
@@ -125,7 +125,7 @@ test('v2 saves retain completed technologies and pending research when adding th
   progress(pending,3); assert.ok(pending.tech.includes('fusion')); assert.deepEqual(parseImport(exportGame(pending)),pending);
 });
 test('every research branch renders traceable prerequisites and a limited specialization', () => {
-  const s = createGame();
+  const s = createGame({ legacy: true });
   for (const branch of Object.keys(RESEARCH_BRANCHES)) {
     const html = renderSheet(s,{panel:'economy',economyMode:'research',planetId:'nereid',researchBranch:branch});
     assert.ok(!html.includes('undefined')); assert.ok(!html.includes('NaN'));
@@ -135,7 +135,7 @@ test('every research branch renders traceable prerequisites and a limited specia
 
 test('research layout shows every real technology once, orders foundations first and joins exclusive choices', async () => {
   const { researchLayout, researchPanel } = await import('../src/research-ui.js');
-  const s = createGame();
+  const s = createGame({ legacy: true });
   for (const branch of Object.keys(RESEARCH_BRANCHES)) {
     const found = [];
     const visit = unit => {
@@ -165,7 +165,7 @@ test('research layout shows every real technology once, orders foundations first
 
 test('research cost colors use actual points independently of prerequisite locks and preserve action guards', async () => {
   const { researchPanel } = await import('../src/research-ui.js');
-  const s = createGame(); s.science = 65;
+  const s = createGame({ legacy: true }); s.science = 65;
   const card = id => researchPanel(s, { researchBranch: 'colonies' }).match(new RegExp(`<details data-tech-id="${id}"[\\s\\S]*?</details>`))[0];
   assert.ok(card('hydroponics').includes('class="tech-cost-amount enough"'));
   assert.ok(card('hydroponics').includes('data-tech="hydroponics" disabled'));

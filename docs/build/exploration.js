@@ -1,3 +1,4 @@
+import { systemsOf, systemTarget, locationsOf } from './world.js';
 import { relationBetween } from './realm-relations.js';
 import { FACTIONS, SYSTEMS } from './data.js';
 import { getPlanet, uid, log } from './state.js';
@@ -6,9 +7,9 @@ import { chartSystem, observePlanet, knowledgeOf, knownTargets, systemKnown } fr
 import { orderFleet, buildShip, fleetTravelDays, fleetUpkeep, maintainFleets } from './fleets.js';
 
 export function exploreSystem(state, fleetId, systemId, owner = 'player') {
-  const system = SYSTEMS.find(s => s.id === systemId);
+  const system = systemsOf(state).find(s => s.id === systemId);
   if (!system?.uncharted || systemKnown(state,systemId,owner)) return 'Dieses System ist bereits kartiert.';
-  const target = state.planets.find(p => p.system === systemId);
+  const target = systemTarget(state,systemId);
   return orderFleet(state,[fleetId],target?.id,'explore',{owner});
 }
 const roll = (id, day, seed) => [...`${id}:${day}:${seed}`].reduce((n,c) => (Math.imul(n,31)+c.charCodeAt(0))>>>0,2166136261)%100;
@@ -38,9 +39,9 @@ export function finishScout(state, mission, fleets, target) {
     if (f.owner === 'player') {
       const first = !state.surveys.includes(target.id);
       if (first) { state.surveys.push(target.id); state.science += 45*technologyEffects(state).survey; }
-      log(state, `${mission.kind==='explore'?`${SYSTEMS.find(s=>s.id===target.system).name}: Flugroute kartiert. `:''}${target.name}: ${target.owner?'bewohnt – Abstand gehalten':'unbewohnt'}${first?' · Forschung gewonnen':''}.`, 'success', 'research');
+      log(state, `${mission.kind==='explore'?`${systemsOf(state).find(s=>s.id===target.system).name}: Flugroute kartiert. `:''}${target.name}: ${target.owner?'bewohnt – Abstand gehalten':'unbewohnt'}${first?' · Forschung gewonnen':''}.`, 'success', 'research');
     } else if (!previous || previous.source !== 'scout') state.factions[f.owner].science += 45*technologyEffects(state,f.owner).survey;
-    if (target.owner && target.owner !== f.owner) returnScout(state,f,target,getPlanet(state,mission.source));
+    if (target.anchor || target.owner && target.owner !== f.owner) returnScout(state,f,target,getPlanet(state,mission.source));
   }
 }
 export function tickExplorationAI(state) {
@@ -60,11 +61,11 @@ export function tickExplorationAI(state) {
     if (!ships.some(f=>f.type===wanted)&&!own.some(p=>p.queues.some(q=>q.type===wanted))) buildShip(state,home,wanted,owner);
     for (const ship of ships.filter(f=>['scout','probe'].includes(f.type)&&!f.mission&&f.supply>=60)) {
       if (ship.planetId!==home.id) { orderFleet(state,[ship.id],home.id,'move',{owner}); continue; }
-      const unknown=SYSTEMS.find(s=>s.uncharted&&!systemKnown(state,s.id,owner));
+      const unknown=systemsOf(state).find(s=>s.uncharted&&!systemKnown(state,s.id,owner));
       if (ship.type==='scout'&&unknown) { exploreSystem(state,ship.id,unknown.id,owner); continue; }
       const targets=knownTargets(state,owner).filter(p=>!p.destroyed&&p.id!==home.id);
       if (ship.type==='probe') {
-        const target=targets.find(p=>!p.knowledge.geology);
+        const target=[...targets,...state.world.anchors.map(p=>({id:p.id,knowledge:knowledgeOf(state,p,owner)})).filter(p=>systemKnown(state,getPlanet(state,p.id).system,owner))].find(p=>!p.knowledge.geology);
         if(target) orderFleet(state,[ship.id],target.id,'analyze',{owner});
       } else if(ship.type==='scout') {
         const target=targets.find(p=>!p.knowledge.occupancy || p.knowledge.occupancy.source!=='own'&&state.day-p.knowledge.occupancy.day>=90);

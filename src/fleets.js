@@ -1,3 +1,6 @@
+import { blocPartners, arriveBlocSupply } from './power.js';
+import { systemsOf } from './world.js';
+import { arriveRelic, workRelic } from './ruins.js';
 import { relationBetween, atWar } from './realm-relations.js';
 import { tickRealmAI } from './realm-ai.js';
 import { publishNews, realmName } from './space-news.js';
@@ -16,7 +19,11 @@ import { canAfford, pay, uid, getPlanet, log, makeStock } from './state.js';
 import { workforce } from './economy.js';
 
 export function fleetStrength(state, fleet) { return SHIPS[fleet.type].strength * fleet.hp / 100 * Math.max(.3, fleet.supply / 100) * technologyEffects(state, fleet.owner).combat * policyEffects(state, fleet.owner).combat; }
-export function travelDays(state, source, target, owner = 'player') { const deep = [source, target].some(p => SYSTEMS.find(s => s.id === p.system)?.uncharted); return Math.max(2, Math.ceil((source.system === target.system ? 5 + Math.abs(source.orbit - target.orbit) : deep ? 28 : 14) * technologyEffects(state, owner).travelTime)); }
+function travelLeg(state,source,target){const systems=systemsOf(state),a=systems.find(s=>s.id===source.system),b=systems.find(s=>s.id===target.system),deep=a.uncharted||b.uncharted,distance=Math.hypot(a.x-b.x,a.y-b.y);return {deep,distance};}
+export function travelDays(state, source, target, owner = 'player') {
+ const {deep,distance}=travelLeg(state,source,target),cross=state.world?.generated?(deep?20+Math.ceil(distance*16):10+Math.ceil(distance*12)):(deep?28:14);
+ return Math.max(2,Math.ceil((source.system===target.system?5+Math.abs(source.orbit-target.orbit):cross)*technologyEffects(state,owner).travelTime));
+}
 export function shipBuildDays(state, type, owner = 'player') { return Math.max(1, Math.ceil(SHIPS[type].days * policyEffects(state, owner).shipTime * technologyEffects(state, owner).shipTime)); }
 export function fleetTravelDays(state, source, target, fleets) { return Math.max(2, Math.ceil(travelDays(state, source, target, fleets[0]?.owner) / Math.min(...fleets.map(f => SHIPS[f.type].speed ?? 1)))); }
 export function buildShip(state, planet, type, owner = 'player') {
@@ -59,7 +66,8 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
   if (fleets.some(f => f.planetId !== source.id)) return 'Die Schiffe müssen am selben Planeten stehen.';
   if (source.id === target.id) return 'Die Flotte ist bereits am Ziel.';
   if (kind !== 'explore' && !reachablePlanet(state, target, owner)) return 'Die Flugroute muss zuerst von einem Erkunder kartiert werden.';
-  if (kind === 'explore' && (!SYSTEMS.find(s => s.id === target.system)?.uncharted || reachablePlanet(state, target, owner) || fleets.some(f => f.type !== 'scout'))) return 'Wähle einen freien Erkunder und ein unkartiertes System.';
+  if (kind === 'explore' && (!systemsOf(state).find(s => s.id === target.system)?.uncharted || reachablePlanet(state, target, owner) || fleets.some(f => f.type !== 'scout'))) return 'Wähle einen freien Erkunder und ein unkartiertes System.';
+  if (kind === 'settle' && target.anchor) return 'Sternanker können nicht besiedelt werden.';
   if (kind === 'settle' && (target.owner || !fleets.some(f => f.type === 'colony'))) return 'Kolonisierung benötigt ein Kolonieschiff und einen unbewohnten Planeten.';
   const previous = knowledgeOf(state, target, owner).occupancy;
   if (kind === 'survey' && (!fleets.some(f => f.type === 'scout') || previous?.source === 'scout' && state.day - previous.day < 30)) return 'Erkundung benötigt einen Erkunder; eine erneute Prüfung ist nach 30 Tagen möglich.';
@@ -99,7 +107,7 @@ export function orderFleet(state, fleetIds, targetId, kind = 'move', options = {
     f.mission = { group, kind, source: source.id, target: target.id, remaining: fleetTravelDays(state, source, target, fleets), total: fleetTravelDays(state, source, target, fleets), cargo };
     if (kind === 'transport' && options.repeat) f.route = { source: source.id, target: target.id, resource: cargo.resource, amount: cargo.amount, reserve:Number(options.reserve??0) };
   }
-  if (owner === 'player') log(state, `${fleets.length === 1 ? fleets[0].name : `${fleets.length} Schiffe`} unterwegs nach ${kind === 'explore' ? SYSTEMS.find(s => s.id === target.system).name : target.name}.`);
+  if (owner === 'player') log(state, `${fleets.length === 1 ? fleets[0].name : `${fleets.length} Schiffe`} unterwegs nach ${kind === 'explore' ? systemsOf(state).find(s => s.id === target.system).name : target.name}.`);
   return null;
 }
 function settle(state, fleet, target) {
@@ -189,7 +197,10 @@ function restartRoute(state, fleet) {
 }
 export function fleetUpkeep(state, owner = 'player') { return state.fleets.filter(f => f.owner === owner).reduce((n, f) => n + (SHIPS[f.type].upkeep ?? 1), 0) * policyEffects(state, owner).fleetUpkeep * technologyEffects(state, owner).fleetUpkeep; }
 export function cargoCapacity(state, type) { return Math.floor(SHIPS[type].cargo * technologyEffects(state).cargoCapacity); }
-export function departureFuel(state, source, target, owner = 'player') { return (source.system === target.system ? 8 : [source, target].some(p => SYSTEMS.find(s => s.id === p.system)?.uncharted) ? 32 : 18) * technologyEffects(state, owner).fuel; }
+export function departureFuel(state,source,target,owner='player') {
+ const {deep,distance}=travelLeg(state,source,target),cross=state.world?.generated?(deep?24+Math.ceil(distance*12):14+Math.ceil(distance*10)):(deep?32:18);
+ return (source.system===target.system?8:cross)*technologyEffects(state,owner).fuel;
+}
 export function shipArmor(state, f) { return Math.min(.65, (SHIPS[f.type].armor ?? 0) + technologyEffects(state, f.owner).armor); }
 export function maintainFleets(state, funded = true, owner = 'player') {
   if (!funded) for (const f of state.fleets.filter(f => f.owner === owner)) f.supply = Math.max(0, f.supply - 3);
@@ -205,7 +216,7 @@ export function maintainFleets(state, funded = true, owner = 'player') {
   }
   for (const fleet of state.fleets.filter(f => !f.mission && f.owner === owner)) {
     const p = getPlanet(state, fleet.planetId),settings={...SUPPLY_DEFAULTS,...fleet.supplySettings};
-    const port=p.owner===owner||owner==='player'&&state.relations[p.owner]?.portAccess&&!state.relations[p.owner]?.war&&!state.relations[p.owner]?.embargo;
+    const port=p.owner===owner||blocPartners(state,owner,p.owner)||owner==='player'&&state.relations[p.owner]?.portAccess&&!state.relations[p.owner]?.war&&!state.relations[p.owner]?.embargo;
     if(!port)continue;
     let threshold=settings.threshold;
     if(settings.smart&&state.tech.includes('smartLogistics')&&fleet.route){
@@ -218,11 +229,11 @@ export function maintainFleets(state, funded = true, owner = 'player') {
     const amount=Math.max(0,Math.min(rate,100-fleet.supply,p.stock.energy*8,p.stock.food*80));
     if(amount>0){
       const fee=p.owner===owner?0:amount/8*marketPrice(state,p,'energy','buy')+amount/80*marketPrice(state,p,'food','buy')+1;
-      if(wallet.credits>=fee){p.stock.energy-=amount/8;p.stock.food-=amount/80;fleet.supply+=amount;wallet.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}
+      if(wallet.credits>=fee){p.stock.energy-=amount/8;p.stock.food-=amount/80;fleet.supply+=amount;wallet.credits-=fee;if(fee)(p.owner==='player'?state:state.factions[p.owner]).credits+=fee;}
     }
     const repairRate=serviceCount(p,'repair')?10:4;
     const repaired=Math.min(repairRate,100-fleet.hp,p.stock.alloy*4);
-    if(repaired>0){const fee=p.owner===owner?0:repaired/4*marketPrice(state,p,'alloy','buy');if(wallet.credits>=fee){p.stock.alloy-=repaired/4;fleet.hp+=repaired;wallet.credits-=fee;if(fee)state.factions[p.owner].credits+=fee;}}
+    if(repaired>0){const fee=p.owner===owner?0:repaired/4*marketPrice(state,p,'alloy','buy');if(wallet.credits>=fee){p.stock.alloy-=repaired/4;fleet.hp+=repaired;wallet.credits-=fee;if(fee)(p.owner==='player'?state:state.factions[p.owner]).credits+=fee;}}
     if(fleet.supply>=settings.target-.00001)fleet.servicing=false;
     if(fleet.hp>=settings.repairTo-.00001)fleet.repairing=false;
     if(fleet.servicing)fleet.pauseReason=p.stock.energy<.01?'Versorgung fehlt: Energie':p.stock.food<.01?'Versorgung fehlt: Nahrung':'Bordversorgung wird aufgefüllt';
@@ -239,6 +250,7 @@ export function tickFleets(state, options = {}) {
       restartRoute(state, fleet); continue;
     }
     const m = fleet.mission;
+    if(m.kind==='relic'&&m.phase==='work'){workRelic(state,fleet);continue;}
     if (m.kind === 'analyze' && m.phase === 'scan') {
       fleet.supply = Math.max(0, fleet.supply - .3);
       if (--m.remaining <= 0) {
@@ -259,6 +271,8 @@ export function tickFleets(state, options = {}) {
   for (const { m, fleets } of arrivals.values()) {
     const target = getPlanet(state, m.target);
     if (target.destroyed) continue;
+    if(m.kind==='bloc-aid'){for(const f of fleets)arriveBlocSupply(state,f,m,target);continue;}
+    if(m.kind==='relic'){for(const f of fleets)arriveRelic(state,f,m,target);continue;}
     if (m.kind === 'analyze') {
       for (const f of fleets) { f.mission = { ...m, phase:'scan', remaining:SCAN_DAYS, total:SCAN_DAYS }; if (f.owner==='player') log(state, `${target.name}: Oberflächenanalyse beginnt (${SCAN_DAYS} Tage).`); }
       continue;

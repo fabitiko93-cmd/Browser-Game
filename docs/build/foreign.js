@@ -1,9 +1,10 @@
+import { buildingBlock } from './infrastructure.js';
 import { realmAtWar } from './realm-relations.js';
 import { realmBalance } from './realm-ai.js';
 import { essentialBuilding } from './finance.js';
 import { marketDemand } from './trade.js';
 import { FACTIONS, BUILDINGS, TECHNOLOGIES } from './data.js';
-import { initialGovernance, policyEffects } from './governance.js';
+import { initialGovernance, policyEffects, decide, decisionCost } from './governance.js';
 import { technologyEffects } from './technology.js';
 import { terrainAt, uid } from './state.js';
 function foundations(ids) {
@@ -31,6 +32,7 @@ export function tickForeignDevelopment(state) {
   }
   const balance=realmBalance(state,id);
   const focus=state.galaxy?.strategies[id]?.focus,doctrine=state.galaxy?.strategies[id]?.doctrine;
+  if(state.day%30===Object.keys(state.factions).indexOf(id)%30){const program=focus==='recovery'&&owned.some(p=>p.net.food<0)?'ration':realmAtWar(state,id)?'mobilize':doctrine==='science'?'grant':doctrine==='trade'?'trade':'industry';if(f.credits>decisionCost(state,program,id)+450&&balance>3||program==='ration'&&f.credits>100)decide(state,program,id);}
   for(const p of owned){const resume=p.buildings.find(b=>!b.enabled&&b.remaining<=0&&!essentialBuilding(b.type)&&balance>BUILDINGS[b.type].upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+1);if(resume){resume.enabled=true;break;}}
 
   if(['security','expansion'].includes(doctrine)&&f.credits>500&&owned.some(p=>p.buildings.some(b=>b.type==='shipyard'&&!b.enabled))){
@@ -52,7 +54,7 @@ export function tickForeignDevelopment(state) {
   const supply=deficits.flatMap(q=>Object.entries(BUILDINGS).filter(([,d])=>d.output?.[q.key]&&(!d.requiredTech||f.tech.includes(d.requiredTech))).map(([key])=>key));
   const preferences=[...(!p.buildings.some(b=>b.type==='commCenter')?['commCenter']:[]),...supply,...(realmAtWar(state,id)?['shield','missileSilo']:[]),...(['security','expansion'].includes(doctrine)&&focus!=='recovery'&&!p.buildings.some(b=>b.type==='laser')?['laser']:[]),...(f.tech.includes('advancedDiplomacy')&&!p.buildings.some(b=>b.type==='embassy')?['embassy']:[]),...(housing<p.population+30?[...(f.tech.includes('compactCities')?['tower']:[]),'habitat']:[...FOREIGN_FACILITIES[id],'solar','academy','tradePort'])];
   for(const type of preferences){
-   const d=BUILDINGS[type];if(d.requiredTech&&!f.tech.includes(d.requiredTech)||d.unique&&p.buildings.filter(b=>b.type===type).length>=d.unique||p.buildings.filter(b=>b.type===type).length>=(type==='habitat'?6:3))continue;
+   const d=BUILDINGS[type];if(buildingBlock(state,p,type)||d.requiredTech&&!f.tech.includes(d.requiredTech)||d.unique&&p.buildings.filter(b=>b.type===type).length>=d.unique||p.buildings.filter(b=>b.type===type).length>=(type==='habitat'?6:3))continue;
    if(!essentialBuilding(type)&&balance<d.upkeep*policyEffects(state,id).upkeep*technologyEffects(state,id).buildingUpkeep+1)continue;
    if(Object.entries(d.cost).some(([k,v])=>(k==='credits'?f.credits:p.stock[k])<v))continue;
    let tile=null;for(let y=3;y<12&&!tile;y++)for(let x=2;x<10;x++)if(!p.buildings.some(b=>b.x===x&&b.y===y)&&!['water','cliff','void'].includes(terrainAt(p,x,y))){tile={x,y};break;}

@@ -41,6 +41,7 @@ export function demolish(state, planet, id) {
   const def = BUILDINGS[b.type];
   for (const [k, v] of Object.entries(def.cost)) { if (k !== 'credits') planet.stock[k] += v * .5; }
   planet.buildings = planet.buildings.filter(b => b.id !== id);
+  if(planet.ruin?.buildingId===id){delete planet.ruin.buildingId;planet.ruin.status='salvaged';planet.ruin.operator=null;}
   log(state, `${planet.name}: ${def.name} abgebaut. Die Hälfte der Materialien wurde zurückgewonnen.`);
   return null;
 }

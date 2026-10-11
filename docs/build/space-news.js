@@ -1,3 +1,4 @@
+import { systemsOf, locationsOf } from './world.js';
 import { FACTIONS, SYSTEMS } from './data.js';
 import { systemKnown, recordContact } from './intelligence.js';
 
@@ -16,7 +17,7 @@ export function publishNews(state,kind,{actors=[],system=null,planet=null,title,
   const n={id:`news${state.nextId++}`,day:state.day,kind,actors,system,planet,title,body,audience,read:false};
   state.galaxy.news.unshift(n);state.galaxy.news.length=Math.min(120,state.galaxy.news.length);
   if(planet&&['colony','conquest','destruction'].includes(kind)) {
-    const p=state.planets.find(p=>p.id===planet);
+    const p=locationsOf(state).find(p=>p.id===planet);
     if(p)for(const viewer of audience)recordContact(state,viewer,p,'news');
   }
 }
@@ -24,7 +25,7 @@ export const newsFor = (state,viewer='player') => (viewer==='player'?state.tech:
 export const unreadNews = state => newsFor(state).some(n=>!n.read);
 export function readNews(state) { for(const n of newsFor(state))n.read=true; }
 export const realmName = (state,id) => id==='player'?state.player.name:FACTIONS[id].name;
-export const systemName = id => SYSTEMS.find(s=>s.id===id)?.name??'Interstellar';
+export const systemName = (id,state={}) => systemsOf(state).find(s=>s.id===id)?.name??'Interstellar';
 export function reportTreaty(state,a,b,kind) {
   const labels={war:'Krieg erklärt',peace:'Waffenstillstand vereinbart',trade:'Handelsabkommen geschlossen',pact:'Nichtangriffspakt geschlossen',alliance:'Schutzbündnis geschlossen',rivalry:'Rivalität erklärt'};
   publishNews(state,kind,{actors:[a,b],title:`${realmName(state,a)} · ${realmName(state,b)}`,body:labels[kind]+'. Quelle: öffentliche Regierungserklärungen.'});

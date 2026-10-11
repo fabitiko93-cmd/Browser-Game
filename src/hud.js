@@ -13,9 +13,10 @@ export function resourcePages(state,p) {
 export function assuredDeliveries(state,p,key) {
  const result=[];
  for(const f of state.fleets){
-  const m=f.mission;if(f.owner!=='player'||!m||m.target!==p.id||p.owner!=='player'||m.remaining>30)continue;
-  if(['transport','return-cargo'].includes(m.kind)&&m.cargo?.resource===key)result.push({day:m.remaining,amount:m.cargo.amount});
-  if(m.kind==='circuit'&&f.route?.type==='circuit'){
+  const m=f.mission;if(!m||m.target!==p.id||p.owner!=='player'||m.remaining>30)continue;
+  if(f.owner==='player'&&['transport','return-cargo'].includes(m.kind)&&m.cargo?.resource===key)result.push({day:m.remaining,amount:m.cargo.amount});
+  if(m.kind==='bloc-aid'&&m.cargo?.resource===key)result.push({day:m.remaining,amount:m.cargo.amount});
+  if(f.owner==='player'&&m.kind==='circuit'&&f.route?.type==='circuit'){
    const stop=f.route.stops[m.stopIndex];let remaining=f.cargo?.[key]??0,total=0;
    for(const a of stop?.actions??[])if(a.kind==='unload'&&a.resource===key){const amount=Math.min(a.amount,remaining);total+=amount;remaining-=amount;}
    if(total)result.push({day:m.remaining,amount:total});

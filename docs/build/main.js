@@ -1,3 +1,7 @@
+import { setTradeBoard } from './trade-board.js';
+import { createBloc, leaveBloc, blocOf, orderBlocSupply } from './power.js';
+import { orderRelic } from './ruins.js';
+import { homePlanet } from './world.js';
 import { unreadNews, realmName } from './space-news.js';
 import { esc } from './ui-format.js';
 import { localSale, austerity } from './finance.js';
@@ -34,7 +38,7 @@ try { state = loadGame() ?? createGame(); } catch (e) { state = createGame(); st
 const audio = new SpaceAudio();
 const ui = {
   audioSettings: audio.settings, resourcePage: 0, buildCategory: null,routeMode:'simple',routeDraft:null,tradeReserve:40,contractAmount:40,
-  view: 'planet', planetId: 'nereid', systemId: 'helios', panel: null, expanded: false, speed: 0, lastSpeed: 1,
+  view: 'planet', planetId: (homePlanet(state)??state.planets[0]).id, systemId: (homePlanet(state)??state.planets[0]).system, panel: null, expanded: false, speed: 0, lastSpeed: 1,
   buildType: null, buildTile: null, surfaceTile: null, detailType: 'farm', selectedBuilding: null, fleetIds: [],
   fleetTarget: 'cinder', routeTarget: 'thalassa', routeFleet: 'starter-f', cargo: 'ore', amount: 40, repeat: true,
   researchBranch: 'energy', economyMode: 'production', politicsMode: 'government', fleetMode: 'orders', government: state.player.ideology,
@@ -43,7 +47,7 @@ const ui = {
 const $ = id => document.getElementById(id);
 const map = new MapRenderer($('map'), state, ui, hit => {
   if (!state.started) return;
-  if (hit.kind === 'system') { ui.systemId = hit.id; ui.view = 'system'; ui.panel = systemKnown(state,hit.id)?null:'exploration';ui.expanded=false; }
+  if (hit.kind === 'system') { ui.systemId = hit.id; ui.view = 'system'; ui.panel = !systemKnown(state,hit.id)||state.world.anchors.some(p=>p.system===hit.id)?'exploration':null;ui.expanded=false; }
   else if (hit.kind === 'planet') { ui.planetId = hit.id; ui.systemId = getPlanet(state, hit.id).system; ui.panel = 'planet-info'; ui.expanded = false; }
   else if (hit.kind === 'tile') {
     if (ui.buildType) { ui.buildTile = { x: hit.tx, y: hit.ty }; }
@@ -90,7 +94,9 @@ function render() {
     el.innerHTML=`<div class="welcome-header"><div class="brand-name">ORBIT 3077</div></div><div><h1 class="welcome-title">Reich <em>gefallen</em></h1><p>Die letzte eigene Welt wurde an Tag ${state.galaxy.defeat.day} durch ${esc(realmName(state,state.galaxy.defeat.conqueror))} verloren. Die Simulation ist beendet. Dein Spielstand bleibt gespeichert.</p></div><div class="welcome-footer"><button class="button secondary" data-action="export">Spielstand sichern</button><button class="button secondary" data-action="import">Spielstand laden</button><input class="file-input" id="import-file" type="file" accept=".json,application/json"><button class="button danger" data-action="reset">${ui.resetConfirm?'Neues Spiel bestätigen':'Neues Spiel'}</button></div>`;
     return;
   }
-  if($('welcome').dataset.mode==='defeat'){ $('welcome').innerHTML='';$('welcome').dataset.mode=''; }
+  const victory=state.galaxy.hegemony.winner;
+  if(victory&&!state.galaxy.hegemony.continued){ui.speed=0;ui.panel=null;$('sheet').hidden=true;const el=$('welcome');el.hidden=false;el.dataset.mode='hegemony';el.innerHTML=`<div class="welcome-header"><div class="brand-name">ORBIT 3077</div></div><div><h1 class="welcome-title">${victory.owner==='player'?'Sektor <em>geeint</em>':'Neue <em>Vormacht</em>'}</h1><p>${esc(realmName(state,victory.owner))} hat an Tag ${victory.day} die Vorherrschaft errungen: zwei Drittel der Systembedeutung für 120 Tage gehalten. ${victory.owner==='player'?'Deine Kolonien und dein Machtbund haben den Sektor geprägt.':'Dein Reich kann im freien Spiel weiter um Einfluss kämpfen.'}</p></div><div class="welcome-footer"><button class="button primary" data-action="hegemony-continue">Im freien Spiel fortsetzen</button><button class="button secondary" data-action="export">Spielstand sichern</button><button class="button danger" data-action="reset">${ui.resetConfirm?'Neues Spiel bestätigen':'Neue Welt beginnen'}</button></div>`;return;}
+  if(['defeat','hegemony'].includes($('welcome').dataset.mode)){ $('welcome').innerHTML='';$('welcome').dataset.mode=''; }
   if (currentPlanet().destroyed) {
     ui.buildType = null; ui.buildTile = null;
     if (['terrain', 'building'].includes(ui.panel)) { ui.panel = 'planet-info'; ui.expanded = false; }
@@ -112,6 +118,7 @@ function render() {
   const oldScroll = sheet.querySelector('.sheet-content')?.scrollTop ?? 0;
   const openTech = [...sheet.querySelectorAll('details[data-tech-id][open]')].map(el => el.dataset.techId);
   const openDescriptions = [...sheet.querySelectorAll('details[data-planet-description][open]')].map(el => el.dataset.planetDescription);
+  const openManagement=[...sheet.querySelectorAll('details[data-panel-detail][open]')].map(el=>el.dataset.panelDetail);
   const activeField = document.activeElement?.dataset.field;
   const selectionStart = document.activeElement?.selectionStart;
   sheet.hidden = !ui.panel || compact; sheet.classList.toggle('expanded', ui.expanded);
@@ -119,6 +126,7 @@ function render() {
     sheet.innerHTML = renderSheet(state, ui);
     for (const id of openTech) { const card = sheet.querySelector(`[data-tech-id="${id}"]`); if (card) card.open = true; }
     for (const id of openDescriptions) { const card=sheet.querySelector(`[data-planet-description="${id}"]`);if(card)card.open=true; }
+    for(const id of openManagement){const card=sheet.querySelector(`[data-panel-detail="${id}"]`);if(card)card.open=true;}
     sheet.querySelector('.sheet-content').scrollTop = oldScroll;
     if (ui.focusTech) { const card = sheet.querySelector(`[data-tech-id="${ui.focusTech}"]`); if (card) { card.open = true; card.scrollIntoView({ block: 'center' }); } ui.focusTech = null; }
     if (activeField) {
@@ -144,6 +152,14 @@ document.addEventListener('click', e => {
   else if (action === 'local-sale') return act(localSale(state,p,el.dataset.resource,25),'Waren an örtliche Privatkäufer verkauft.');
   else if (action === 'austerity') return act(austerity(state),'Sparbetrieb aktiviert.');
   else if (action === 'exploration-start') return act(exploreSystem(state,el.dataset.id,el.dataset.system),'Erkundungsflug gestartet.');
+  else if(action==='trade-board-save')return act(setTradeBoard(state,el.dataset.id,selectedTarget('boardResource'),selectedTarget('boardTarget'),selectedTarget('boardPrice'),selectedTarget('boardBudget'),selectedTarget('boardExports')==='on'),'Handelsplatz und reserviertes Budget aktualisiert.');
+  else if(action==='bloc-create')return act(createBloc(state),'Machtbund gegründet.');
+  else if(action==='bloc-leave')return act(leaveBloc(state,'player'),'Blockmitgliedschaft beendet.');
+  else if(action==='bloc-invite')return act(sendOffer(state,el.dataset.faction,'bloc'),'Mitgliedschaft angeboten.');
+  else if(action==='bloc-supply')return act(orderBlocSupply(state,el.dataset.member),'Versorgungsfrachter gestartet.');
+  else if(action==='bloc-auto'){const b=blocOf(state,'player');if(b?.leader==='player'&&state.tech.includes('smartLogistics')){b.autoSupply=!b.autoSupply;persist();}}
+  else if(action==='hegemony-continue'){state.galaxy.hegemony.continued=true;ui.speed=0;persist();}
+  else if (action === 'relic-order') return act(orderRelic(state,el.dataset.id,el.dataset.target,el.dataset.kind),'Expedition gestartet.');
   else if (action === 'analysis-start') return act(orderFleet(state,[el.dataset.id],el.dataset.target,'analyze'),'Analyseauftrag erteilt.');
   else if (action === 'message-answer') return act(answerMessage(state,el.dataset.id,el.dataset.choice),'Antwort übermittelt.');
   else if (action === 'message-withdraw') return act(withdrawMessage(state,el.dataset.id),'Angebot zurückgezogen.');
@@ -195,7 +211,7 @@ document.addEventListener('click', e => {
   else if (action === 'diplomacy') return act(diplomaticAction(state, el.dataset.faction, el.dataset.kind), 'Diplomatische Aktion ausgeführt.');
   else if (action === 'war-confirm') {
     if (ui.warConfirm !== el.dataset.faction) ui.warConfirm = el.dataset.faction;
-    else { ui.warConfirm = null; return act(diplomaticAction(state, el.dataset.faction, 'war'), 'Krieg erklärt.'); }
+    else { ui.warConfirm = null; return act(diplomaticAction(state, el.dataset.faction, 'war',{target:selectedTarget('warTarget')}), 'Krieg erklärt.'); }
   } else if (action === 'fleet') { panel('fleet'); ui.fleetMode = 'shipyard'; ensureOwned(); }
   else if (action === 'arsenal-open') { panel('fleet'); ui.fleetMode = 'arsenal'; ensureOwned(); }
   else if (action === 'strike-cancel') return act(cancelStrike(state, el.dataset.id), 'Ladeauftrag abgebrochen.');
@@ -239,7 +255,7 @@ document.addEventListener('click', e => {
   } else if (action === 'import') { $('import-file').click(); return; }
   else if (action === 'reset') {
     if (!ui.resetConfirm) ui.resetConfirm = true;
-    else { state = createGame(); ui.planetId = 'nereid'; ui.systemId = 'helios'; ui.view = 'planet'; ui.fleetIds = []; ui.government = 'democracy';ui.routeDraft=null;ui.supplyFleet=null;ui.resourcePage=0; ui.speed = 0; ui.hints = true; panel(null); persist(); }
+    else { state = createGame(); ui.planetId = homePlanet(state).id; ui.systemId = homePlanet(state).system; ui.view = 'planet'; ui.fleetIds = []; ui.government = 'democracy';ui.routeDraft=null;ui.supplyFleet=null;ui.resourcePage=0;for(const k of ['boardPlanet','boardResource','boardTarget','boardPrice','boardBudget','boardExports','relicFleet','warTarget'])delete ui[k]; ui.speed = 0; ui.hints = true; panel(null); persist(); }
   }
   render();
 });
@@ -248,7 +264,7 @@ document.addEventListener('change', async e => {
     const file = e.target.files?.[0]; if (!file) return;
     if (file.size > 2_000_000) { toast('Diese Datei ist zu groß für einen Spielstand.', true); return; }
     try {
-      ui.routeDraft=null;ui.supplyFleet=null;state = parseImport(await file.text()); ui.planetId = ownedPlanets(state)[0]?.id ?? state.planets[0].id; ui.systemId = currentPlanet().system; ui.government = state.player.ideology; ui.fleetIds = []; ui.speed = 0; panel(null); persist(); render(); toast('Spielstand geladen. Die Zeit ist pausiert.');
+      ui.routeDraft=null;ui.supplyFleet=null;for(const k of ['boardPlanet','boardResource','boardTarget','boardPrice','boardBudget','boardExports','relicFleet','warTarget'])delete ui[k];state = parseImport(await file.text()); ui.planetId = ownedPlanets(state)[0]?.id ?? state.planets[0].id; ui.systemId = currentPlanet().system; ui.government = state.player.ideology; ui.fleetIds = []; ui.speed = 0; panel(null); persist(); render(); toast('Spielstand geladen. Die Zeit ist pausiert.');
     } catch (error) { toast(`Datei konnte nicht geladen werden: ${error.message}`, true); }
     return;
   }
@@ -265,6 +281,7 @@ document.addEventListener('change', async e => {
     else if(kind==='circuitPlanet'){const stop=ui.routeDraft.stops[Number(i)];stop.planet=e.target.value;const own=getPlanet(state,stop.planet).owner==='player';for(const a of stop.actions)a.kind=own?(['load','buy'].includes(a.kind)?'load':'unload'):(['load','buy'].includes(a.kind)?'buy':'sell');}
     else{const a=ui.routeDraft.stops[Number(i)].actions[Number(j)];if(kind==='circuitKind')a.kind=e.target.value;else if(kind==='circuitResource')a.resource=e.target.value;else if(kind==='circuitAmount')a.amount=Number(e.target.value);else if(kind==='circuitLimit')a[a.kind==='load'?'reserve':a.kind==='sell'?'minPrice':'maxPrice']=a.kind==='buy'&&Number(e.target.value)===0?1000000:Number(e.target.value);}
   }
+  else if(['boardPlanet','boardResource'].includes(field)){ui[field]=e.target.value;for(const k of ['boardTarget','boardPrice','boardBudget','boardExports'])delete ui[k];}
   else if (field === 'fleet') { if (e.target.checked) ui.fleetIds.push(e.target.value); else ui.fleetIds = ui.fleetIds.filter(id => id !== e.target.value); }
   else if (field === 'amount') ui.amount = Number(e.target.value);
   else if (field === 'repeat') ui.repeat = e.target.checked;
@@ -285,7 +302,7 @@ window.addEventListener('pagehide', ()=>{audio.setHidden(true);persist();});
 let previousTime = performance.now(), accumulator = 0;
 function frame(now) {
   const delta = Math.min(500, now - previousTime); previousTime = now;
-  if (state.started && !state.galaxy.defeat && ui.speed && !document.hidden) {
+  if (state.started && !state.galaxy.defeat && !(state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued) && ui.speed && !document.hidden) {
     accumulator += delta * ui.speed;
     if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state);const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render(); }
   }

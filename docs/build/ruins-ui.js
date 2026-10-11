@@ -1,0 +1,14 @@
+import { RELICS, RESTORE_COST, ruinKnown } from './ruins.js';
+import { knowledgeOf } from './intelligence.js';
+import { getPlanet } from './state.js';
+import { SHIPS, RESOURCES, TECHNOLOGIES } from './data.js';
+import { esc, fmt, opts, button } from './ui-format.js';
+export function relicMarkup(state,ui,p) {
+  if(!ruinKnown(state,p))return '';
+  const r=p.owner==='player'||p.ruin.operator==='player'?p.ruin:knowledgeOf(state,p).relic.value,def=RELICS[r.type];
+  const ships=state.fleets.filter(f=>f.owner==='player'&&SHIPS[f.type].cargo&&!f.mission&&!f.route&&getPlanet(state,f.planetId).owner==='player'&&f.planetId!==p.id);
+  const ship=ships.find(f=>f.id===ui.relicFleet)??ships[0];
+  const expedition=state.fleets.find(f=>f.owner==='player'&&f.mission?.kind==='relic'&&f.mission.target===p.id);
+  const restore=state.tech.includes(def.tech)&&state.tech.includes('planetaryAnalysis')&&(p.anchor||p.owner==='player');
+  return `<div class="detail-card"><div class="card-heading"><strong>${esc(def.name)}</strong><span class="status-badge">${{sealed:'Analysiert',restoring:'Wiederaufbau',active:'Wiederhergestellt',salvaged:'Geborgen'}[r.status]}</span></div><p>${esc(def.description)}</p>${p.anchor?'<p class="note">Orbitaler Standort · keine kolonialisierbare Welt. Betrieben: 1 ¢, 2 Energie und 0,12 Nahrung pro Tag.</p>':''}${r.status==='active'&&p.anchor&&p.owner==='player'?`<p class="note">${p.active?'Betrieb versorgt':'Betrieb benötigt Versorgung'} · Nahrung ${fmt(p.stock.food)} · Energie ${fmt(p.stock.energy)} · Legierungen ${fmt(p.stock.alloy)}. Lieferungen über Frachter und Kreisläufe.</p>`:''}${expedition?`<p class="note">${esc(expedition.name)} · ${expedition.mission.phase==='work'?'Wiederaufbau':'Anflug'} · ${expedition.mission.remaining} Tage</p>`:''}${r.status==='sealed'&&!expedition?`<p class="note">Bergung: ${Object.entries(def.salvage).map(([k,n])=>`${n} ${RESOURCES[k].name}`).join(' · ')}.<br>Wiederaufbau: ${Object.entries(RESTORE_COST).map(([k,n])=>`${n} ${k==='credits'?'¢':RESOURCES[k].name}`).join(' · ')} · 12 Arbeitstage.</p>${ships.length?`<label class="form-label">Expeditionsfrachter</label><select class="select" data-field="relicFleet">${opts(ships.map(f=>[f.id,`${f.name} · ${getPlanet(state,f.planetId).name}`]),ship.id)}</select><div class="button-row">${button('Material bergen · 65 ¢','relic-order',`data-id="${ship.id}" data-target="${p.id}" data-kind="salvage"`,!state.tech.includes('planetaryAnalysis'))}${button('Wiederherstellen','relic-order',`data-id="${ship.id}" data-target="${p.id}" data-kind="restore"`,!restore)}</div>`:'<p class="note">Ein freier Frachter am eigenen Hafen wird benötigt.</p>'}${!restore?`<p class="research-condition unmet">Wiederaufbau benötigt ${TECHNOLOGIES[def.tech].name}${!p.anchor&&p.owner!=='player'?' und eine eigene Kolonie auf dieser Welt':''}.</p>`:''}`:''}</div>`;
+}

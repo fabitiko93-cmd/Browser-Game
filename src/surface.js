@@ -26,7 +26,7 @@ export function terrainClassAt(planet, x, y) {
   return n < .1 ? 'rock' : n < .32 ? 'rough' : 'ground';
 }
 export function planetSurface(planet) {
-  const key = `${planet.seed}:${planet.kind}`;
+  const key = `${planet.seed}:${planet.kind}:${planet.deposits?.ore ?? 3}`;
   if (surfaces.has(key)) return surfaces.get(key);
   const kind = surfaceKind(planet), tiles = [], candidates = [];
   for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
@@ -41,7 +41,7 @@ export function planetSurface(planet) {
   for (const tile of candidates) {
     if (deposits.some(d => Math.hypot(d.x - tile.x, d.y - tile.y) < 3)) continue;
     deposits.push({ x: tile.x, y: tile.y, radius: 1.45 + surfaceRandom(planet.seed, tile.x, tile.y, 34) * .35 });
-    if (deposits.length === 3) break;
+    if (deposits.length === Math.min(6, planet.deposits?.ore ?? 3)) break;
   }
   for (const tile of candidates) for (const d of deposits) {
     const distance = Math.hypot(tile.x - d.x, tile.y - d.y);
@@ -79,7 +79,9 @@ export function geologicalFactor(planet, building, resource) {
   let factor = resource === 'ore' ? planet.oreFactor : resource === 'energy' && building.type === 'solar' ? planet.solarFactor : 1;
   if (building.type === 'farm') factor *= PLANET_FACTORS[planet.kind]?.food ?? 1;
   if (resource === 'crystal') factor *= PLANET_FACTORS[planet.kind]?.crystal ?? 1;
+  if (resource === 'crystal') factor *= planet.deposits?.crystalYield ?? 1;
   if (building.type === 'fuelExtractor') factor *= PLANET_FACTORS[planet.kind]?.fuel ?? 1;
+  if (building.type === 'fuelExtractor') factor *= planet.deposits?.fuelYield ?? 1;
   if (building.type === 'geothermal') factor *= PLANET_FACTORS[planet.kind]?.geothermal ?? 1;
   const bonus = siteBonus(planet, building.type, building.x, building.y);
   return factor * (bonus?.resource === resource ? bonus.factor : 1);

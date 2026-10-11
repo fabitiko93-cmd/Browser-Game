@@ -1,3 +1,5 @@
+import { recordBlocDelivery } from './power.js';
+import { relationBetween } from './realm-relations.js';
 import { policyEffects } from './governance.js';
 import { technologyEffects } from './technology.js';
 import { BUILDINGS, RESOURCE_KEYS } from './data.js';
@@ -7,6 +9,7 @@ import { getPlanet, log, uid } from './state.js';
 import { portKnown } from './intelligence.js';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function marketDemand(state,p,key) {
+ if(p.anchor)return key==='energy'?2:key==='food'?.12:0;
  if(p.lastReport?.demandByResource)return p.lastReport.demandByResource[key]??0;
  const effects=policyEffects(state,p.owner),tech=technologyEffects(state,p.owner);
  let demand=p.buildings.filter(b=>b.enabled&&b.remaining<=0).reduce((n,b)=>n+(BUILDINGS[b.type].input?.[key]??0)*(key==='energy'?tech.inputEnergy*effects.inputEnergy:1),0);
@@ -20,6 +23,7 @@ export function marketDemand(state,p,key) {
 // Funded public procurement bids cover upcoming buildings and ships; they are not daily consumption.
 export function marketTarget(state,p,key,days=30) {
  const daily=marketDemand(state,p,key),f=state.factions?.[p.owner];
+ if(p.anchor)return daily*days;
  if(!f)return Math.max(30,daily*days);
  const military=['security','expansion'].includes(state.galaxy?.strategies[p.owner]?.doctrine);
  const reserve={alloy:80,optics:35,crystal:25,electronics:f.tech.includes('advancedDiplomacy')?20:8,weapons:military?65:25}[key]??0;
@@ -31,11 +35,11 @@ export function marketMidpoint(state,p,key,extraStock=0) {
  const scarcity=daily>.01?clamp(.35+2.65/(1+Math.max(0,coverage)/9),.28,3):clamp(.7-(p.stock[key]+extraStock)/180,.25,.7);
  return BASE_PRICES[key]*scarcity;
 }
-export function marketPrice(state,p,key,side='sell',extraStock=0) {
+export function marketPrice(state,p,key,side='sell',extraStock=0,owner='player') {
  const midpoint=marketMidpoint(state,p,key,extraStock);
  if(side==='buy')return midpoint*1.12;
- const partnership=state.relations[p.owner]?.cooperation&&!state.relations[p.owner]?.embargo?1.12:1;
- const terms=Math.min(.92,.7*policyEffects(state).trade*technologyEffects(state).trade*(1+.04*Math.min(1,state.planets.filter(q=>q.owner==='player').reduce((n,q)=>n+serviceCount(q,'trade'),0))))*partnership;
+ const r=relationBetween(state,owner,p.owner),partnership=r?.cooperation&&!r.embargo?1.12:1;
+ const terms=Math.min(.92,.7*policyEffects(state,owner).trade*technologyEffects(state,owner).trade*(1+.04*Math.min(1,state.planets.filter(q=>q.owner===owner).reduce((n,q)=>n+serviceCount(q,'trade'),0))))*partnership;
  return midpoint*terms;
 }
 export function marketSignal(state,p,key) {
@@ -78,7 +82,7 @@ export function sellGoods(state,p,key,quantity,minPrice=0) {
  const q=quoteSale(state,p,key,remaining);
  if(q.amount>0&&q.price>=minPrice){p.stock[key]+=q.amount;state.factions[p.owner].credits=Math.max(0,state.factions[p.owner].credits-q.total);remaining-=q.amount;total+=q.total;}
  state.credits+=total;
- const amount=quantity-remaining;if(amount>0)recordTrade(state,p,key,amount,total);
+ const amount=quantity-remaining;if(amount>0){recordTrade(state,p,key,amount,total);recordBlocDelivery(state,'player',p.owner,key,amount);}
  return {amount,total};
 }
 export function purchaseGoods(state,p,key,quantity,maxPrice=Infinity) {

@@ -1,3 +1,4 @@
+import { recordWar, closeWar, blocPartners } from './power.js';
 import { FACTIONS } from './data.js';
 
 export const INTERESTS = {
@@ -32,18 +33,18 @@ export function initializeGalaxy(state) {
 }
 export function endWar(state,a,b) {
   const r=relationBetween(state,a,b);if(!r)return;
-  r.war=false;r.score=Math.min(10,Math.max(-15,r.score+20));
+  closeWar(state,a,b);r.war=false;r.score=Math.min(10,Math.max(-15,r.score+20));
   r.warSince=0;r.truceUntil=state.day+180;
   if(a!=='player'&&b!=='player')r.nextAction=state.day+30;
   for(const id of [a,b])if(state.galaxy?.strategies[id]?.warPlan?.enemy===(id===a?b:a))state.galaxy.strategies[id].warPlan=null;
 }
-export function beginWar(state,a,b) {
+export function beginWar(state,a,b,target=null) {
   const r=relationBetween(state,a,b);if(!r)return false;
-  if(r.war||r.pactUntil>state.day||r.embargo)return false;
+  if(r.war||r.pactUntil>state.day||(r.truceUntil??0)>state.day||blocPartners(state,a,b)||!realmExists(state,a)||!realmExists(state,b))return false;
   Object.assign(r,{war:true,trade:false,defensePact:false,score:-70});
   if(a==='player'||b==='player')Object.assign(r,{cooperation:false,portAccess:false,researchPact:false});
   else r.nextAction=state.day+30;
-  r.warSince=state.day;
+  r.warSince=state.day;recordWar(state,a,b,target);
   return true;
 }
 export const publicInterest = (state,id) => state.galaxy?.strategies[id]??{focus:'trade',reason:FACTIONS[id].goal};

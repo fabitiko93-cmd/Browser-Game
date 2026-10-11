@@ -55,12 +55,12 @@ export const LAWS = {
   } }
 };
 export const DECISIONS = {
-  industry: { name: 'Industrieprogramm', description: 'Zusätzliche Schichten und staatliche Lieferaufträge.', cost: 120, duration: 12, cooldown: 24, effects: { production: 1.3, happiness: -4 } },
-  grant: { name: 'Forschungsförderung', description: 'Ein zeitlich begrenztes Budget für deine Labore.', cost: 140, duration: 15, cooldown: 30, effects: { science: 1.5 } },
-  relief: { name: 'Versorgungspaket', description: 'Zusätzliche Lebensmittel und Hilfen für alle Kolonien.', cost: 90, duration: 12, cooldown: 24, effects: { happiness: 10, foodDemand: 1.15 } },
-  ration: { name: 'Notrationierung', description: 'Lebensmittel strecken, um Versorgungsengpässe zu überbrücken.', cost: 40, duration: 10, cooldown: 20, effects: { foodDemand: .65, happiness: -10 } },
-  mobilize: { name: 'Flottenmobilisierung', description: 'Werften haben Vorrang bei Personal und Material.', cost: 150, duration: 12, cooldown: 28, effects: { shipTime: .65, combat: 1.15, workers: .85 } },
-  trade: { name: 'Handelsmission', description: 'Exportförderung und zusätzliche diplomatische Vertretungen.', cost: 100, duration: 16, cooldown: 30, effects: { trade: 1.4, envoy: 1.4 } }
+  industry: { name: 'Industrieprogramm', description: 'Zusätzliche Schichten und staatliche Lieferaufträge.', cost: 360, duration: 90, cooldown: 150, effects: { production: 1.3, happiness: -4 } },
+  grant: { name: 'Forschungsförderung', description: 'Ein zeitlich begrenztes Budget für deine Labore.', cost: 420, duration: 120, cooldown: 180, effects: { science: 1.5 } },
+  relief: { name: 'Versorgungspaket', description: 'Zusätzliche Lebensmittel und Hilfen für alle Kolonien.', cost: 270, duration: 90, cooldown: 150, effects: { happiness: 10, foodDemand: 1.15 } },
+  ration: { name: 'Notrationierung', description: 'Lebensmittel strecken, um Versorgungsengpässe zu überbrücken.', cost: 60, duration: 60, cooldown: 90, effects: { foodDemand: .65, happiness: -10 } },
+  mobilize: { name: 'Flottenmobilisierung', description: 'Werften haben Vorrang bei Personal und Material.', cost: 450, duration: 90, cooldown: 150, effects: { shipTime: .65, combat: 1.15, workers: .85 } },
+  trade: { name: 'Handelsmission', description: 'Exportförderung und zusätzliche diplomatische Vertretungen.', cost: 300, duration: 120, cooldown: 180, effects: { trade: 1.4, envoy: 1.4 } }
 };
 export const EFFECT_LABELS = { production: 'Warenproduktion', science: 'Forschung', workers: 'Arbeitskräfte', tax: 'Steuereinnahmen', trade: 'Exporterlös', envoy: 'Gesandtschaftswirkung', shipTime: 'Schiffbauzeit', combat: 'Kampfstärke', upkeep: 'Gebäudeunterhalt', fleetUpkeep: 'Flottenunterhalt', growth: 'Bevölkerungswachstum', foodDemand: 'Nahrungsbedarf', happiness: 'Zufriedenheit', researchTime: 'Entwicklungszeit', inputEnergy: 'Fabrik-Energiebedarf', militaryProduction: 'Waffenproduktion', civilianProduction: 'Zivile Warenproduktion', reformCost: 'Reformkosten', reformStability: 'Stabilitätsverlust bei Reformen' };
 export function effectText(effects) { return Object.entries(effects).map(([k, v]) => `${EFFECT_LABELS[k]} ${k === 'happiness' ? `${v >= 0 ? '+' : ''}${v} Punkte` : `${v >= 1 ? '+' : '−'}${Math.round(Math.abs(v - 1) * 100)} %`}`).join(' · ') || 'Keine zusätzlichen Modifikatoren'; }
@@ -85,23 +85,25 @@ export function enactLaw(state, category, choice) {
   log(state, `Gesetz verabschiedet: ${LAWS[category].options[choice].name}.`, 'politics');
   return null;
 }
-export function decide(state, id) {
+export const decisionCost = (state,id,owner='player') => Math.round(DECISIONS[id].cost*(1+.4*Math.max(0,state.planets.filter(p=>p.owner===owner&&!p.destroyed).length-1)));
+export function decide(state, id, owner='player') {
   if (!Object.hasOwn(DECISIONS, id)) return 'Unbekannter Regierungsbeschluss.';
-  const d = DECISIONS[id];
-  if (d.ideologies && !d.ideologies.includes(state.player.ideology)) return 'Dieser Beschluss gehört zu einer anderen Regierungsform.';
-  if (d.requiredTech && !state.tech.includes(d.requiredTech)) return 'Die institutionelle Reformforschung fehlt.';
-  if ((state.governance.cooldowns[id] ?? 0) > state.day) return 'Dieser Beschluss kann noch nicht erneut erlassen werden.';
-  if (state.credits < d.cost) return 'Für diesen Beschluss fehlen Credits.';
-  state.credits -= d.cost;
-  state.governance.decisions.push({ id, until: state.day + d.duration });
-  state.governance.cooldowns[id] = state.day + d.cooldown;
-  log(state, `${d.name} beschlossen: ${d.duration} Tage Laufzeit.`, 'politics');
+  const d = DECISIONS[id],wallet=owner==='player'?state:state.factions[owner],g=wallet.governance,ideology=owner==='player'?state.player.ideology:FACTIONS[owner].ideology,tech=owner==='player'?state.tech:wallet.tech;
+  if (d.ideologies && !d.ideologies.includes(ideology)) return 'Dieser Beschluss gehört zu einer anderen Regierungsform.';
+  if (d.requiredTech && !tech.includes(d.requiredTech)) return 'Die institutionelle Reformforschung fehlt.';
+  if ((g.cooldowns[id] ?? 0) > state.day) return 'Dieser Beschluss kann noch nicht erneut erlassen werden.';
+  const cost=decisionCost(state,id,owner);
+  if (wallet.credits < cost) return 'Für diesen Beschluss fehlen Credits.';
+  wallet.credits -= cost;
+  g.decisions.push({ id, until: state.day + d.duration });
+  g.cooldowns[id] = state.day + d.cooldown;
+  if(owner==='player')log(state, `${d.name} beschlossen: ${d.duration} Tage Laufzeit.`, 'politics');
   return null;
 }
 export function tickGovernance(state) {
-  state.governance.decisions = state.governance.decisions.filter(d => {
+  for(const [owner,g]of [['player',state.governance],...Object.entries(state.factions).map(([id,f])=>[id,f.governance])])g.decisions=g.decisions.filter(d => {
     if (d.until > state.day) return true;
-    log(state, `${DECISIONS[d.id].name}: Programm beendet.`, 'politics'); return false;
+    if(owner==='player')log(state, `${DECISIONS[d.id].name}: Programm beendet.`, 'politics'); return false;
   });
 }
 
@@ -130,7 +132,7 @@ Object.assign(LAWS.science.options, {
  patronage:{name:'Akademische Kronförderung',ideologies:['monarchy'],effects:{science:1.12,tax:.97}},
  expert:{name:'Fachgesteuerte Forschungsbudgets',ideologies:['technocracy'],effects:{science:1.15,researchTime:.92,upkeep:1.12}}
 });
-const reform = (name,description,ideology,effects) => ({name,description,ideologies:[ideology],requiredTech:'politicalReforms',cost:180,duration:30,cooldown:60,effects});
+const reform = (name,description,ideology,effects) => ({name,description,ideologies:[ideology],requiredTech:'politicalReforms',cost:540,duration:180,cooldown:240,effects});
 Object.assign(DECISIONS, {
  civicMandate:reform('Bürgerkonvent','Öffentliche Reformberatung stärkt Zustimmung und wissenschaftlichen Austausch.','democracy',{happiness:6,science:1.1,upkeep:1.05}),
  productionPlan:reform('Planetarer Produktionsplan','Koordinierte Lieferaufträge und zusätzliche Beschäftigung.','communism',{workers:1.08,production:1.1,upkeep:1.08}),

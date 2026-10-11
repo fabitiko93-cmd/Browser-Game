@@ -1,11 +1,14 @@
 import { BUILDINGS, RESOURCES } from './data.js';
 export const PRIORITIES = {balanced:'Ausgewogen',supply:'Bevölkerung und Versorgung',industry:'Zivile Industrie',defense:'Verteidigung und Werften',science:'Wissenschaft'};
 export function serviceCount(planet, service) {
+ if(planet.anchor)return service==='supply'&&planet.active&&planet.ruin?.type==='depot'&&planet.ruin.status==='active'?1:0;
  return planet.buildings.filter(b=>b.enabled&&b.remaining<=0&&b.status==='aktiv'&&BUILDINGS[b.type].service===service).length;
 }
 export function buildingBlock(state, planet, type) {
  const def=BUILDINGS[type];
  if(!def)return 'Unbekanntes Bauwerk.';
+ const extraction={mine:'ore',deepMine:'ore',crystal:'crystal',fuelExtractor:'fuel'},key=extraction[type];
+ if(key&&planet.deposits&&planet.buildings.filter(b=>extraction[b.type]===key).length>=planet.deposits[key])return `Alle ${planet.deposits[key]} örtlichen Förderstellen für ${RESOURCES[key].name} sind belegt.`;
  if(def.unique&&planet.buildings.filter(b=>b.type===type).length>=def.unique)return `Höchstens ${def.unique} ${def.name} je Planet.`;
  return null;
 }

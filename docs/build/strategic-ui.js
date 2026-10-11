@@ -1,3 +1,4 @@
+import { powerPanel } from './power-ui.js';
 import { knownTargets } from './intelligence.js';
 import { requirementLine } from './build-ui.js';
 import { BUILDINGS, TECHNOLOGIES, RESOURCES } from './data.js';
@@ -10,7 +11,7 @@ const esc = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 export function militaryPanel(state, ui) {
   const own = state.planets.filter(p => p.owner === 'player');
   const p = getPlanet(state, ui.planetId)?.owner === 'player' ? getPlanet(state, ui.planetId) : own[0];
-  if (ui.fleetMode === 'goals') return `<p class="lede">Baue ein interstellares Reich auf. Jeder Meilenstein zahlt seine Belohnung einmal aus; du kannst danach weiterspielen.</p>${CAMPAIGN_GOALS.map(g => `<div class="detail-card"><div class="card-heading"><strong>${g.name}</strong><span class="status-badge">${state.milestones.includes(g.id) ? '✓ Erreicht' : `${n(goalValue(state,g.kind))} / ${n(g.target)}`}</span></div><p>${({colonies:"Kolonien",research:"Abgeschlossene Forschungen",bases:"Fertiggestellte Basen",shields:"Geladene Schildpunkte",mega:"Fertiggestellte Resonanzschmieden"})[g.kind]}<br>Belohnung: ${n(g.credits)} ¢ · ${n(g.science)} Forschung</p><div class="progress"><span style="width:${Math.min(100,goalValue(state,g.kind)/g.target*100)}%"></span></div></div>`).join('')}`;
+  if (ui.fleetMode === 'goals') return `${powerPanel(state)}<details class="management-fold" data-panel-detail="milestones"><summary class="section-title">Aufbau-Meilensteine</summary><p class="lede">Baue ein interstellares Reich auf. Jeder Meilenstein zahlt seine Belohnung einmal aus; du kannst danach weiterspielen.</p>${CAMPAIGN_GOALS.map(g => `<div class="detail-card"><div class="card-heading"><strong>${g.name}</strong><span class="status-badge">${state.milestones.includes(g.id) ? '✓ Erreicht' : `${n(goalValue(state,g.kind))} / ${n(g.target)}`}</span></div><p>${({colonies:"Kolonien",research:"Abgeschlossene Forschungen",bases:"Fertiggestellte Basen",shields:"Geladene Schildpunkte",mega:"Fertiggestellte Resonanzschmieden"})[g.kind]}<br>Belohnung: ${n(g.credits)} ¢ · ${n(g.science)} Forschung</p><div class="progress"><span style="width:${Math.min(100,goalValue(state,g.kind)/g.target*100)}%"></span></div></div>`).join('')}</details>`;
   const select = `<label class="form-label">Startplanet / Basis</label><select class="select" data-field="ownPlanet">${own.map(q => `<option value="${q.id}" ${q.id === p.id ? 'selected' : ''}>${esc(q.name)}</option>`).join('')}</select>`;
   if (ui.fleetMode === 'bases') {
     const b = baseStats(state,p);

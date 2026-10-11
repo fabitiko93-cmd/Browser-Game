@@ -1,4 +1,5 @@
-import { endWar } from './realm-relations.js';
+import { beginWar } from './realm-relations.js';
+import { settlePeace } from './power.js';
 import { reportTreaty } from './space-news.js';
 import { treatyAction, cancelForeignRoutes } from './diplomacy.js';
 import { technologyEffects } from './technology.js';
@@ -26,20 +27,20 @@ export function changeGovernment(state, ideology) {
   log(state, `Regierungsumbildung: ${IDEOLOGIES[ideology].name}. Die politische Stabilität sinkt vorübergehend.`, 'politics');
   return null;
 }
-export function diplomaticAction(state, faction, action) {
+export function diplomaticAction(state, faction, action, options={}) {
   const rel = state.relations[faction];
   if (!rel) return 'Keine diplomatische Verbindung.';
   if (['ports','research-pact','defense-pact','cancel-ports','cancel-research-pact','cancel-defense-pact','pact','cooperation','cancel-pact','cancel-cooperation','embargo','lift-embargo'].includes(action)) return treatyAction(state,faction,action);
   if (action === 'war') {
     if (rel.war) return 'Ihr befindet euch bereits im Krieg.';
     if (rel.pactUntil > state.day) return 'Kündige zuerst den aktiven Nichtangriffspakt.';
-    rel.war = true; rel.warSince=state.day; rel.trade = false; rel.cooperation = false;rel.portAccess=false;rel.researchPact=false;rel.defensePact=false; cancelForeignRoutes(state,faction); rel.score = Math.max(-100, rel.score - 40);
+    if(!beginWar(state,'player',faction,options.target??null))return 'Ein Waffenstillstand oder eine gemeinsame Blockmitgliedschaft verhindert diese Kriegserklärung.';
+    cancelForeignRoutes(state,faction);
     log(state, `Krieg erklärt: ${FACTIONS[faction].name}. Frachtrouten in dieses Gebiet werden beendet.`, 'war');
     declareMessage(state,faction,'Kriegserklärung','Unsere Regierung erklärt diesem Reich den Krieg. Handels- und Hafenabkommen sind aufgehoben.');
   } else if (action === 'peace') {
     if (!rel.war) return 'Es besteht kein Krieg.';
-    if (state.credits < 120) return 'Für einen Waffenstillstand fehlen 120 Credits.';
-    state.credits -= 120; endWar(state,'player',faction);
+    const issue=settlePeace(state,'player',faction);if(issue)return issue;
     log(state, `Waffenstillstand mit ${FACTIONS[faction].name}.`, 'politics');
     declareMessage(state,faction,'Waffenstillstand','Die Regierungen haben die Kampfhandlungen eingestellt.');
   } else if (action === 'envoy') {
@@ -57,7 +58,7 @@ export function diplomaticAction(state, faction, action) {
     const capital=state.planets.find(p=>p.owner===faction&&!p.destroyed);if(capital)recordContact(state,'player',capital);
     log(state, `Handelsabkommen mit ${FACTIONS[faction].name}. Frachter können Waren verkaufen.`, 'politics');
   } else return 'Unbekannte diplomatische Aktion.';
-  if(['war','peace','trade'].includes(action))reportTreaty(state,'player',faction,action);
+  if(['war','trade'].includes(action))reportTreaty(state,'player',faction,action);
   return null;
 }
 export function tickPolitics(state) {

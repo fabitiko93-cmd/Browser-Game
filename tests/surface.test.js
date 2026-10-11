@@ -18,7 +18,7 @@ const richTile = p => planetSurface(p).tiles.find(t => t.ore === .35);
 const neutralTile = p => surfaceTile(p, 6, 6);
 
 test('geology survives forecasts and saves, with three permanent ore fields on every planet', () => {
-  const state = createGame(), before = exportGame(state), restored = parseImport(before);
+  const state = createGame({ legacy: true }), before = exportGame(state), restored = parseImport(before);
   for (const p of state.planets) {
     const surface = planetSurface(p);
     assert.deepEqual(surface, planetSurface(getPlanet(restored, p.id)));
@@ -33,7 +33,7 @@ test('geology survives forecasts and saves, with three permanent ore fields on e
 });
 
 test('old buildable coordinates stay buildable and colony landing sites keep neutral yields', () => {
-  const state = createGame();
+  const state = createGame({ legacy: true });
   for (const p of state.planets) {
     for (let y = 0; y < GRID.height; y++) for (let x = 0; x < GRID.width; x++) {
       const wasBlocked = x < 2 && y > 7 || x > 9 && y < 4;
@@ -46,7 +46,7 @@ test('old buildable coordinates stay buildable and colony landing sites keep neu
 
 test('ore veins give miners 20–35 percent extra output; preview, forecast and actual bookings agree', () => {
   for (const type of ['mine', 'deepMine']) {
-    const s = createGame(), p = home(s), base = facility(type, neutralTile(p)), rich = facility(type, richTile(p));
+    const s = createGame({ legacy: true }), p = home(s), base = facility(type, neutralTile(p)), rich = facility(type, richTile(p));
     p.buildings = [rich]; p.population = 200; p.stock = makeStock({ food: 1000, energy: 1000 });
     const ordinary = buildingPotential(s, p, base).ore, enhanced = buildingPotential(s, p, rich).ore;
     close(enhanced / ordinary, 1.35);
@@ -62,7 +62,7 @@ test('ore veins give miners 20–35 percent extra output; preview, forecast and 
 
 test('thermal sites multiply planetary, political and research effects without boosting other facilities', () => {
   for (const id of ['nereid', 'nox', 'cinder']) {
-    const s = createGame(), p = getPlanet(s, id); p.owner = 'player'; p.population = 200;
+    const s = createGame({ legacy: true }), p = getPlanet(s, id); p.owner = 'player'; p.population = 200;
     s.player.ideology = 'technocracy'; s.tech = ['grid', 'fusion'];
     const vent = planetSurface(p).tiles.find(t => t.vent), b = facility('geothermal', vent);
     const base = buildingPotential(s, p, facility('geothermal', neutralTile(p))).energy;
@@ -75,7 +75,7 @@ test('thermal sites multiply planetary, political and research effects without b
 });
 
 test('automatic connections reach remote buildings without charging or claiming any build space', () => {
-  const s = createGame(), p = home(s);
+  const s = createGame({ legacy: true }), p = home(s);
   p.buildings = [facility('habitat', { x: 2, y: 10 }), { ...facility('habitat', { x: 8, y: 10 }), id: 'remote' }, facility('lab', { x: 6, y: 4 }, 2)];
   const before = exportGame(s), links = surfaceConnections(p.buildings);
   assert.equal(links.length, 1); assert.deepEqual(links[0], { from: { x: 2, y: 10 }, to: { x: 8, y: 10 } });
@@ -86,7 +86,7 @@ test('automatic connections reach remote buildings without charging or claiming 
 });
 
 test('placement controls explain blocked and occupied sites before resources are booked', () => {
-  const s = createGame(), p = home(s), controls = { ...ui(), buildType: 'mine', buildTile: { x: 0, y: 10 } };
+  const s = createGame({ legacy: true }), p = home(s), controls = { ...ui(), buildType: 'mine', buildTile: { x: 0, y: 10 } };
   const before = exportGame(s);
   assert.match(renderMapFoot(s, controls), /Steilhang/);
   assert.match(renderMapFoot(s, controls), /data-action="build-place"[^>]*disabled/);
@@ -99,7 +99,7 @@ test('placement controls explain blocked and occupied sites before resources are
 });
 
 test('site inspection exposes research gates and offers no construction on foreign worlds', () => {
-  const s = createGame(), p = home(s), tile = planetSurface(p).tiles.find(t => t.vent);
+  const s = createGame({ legacy: true }), p = home(s), tile = planetSurface(p).tiles.find(t => t.vent);
   const controls = { ...ui(), panel: 'terrain', surfaceTile: tile };
   let markup = renderSheet(s, controls);
   assert.match(markup, /Wärmequelle/); assert.match(markup, /\+40 %/);
@@ -114,7 +114,7 @@ test('site inspection exposes research gates and offers no construction on forei
 });
 
 test('construction progresses through foundation, frame and finishing before producing', () => {
-  const s = createGame(), p = home(s), b = facility('geothermal', neutralTile(p), 5);
+  const s = createGame({ legacy: true }), p = home(s), b = facility('geothermal', neutralTile(p), 5);
   p.buildings = [b]; p.population = 200; p.stock = makeStock({ food: 1000 });
   assert.equal(constructionPhase(b, 5), 'foundation');
   simulatePlanet(s, p); assert.equal(p.net.energy, 0);
@@ -124,7 +124,7 @@ test('construction progresses through foundation, frame and finishing before pro
 });
 
 test('portrait tile picking follows the drawn position after dragging and zooming', () => {
-  const s = createGame(), controls = ui(), selected = [], map = Object.create(MapRenderer.prototype);
+  const s = createGame({ legacy: true }), controls = ui(), selected = [], map = Object.create(MapRenderer.prototype);
   Object.assign(map, { state: s, ui: controls, width: 320, height: 520, camera: { x: 0, y: 0, zoom: 1 }, hits: [], pointers: new Map(), dragged: false, tap: hit => selected.push(hit), canvas: { getBoundingClientRect: () => ({ left: 12, top: 80 }) }, surfaceRenderer: { render() {} } });
   const ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
   for (const [zoom, dx, dy] of [[1, 0, 0], [2.1, 45, -24], [.7, -31, 40]]) {
@@ -139,7 +139,7 @@ test('portrait tile picking follows the drawn position after dragging and zoomin
 });
 
 test('small portrait construction retains tappable tiles and focuses a selected site below the top card', () => {
-  const s = createGame(), controls = { ...ui(), buildType: 'mine', buildTile: richTile(home(s)) }, map = Object.create(MapRenderer.prototype);
+  const s = createGame({ legacy: true }), controls = { ...ui(), buildType: 'mine', buildTile: richTile(home(s)) }, map = Object.create(MapRenderer.prototype);
   Object.assign(map, { state: s, ui: controls, camera: { x: 0, y: 0, zoom: 1 }, hits: [], surfaceRenderer: { render() {} } });
   const ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
   map.surface(ctx, 320, 362, 0);
@@ -152,7 +152,7 @@ test('small portrait construction retains tappable tiles and focuses a selected 
 });
 
 test('construction and inspection keep edge tiles visible when measured card or screen heights change', () => {
-  const s = createGame(), p = home(s), b = facility('mine', { x: 11, y: 13 }); p.buildings.push(b);
+  const s = createGame({ legacy: true }), p = home(s), b = facility('mine', { x: 11, y: 13 }); p.buildings.push(b);
   const map = Object.create(MapRenderer.prototype), ctx = { fillText() {}, fillRect() {}, save() {}, beginPath() {}, rect() {}, clip() {}, restore() {} };
   Object.assign(map, { state: s, camera: { x: 0, y: 0, zoom: 1 }, hits: [], surfaceRenderer: { render() {} } });
   for (const mode of [
@@ -174,7 +174,7 @@ test('construction and inspection keep edge tiles visible when measured card or 
 });
 
 test('every system draws all its planets, including the fourth capital worlds, without interrupting the map loop', () => {
-  const state = createGame();
+  const state = createGame({ legacy: true });
   const ctx = new Proxy({ createRadialGradient: () => ({ addColorStop() {} }) }, { get: (target, key) => target[key] ?? (() => {}) });
   for (const system of SYSTEMS) {
     chartSystem(state,'player',system.id);

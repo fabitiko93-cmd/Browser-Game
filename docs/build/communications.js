@@ -1,3 +1,4 @@
+import { joinIssue, joinBloc } from './power.js';
 import { offerEvaluation } from './realm-ai.js';
 import { unreadNews, readNews } from './space-news.js';
 import { FACTIONS } from './data.js';
@@ -6,7 +7,7 @@ import { diplomaticAction } from './politics.js';
 import { recordContact } from './intelligence.js';
 
 export const OFFER_DAYS = 30;
-export const OFFER_TERMS = { trade: { cost: 50, title: 'Handelsabkommen' }, pact: { cost: 100, title: 'Nichtangriffspakt', duration: 180 } };
+export const OFFER_TERMS = { bloc:{cost:100,title:'Beitritt zum Machtbund'}, trade: { cost: 50, title: 'Handelsabkommen' }, pact: { cost: 100, title: 'Nichtangriffspakt', duration: 180 } };
 export const centers = (state, owner = 'player') => state.planets.filter(p => p.owner === owner && !p.destroyed).flatMap(p => p.buildings.filter(b => b.type === 'commCenter' && !b.remaining && b.enabled).map(b => ({ p, b })));
 export const communicationReady = (state, owner = 'player') => centers(state,owner).some(({b})=>b.status==='aktiv');
 export const openRequests = state => state.communications.messages.filter(m => m.to==='player' && m.status==='open' && m.expires>state.day);
@@ -27,7 +28,8 @@ function append(state, message) {
 export function declareMessage(state, faction, title, body, incoming = false) {
   return append(state,{from:incoming?faction:'player',to:incoming?'player':faction,type:'declaration',status:'information',title,body,read:!incoming});
 }
-export function offerIssue(state, faction, type) {
+export function offerIssue(state, faction, type, incoming=true) {
+  if(type==='bloc')return joinIssue(state,incoming?faction:'player',incoming?'player':faction);
   const r=state.relations[faction],terms=OFFER_TERMS[type];
   if(!r||!terms)return 'Unbekanntes Angebot.';
   if(r.war||r.embargo)return 'Dieses Angebot benötigt Frieden und offene diplomatische Beziehungen.';
@@ -37,13 +39,13 @@ export function offerIssue(state, faction, type) {
   return null;
 }
 export function createOffer(state, faction, type, incoming = true) {
-  const issue=offerIssue(state,faction,type);if(issue)return issue;
+  const issue=offerIssue(state,faction,type,incoming);if(issue)return issue;
   const from=incoming?faction:'player',to=incoming?'player':faction;
   if(state.communications.messages.filter(m=>m.status==='open').length>=12)return 'Es laufen bereits zu viele Verhandlungen.';
   if(state.communications.messages.some(m=>m.status==='open'&&[m.from,m.to].includes(faction)))return 'Mit diesem Reich läuft bereits eine Verhandlung.';
   const terms=OFFER_TERMS[type];
   append(state,{from,to,type,read:!incoming,status:'open',expires:state.day+OFFER_DAYS,title:terms.title,
-    body:type==='trade'?'Gegenseitiger Marktzugang für Frachter. Preise und Abnahme richten sich nach den örtlichen Märkten.':'Beide Reiche verzichten für 180 Tage auf Kriegserklärungen. Eine Kündigung bleibt möglich und belastet die Beziehungen.'});
+    body:type==='bloc'?'Verbindliche Mitgliedschaft: 100 Credits Beitritt, 2 Credits Beitrag pro Tag, gemeinsame Häfen und +6 % Forschung. Die Führung übernimmt Versorgungsersuchen; wiederholte Brüche erlauben einen Austritt.':type==='trade'?'Gegenseitiger Marktzugang für Frachter. Preise und Abnahme richten sich nach den örtlichen Märkten.':'Beide Reiche verzichten für 180 Tage auf Kriegserklärungen. Eine Kündigung bleibt möglich und belastet die Beziehungen.'});
   return null;
 }
 export function sendOffer(state, faction, type) {
@@ -56,8 +58,9 @@ export function sendOffer(state, faction, type) {
 }
 function finish(state,m,status,reason='') { m.status=status;m.resolved=state.day;m.reason=reason;m.read=true; }
 function agree(state,m) {
-  const faction=m.from==='player'?m.to:m.from,issue=offerIssue(state,faction,m.type);
+  const faction=m.from==='player'?m.to:m.from,issue=offerIssue(state,faction,m.type,m.from!=='player');
   if(issue)return issue;
+  if(m.type==='bloc'){const result=joinBloc(state,m.from,m.to);if(result)return result;finish(state,m,'accepted');return null;}
   const terms=OFFER_TERMS[m.type],foreign=state.factions[faction];
   if(foreign.credits<terms.cost)return 'Der Vertragspartner kann das Abkommen derzeit nicht finanzieren.';
   if(state.credits<terms.cost)return `Für dieses Abkommen fehlen ${terms.cost} Credits.`;
@@ -87,7 +90,7 @@ export function tickCommunications(state) {
   const c=state.communications;
   for(const m of c.messages.filter(m=>m.status==='open')) {
     if(m.expires<=state.day){finish(state,m,'expired','Unbeantwortet zurückgegeben.');continue;}
-    const faction=m.from==='player'?m.to:m.from,issue=offerIssue(state,faction,m.type);
+    const faction=m.from==='player'?m.to:m.from,issue=offerIssue(state,faction,m.type,m.from!=='player');
     if(issue){finish(state,m,'withdrawn',issue);continue;}
     if(m.from==='player'&&state.day>=m.created+3) {
       // The other government evaluates its own budget and the shared diplomatic terms.

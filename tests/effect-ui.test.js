@@ -27,7 +27,7 @@ test('effect labels stay neutral and only signed values carry semantic colors', 
   assert.ok(eventEffectMarkup('Stabilisieren · 30 Kristalle → +20 % Energie').includes('30 Kristalle → <span class="effect-value effect-benefit"'));
 });
 test('research, government, laws, decisions and event views all use the modifier color convention', () => {
-  const s=createGame(),base={planetId:'nereid',fleetIds:[]};
+  const s=createGame({ legacy: true }),base={planetId:'nereid',fleetIds:[]};
   s.player.ideology='technocracy';s.tech=['habitats'];
   for (const ui of [{panel:'economy',economyMode:'research',researchBranch:'colonies'},{panel:'politics',politicsMode:'government'},{panel:'politics',politicsMode:'laws'},{panel:'politics',politicsMode:'decisions'}]) {
     const html=renderSheet(s,{...base,...ui});

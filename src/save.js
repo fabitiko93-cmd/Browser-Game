@@ -1,4 +1,9 @@
+import { initializePower } from './power.js';
+import { emptyTradeBoard } from './trade-board.js';
+import { validatePower, validateTradeBoards } from './power-save.js';
 import { initializeGalaxy, relationBetween } from './realm-relations.js';
+import { systemsOf, locationsOf, legacyWorld, legacyDepositsFor } from './world.js';
+import { validateWorld } from './world-save.js';
 import { validateGalaxy } from './realm-save.js';
 import { initialFactions } from './foreign.js';
 import { SUPPLY_DEFAULTS } from './routing.js';
@@ -90,17 +95,24 @@ export function validateSave(value) {
     value=structuredClone(value);initializeGalaxy(value);
     for(const f of value.fleets??[])if(f.owner!=='player'&&f.mission?.kind==='commerce'&&f.mission.buyer!=='player'){const r=relationBetween(value,f.owner,f.mission.buyer);if(r){r.trade=true;r.score=Math.max(0,r.score);}}
     for(const r of Object.values(value.relations??{})){r.truceUntil??=0;r.warSince??=0;}
-    value.version=SAVE_VERSION;
+    value.version=9;
+  }
+  if(value?.version===9){
+    value=structuredClone(value);value.world=legacyWorld(value);
+    for(const p of value.planets)p.deposits??=legacyDepositsFor(p);
+    initializePower(value);for(const p of value.planets)p.tradeBoard??=emptyTradeBoard(value.day);
+    value.version=10;
   }
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
   const text = (v, max = 100) => typeof v === 'string' && v.length > 0 && v.length <= max;
   const known = (dict, key) => typeof key === 'string' && Object.hasOwn(dict, key);
   const validCargo = (cargo, capacity) => !cargo || RESOURCE_KEYS.includes(cargo.resource) && finite(cargo.amount, 1, capacity);
   if (!value || value.version !== SAVE_VERSION || !Array.isArray(value.planets) || value.planets.length !== PLANET_SEEDS.length || !Array.isArray(value.fleets) || value.fleets.length > 2000) throw new Error('Unbekanntes Spielstandformat.');
+  validateWorld(value);
   if (!Number.isInteger(value.day) || !finite(value.day, 0, 1e6) || !finite(value.credits,-1e12) || !finite(value.science) || !Number.isInteger(value.nextId) || !finite(value.nextId, 1) || typeof value.started !== 'boolean' || !known(IDEOLOGIES, value.player?.ideology) || !text(value.player.name, 32) || !finite(value.player.tax, 0, .5) || !finite(value.player.stability, 0, 100) || !finite(value.player.rulingSupport, 0, 100) || !finite(value.player.term) || !finite(value.aiNext)) throw new Error('Der Spielstand enthält ungültige Werte.');
   const g = value.governance;
   if (!g || !g.laws || Object.keys(g.laws).length !== Object.keys(LAWS).length || Object.entries(LAWS).some(([id, law]) => !known(law.options, g.laws[id]) || Boolean(lawBlock(value,id,g.laws[id]))) || !finite(g.lawReady, 0, value.day + 5) || !Array.isArray(g.decisions) || g.decisions.length > Object.keys(DECISIONS).length || new Set(g.decisions.map(d => d.id)).size !== g.decisions.length || g.decisions.some(d => !known(DECISIONS, d.id) || DECISIONS[d.id].ideologies&&!DECISIONS[d.id].ideologies.includes(value.player.ideology) || DECISIONS[d.id].requiredTech&&!value.tech.includes(DECISIONS[d.id].requiredTech) || !finite(d.until, value.day, value.day + DECISIONS[d.id].duration)) || !g.cooldowns || typeof g.cooldowns !== 'object' || Array.isArray(g.cooldowns) || Object.entries(g.cooldowns).some(([id, until]) => !known(DECISIONS, id) || !finite(until, 0, value.day + DECISIONS[id].cooldown))) throw new Error('Ungültige Regierungspolitik.');
-  if (!Array.isArray(value.surveys) || new Set(value.surveys).size !== value.surveys.length || value.surveys.some(id => !PLANET_SEEDS.some(p => p.id === id))) throw new Error('Ungültige Erkundungsdaten.');
+  if (!Array.isArray(value.surveys) || new Set(value.surveys).size !== value.surveys.length || value.surveys.some(id => !locationsOf(value).some(p => p.id === id))) throw new Error('Ungültige Erkundungsdaten.');
   if (!Array.isArray(value.tech) || value.tech.length > Object.keys(TECHNOLOGIES).length || new Set(value.tech).size !== value.tech.length || value.tech.some(t => !known(TECHNOLOGIES, t))) throw new Error('Ungültige Forschung.');
   if (value.tech.some(id => TECHNOLOGIES[id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[id].requiresAny && !TECHNOLOGIES[id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültige Forschungsabhängigkeiten.');
   if (value.research && (!known(TECHNOLOGIES, value.research.id) || !Number.isInteger(value.research.total) || !finite(value.research.total, 2, 30) || !Number.isInteger(value.research.remaining) || !finite(value.research.remaining, 1, value.research.total) || value.tech.includes(value.research.id) || TECHNOLOGIES[value.research.id].requires.some(required => !value.tech.includes(required)) || TECHNOLOGIES[value.research.id].requiresAny && !TECHNOLOGIES[value.research.id].requiresAny.some(required => value.tech.includes(required)) || (TECHNOLOGIES[value.research.id].excludes ?? []).some(other => value.tech.includes(other)))) throw new Error('Ungültiger Forschungsauftrag.');
@@ -110,8 +122,8 @@ export function validateSave(value) {
   }
   if (Object.keys(value.relations).length !== Object.keys(FACTIONS).length-1 || !Array.isArray(value.logs) || value.logs.length > 60 || value.logs.some(e => !finite(e.day, 0, value.day) || !text(e.text, 600) || !text(e.type, 24) || e.sound != null && !SOUND_CUES.includes(e.sound))) throw new Error('Ungültiges Kommandoprotokoll.');
   const ids = new Set();
-  for (const p of value.planets) {
-    if (!finite(p.shield) || typeof p.destroyed !== 'boolean' || p.destroyed && (p.owner !== null || p.population !== 0 || p.buildings?.length || p.queues?.length || p.shield !== 0) || !PLANET_SEEDS.some(seed => seed.id === p.id) || ids.has(p.id) || !text(p.name, 64) || !SYSTEMS.some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
+  for (const p of locationsOf(value)) {
+    if (!finite(p.shield) || typeof p.destroyed !== 'boolean' || p.destroyed && (p.owner !== null || p.population !== 0 || p.buildings?.length || p.queues?.length || p.shield !== 0) || !PLANET_SEEDS.some(seed => seed.id === p.id) && !p.anchor || ids.has(p.id) || !text(p.name, 64) || !systemsOf(value).some(s => s.id === p.system) || (p.owner !== null && !known(FACTIONS, p.owner)) || !finite(p.population) || !finite(p.happiness, 0, 100) || !finite(p.defense) || !finite(p.garrison) || !finite(p.aliens, 0, 1) || !finite(p.oreFactor, .1, 10) || !finite(p.solarFactor, .1, 10) || !Number.isInteger(p.seed) || !finite(p.orbit, 0, 4) || !text(p.kind, 40) || !/^#[a-f0-9]{6}$/i.test(p.color) || !Array.isArray(p.buildings) || p.buildings.length > GRID.width * GRID.height || !Array.isArray(p.queues) || p.queues.length > 3) throw new Error('Ungültiger Planet.');
     if(p.localMarket!=null&&(typeof p.localMarket!=='object'||Array.isArray(p.localMarket)||!finite(p.localMarket.cash,0,200)||!Number.isInteger(p.localMarket.day)||!finite(p.localMarket.day,-1,value.day)||!finite(p.localMarket.sold,0,50)))throw new Error('Ungültiger örtlicher Markt.');
     if(!known(PRIORITIES,p.priority)||!Array.isArray(p.needs)||new Set(p.needs).size!==p.needs.length||p.needs.some(k=>!['goods','medicine'].includes(k)))throw new Error('Ungültige planetare Versorgung.');
     ids.add(p.id);
@@ -125,7 +137,7 @@ export function validateSave(value) {
     }
     for (const q of p.queues) if (!known(SHIPS, q.type) || !finite(q.remaining, 1, 30) || !text(q.id, 64)) throw new Error('Ungültiger Werftauftrag.');
   }
-  if (!Array.isArray(value.destroyedSystems) || new Set(value.destroyedSystems).size !== value.destroyedSystems.length || value.destroyedSystems.some(id => !SYSTEMS.some(s=>s.id===id) || value.planets.some(p=>p.system===id&&!p.destroyed))) throw new Error('Ungültige zerstörte Systeme.');
+  if (!Array.isArray(value.destroyedSystems) || new Set(value.destroyedSystems).size !== value.destroyedSystems.length || value.destroyedSystems.some(id => !systemsOf(value).some(s=>s.id===id) || value.planets.some(p=>p.system===id&&!p.destroyed))) throw new Error('Ungültige zerstörte Systeme.');
   if (!Array.isArray(value.milestones) || new Set(value.milestones).size !== value.milestones.length || value.milestones.some(id=>!CAMPAIGN_GOALS.some(g=>g.id===id))) throw new Error('Ungültige Meilensteine.');
   if (!Array.isArray(value.strikes) || value.strikes.length > 200 || new Set(value.strikes.map(s=>s.id)).size !== value.strikes.length || value.strikes.some(s=>!text(s.id,64) || !known(STRATEGIC_WEAPONS,s.type) || !known(FACTIONS,s.owner) || !ids.has(s.source) || !ids.has(s.target) || s.source === s.target || !text(s.facilityId,64) || !['charge','flight'].includes(s.phase) || !Number.isInteger(s.remaining) || !finite(s.remaining,1,s.total) || !Number.isInteger(s.total) || !finite(s.total,1,100) || !Number.isInteger(s.flight) || !finite(s.flight,1,30))) throw new Error('Ungültiger Fernangriff.');
   const fleetIds = new Set();
@@ -134,19 +146,24 @@ export function validateSave(value) {
     fleetIds.add(f.id);
     if((f.mission?.cargo?.amount??0)+Object.values(f.cargo??{}).reduce((n,v)=>n+v,0)>Math.floor(SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity)+.000001)throw new Error('Überladener Frachtraum.');
     const m = f.mission, r = f.route;
-    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit','commerce','resupply'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
-    if(m?.kind==='commerce'&&(f.owner==='player'||f.type!=='freighter'||!known(FACTIONS,m.buyer)||m.buyer==='player'||m.buyer===f.owner||!m.cargo))throw new Error('Ungültige fremde Handelslieferung.');
+    if (m && (!ids.has(m.target) || !ids.has(m.source) || m.target === m.source || !finite(m.remaining, 1, m.total) || !finite(m.total, 1, 100) || !text(m.group, 64) || !['move', 'settle', 'attack', 'transport', 'return-cargo', 'survey','explore','analyze','circuit','commerce','resupply','relic','bloc-aid'].includes(m.kind) || !validCargo(m.cargo, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültiger Flottenauftrag.');
+    if(m?.kind==='commerce'){
+      const purchase=m.mode==='purchase',invalid=purchase?(m.buyer!==f.owner||m.cargo!==null||!m.intent||!RESOURCE_KEYS.includes(m.intent.resource)||!finite(m.intent.amount,1,Math.floor(SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity))||!finite(m.intent.maxPrice,.01,100)):(!known(FACTIONS,m.buyer)||m.buyer===f.owner||!m.cargo||m.mode!=null);
+      if(f.owner==='player'||f.type!=='freighter'||invalid)throw new Error('Ungültige fremde Handelslieferung.');
+    }
+    if(m?.kind==='bloc-aid'&&(!SHIPS[f.type].cargo||!known(FACTIONS,m.buyer)||m.buyer===f.owner||!m.cargo))throw new Error('Ungültige Blockversorgung.');
     if(m?.kind==='resupply'&&(f.owner==='player'||f.type!=='freighter'||m.buyer!==f.owner||!m.cargo))throw new Error('Ungültige eigene Versorgungslieferung.');
     if(f.tradeReady!=null&&!finite(f.tradeReady,0,value.day+20))throw new Error('Ungültige Handelsplanung.');
     if(m?.kind==='analyze'&&(f.type!=='probe'||m.phase!=null&&m.phase!=='scan'||m.phase==='scan'&&f.planetId!==m.target)||m?.kind==='explore'&&f.type!=='scout')throw new Error('Ungültiger Erkundungsauftrag.');
+    if(m?.kind==='relic'&&(!['restore','salvage'].includes(m.relicAction)||!SHIPS[f.type].cargo||m.phase!=null&&m.phase!=='work'||m.phase==='work'&&(m.relicAction!=='restore'||f.planetId!==m.target||m.remaining>12||!Object.entries({alloy:16,food:16,energy:32}).every(([k,n])=>f.cargo[k]>=n))))throw new Error('Ungültige Ruinenexpedition.');
     if (m?.kind==='circuit'&&(!Number.isInteger(m.stopIndex)||!finite(m.stopIndex,0,7)))throw new Error('Ungültiger Routenstopp.');
     if(f.cargo!=null&&(typeof f.cargo!=='object'||Array.isArray(f.cargo)||Object.keys(f.cargo).length!==RESOURCE_KEYS.length||RESOURCE_KEYS.some(k=>!finite(f.cargo[k]))||Object.values(f.cargo).reduce((n,v)=>n+v,0)>SHIPS[f.type].cargo*technologyEffects(value,f.owner).cargoCapacity+.000001))throw new Error('Ungültige Bordfracht.');
-    if(f.supplySettings){const s=f.supplySettings;if(!['threshold','target','repairBelow','repairTo'].every(k=>finite(s[k],0,100))||s.target<=s.threshold||s.repairTo<=s.repairBelow||value.planets.find(p=>p.id===s.homePort)?.owner!==f.owner||typeof s.smart!=='boolean')throw new Error('Ungültige Versorgungseinstellungen.');}
+    if(f.supplySettings){const s=f.supplySettings;if(!['threshold','target','repairBelow','repairTo'].every(k=>finite(s[k],0,100))||s.target<=s.threshold||s.repairTo<=s.repairBelow||locationsOf(value).find(p=>p.id===s.homePort)?.owner!==f.owner||typeof s.smart!=='boolean')throw new Error('Ungültige Versorgungseinstellungen.');}
     if(f.servicing!=null&&typeof f.servicing!=='boolean'||f.repairing!=null&&typeof f.repairing!=='boolean'||f.pauseReason!=null&&(typeof f.pauseReason!=='string'||f.pauseReason.length>180))throw new Error('Ungültiger Wartungszustand.');
     if(r?.type==='circuit')validateCircuit(value,f,r,ids);
     if (r && r.type!=='circuit' && (!SHIPS[f.type].cargo || !ids.has(r.source) || !ids.has(r.target) || r.source === r.target || !RESOURCE_KEYS.includes(r.resource) || r.reserve!=null&&!finite(r.reserve) || !finite(r.amount, 1, Math.floor(SHIPS[f.type].cargo * technologyEffects(value,f.owner).cargoCapacity)))) throw new Error('Ungültige Handelsroute.');
   }
-  validateDevelopment(value,ids);
+  validateDevelopment(value,ids);validatePower(value,ids);validateTradeBoards(value);
   validateExploration(value,ids);
   validateGalaxy(value,ids);
   if (value.event && (!known(EVENTS,value.event.kind) || !ids.has(value.event.planet))) throw new Error('Ungültige Meldung.');
@@ -179,7 +196,7 @@ function validateDevelopment(state,ids){
  for(const id of Object.keys(FACTIONS).filter(id=>id!=='player')){
   const f=state.factions[id],g=f?.governance;
   if(!f||!finite(f.credits,-1e12)||!finite(f.science)||!finite(f.nextBuild,0,state.day+60)||!Array.isArray(f.tech)||new Set(f.tech).size!==f.tech.length||f.tech.some(key=>!TECHNOLOGIES[key]||TECHNOLOGIES[key].requires.some(q=>!f.tech.includes(q))||(TECHNOLOGIES[key].excludes??[]).some(q=>f.tech.includes(q))||TECHNOLOGIES[key].requiresAny&&!TECHNOLOGIES[key].requiresAny.some(q=>f.tech.includes(q)))||!g||Object.keys(g.laws??{}).length!==Object.keys(LAWS).length||Object.entries(LAWS).some(([key,law])=>!law.options[g.laws[key]]||law.options[g.laws[key]].ideologies&&!law.options[g.laws[key]].ideologies.includes(FACTIONS[id].ideology)||law.options[g.laws[key]].requiredTech&&!f.tech.includes(law.options[g.laws[key]].requiredTech)))throw new Error('Ungültige fremde Wirtschaft oder Forschung.');
-  if(!finite(g.lawReady,0,state.day+5)||!Array.isArray(g.decisions)||g.decisions.length||!g.cooldowns||Object.keys(g.cooldowns).length)throw new Error('Ungültige fremde Regierungspolitik.');
+  if(!finite(g.lawReady,0,state.day+5)||!Array.isArray(g.decisions)||g.decisions.length>Object.keys(DECISIONS).length||new Set(g.decisions.map(d=>d.id)).size!==g.decisions.length||g.decisions.some(d=>!DECISIONS[d.id]||DECISIONS[d.id].ideologies&&!DECISIONS[d.id].ideologies.includes(FACTIONS[id].ideology)||DECISIONS[d.id].requiredTech&&!f.tech.includes(DECISIONS[d.id].requiredTech)||!finite(d.until,state.day,state.day+DECISIONS[d.id].duration))||!g.cooldowns||typeof g.cooldowns!=='object'||Array.isArray(g.cooldowns)||Object.entries(g.cooldowns).some(([key,until])=>!DECISIONS[key]||!finite(until,0,state.day+DECISIONS[key].cooldown)))throw new Error('Ungültige fremde Regierungspolitik.');
   if(f.research&&(!TECHNOLOGIES[f.research.id]||f.tech.includes(f.research.id)||!Number.isInteger(f.research.remaining)||!finite(f.research.remaining,1,45)||TECHNOLOGIES[f.research.id].requires.some(q=>!f.tech.includes(q))||(TECHNOLOGIES[f.research.id].excludes??[]).some(q=>f.tech.includes(q))||TECHNOLOGIES[f.research.id].requiresAny&&!TECHNOLOGIES[f.research.id].requiresAny.some(q=>f.tech.includes(q))))throw new Error('Ungültige fremde Forschung.');
  }
  if(!Array.isArray(state.contracts)||state.contracts.length>20||new Set(state.contracts.map(c=>c.id)).size!==state.contracts.length||state.contracts.some(c=>!ids.has(c.planet)||!state.factions[c.faction]||!RESOURCE_KEYS.includes(c.resource)||typeof c.id!=='string'||!c.id.length||c.id.length>64||!finite(c.quantity,1,2000)||!finite(c.price,.001,1e6)||!finite(c.delivered,0,c.quantity+.000001)||!finite(c.escrow,0,c.quantity*c.price+.000001)||!finite(c.periodStart,0,state.day)||!finite(c.until,state.day,state.day+180)||!Number.isInteger(c.fulfilled)||!finite(c.fulfilled,0,6)))throw new Error('Ungültige Lieferverträge.');

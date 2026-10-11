@@ -1,3 +1,4 @@
+import { buildingBlock } from './infrastructure.js';
 import { BUILDINGS, RESOURCES, TECHNOLOGIES } from './data.js';
 import { PLANET_FACTORS } from './development-data.js';
 import { surfaceTile, surfaceName, siteBonus, placementIssue, planetSurface, constructionPhase } from './surface.js';
@@ -20,7 +21,7 @@ export function compactSiteMarkup(state, ui, planet, costs) {
   let header, content, action;
   if (ui.buildType) {
     const type = ui.buildType, def = BUILDINGS[type], position = ui.buildTile;
-    const tile = position && surfaceTile(planet, position.x, position.y), issue = position && placementIssue(planet, position.x, position.y);
+    const tile = position && surfaceTile(planet, position.x, position.y), issue = buildingBlock(state,planet,type) || position && placementIssue(planet, position.x, position.y);
     const bonus = position && siteBonus(planet, type, position.x, position.y);
     const locked = def.requiredTech && !state.tech.includes(def.requiredTech);
     header = heading(def.name, tile ? `${sector(tile)} · ${featureName(tile)}${bonus ? ` · ${bonusValue(bonus)}` : ''}` : 'Freie Kachel antippen', 'build-cancel');
@@ -66,9 +67,9 @@ export function constructionMarkup(building) {
 }
 export function geologyMarkup(planet) {
   const surface = planetSurface(planet), factors = PLANET_FACTORS[planet.kind] ?? {};
-  const rates = [['Erzgehalt', planet.oreFactor], ['Solarertrag', planet.solarFactor], ['Agrarertrag', factors.food ?? 1], ['Geothermie', factors.geothermal ?? 1]];
+  const rates = [['Erzgehalt', planet.oreFactor], ['Solarertrag', planet.solarFactor], ['Agrarertrag', factors.food ?? 1], ['Geothermie', factors.geothermal ?? 1],['Kristallförderung',(factors.crystal??1)*(planet.deposits?.crystalYield??1)],['Brennstoffförderung',(factors.fuel??1)*(planet.deposits?.fuelYield??1)]];
   const locations = [...surface.deposits.map(d => ({ ...d, label: 'Erzader' })), ...surface.vents.map(v => ({ ...v, label: 'Wärmequelle' }))];
-  return `<div class="detail-card"><div class="eyebrow">${surfaceName(planet)}</div><p>Planetenfaktoren bestimmen den Grundertrag. Örtliche Vorkommen verbessern passende Anlagen zusätzlich; prüfe ihren Standort durch Antippen einer Baufläche.</p>${rates.map(([label, rate]) => `<div class="stat-line"><span>${label}</span><strong class="${rate > 1 ? 'effect-benefit' : rate < 1 ? 'effect-penalty' : ''}">× ${decimal(rate)}</strong></div>`).join('')}<p class="note">${surface.deposits.length} Erzfelder · ${surface.vents.length} Wärmequellen</p><p class="note">Erzadern: +20–35 % Ertrag für Erzförderer und Tiefenförderanlagen. Wärmequellen: +40 % für Geothermie. Boni gelten zusätzlich zu den Planetenfaktoren und erschöpfen sich nicht.</p></div><div class="section-title">Bekannte Standorte</div><div class="detail-card">${locations.map(t => `<button class="button secondary" data-action="inspect-site" data-x="${t.x}" data-y="${t.y}">${t.label} · Sektor ${t.x + 1} / ${t.y + 1}</button>`).join('')}</div>`;
+  return `<div class="detail-card"><div class="eyebrow">${surfaceName(planet)}</div><p>Planetenfaktoren bestimmen den Grundertrag. Örtliche Vorkommen verbessern passende Anlagen zusätzlich; prüfe ihren Standort durch Antippen einer Baufläche.</p>${rates.map(([label, rate]) => `<div class="stat-line"><span>${label}</span><strong class="${rate > 1 ? 'effect-benefit' : rate < 1 ? 'effect-penalty' : ''}">× ${decimal(rate)}</strong></div>`).join('')}<p class="note">${planet.deposits?`Förderstellen: ${planet.deposits.ore} Erz · ${planet.deposits.crystal} Kristalle · ${planet.deposits.fuel} Brennstoff.<br>`:''}${surface.deposits.length} Erzfelder · ${surface.vents.length} Wärmequellen</p><p class="note">Erzadern: +20–35 % Ertrag für Erzförderer und Tiefenförderanlagen. Wärmequellen: +40 % für Geothermie. Boni gelten zusätzlich zu den Planetenfaktoren und erschöpfen sich nicht.</p></div><div class="section-title">Bekannte Standorte</div><div class="detail-card">${locations.map(t => `<button class="button secondary" data-action="inspect-site" data-x="${t.x}" data-y="${t.y}">${t.label} · Sektor ${t.x + 1} / ${t.y + 1}</button>`).join('')}</div>`;
 }
 export function terrainPanel(state, ui, planet) {
   const position = ui.surfaceTile, tile = position && surfaceTile(planet, position.x, position.y);

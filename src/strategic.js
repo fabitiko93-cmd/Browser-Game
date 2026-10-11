@@ -1,3 +1,4 @@
+import { systemsOf, locationsOf } from './world.js';
 import { atWar, realmAtWar } from './realm-relations.js';
 import { publishNews, realmName } from './space-news.js';
 import { routePlanets } from './routing.js';
@@ -19,15 +20,15 @@ export function baseStats(state, p) {
 }
 export function tickShields(state) { for (const p of state.planets) { const b = baseStats(state, p); p.shield = p.destroyed ? 0 : Math.min(b.capacity, (p.shield ?? 0) + b.regen); } }
 export function absorbShield(p, power) { const absorbed = Math.min(p.shield ?? 0, power); p.shield = Math.max(0, (p.shield ?? 0) - absorbed); return power - absorbed; }
-export function strikeDistance(source, target) { const a = SYSTEMS.find(s => s.id === source.system), b = SYSTEMS.find(s => s.id === target.system); return Math.hypot(a.x - b.x, a.y - b.y); }
+export function strikeDistance(source, target, state = {}) { const a = systemsOf(state).find(s => s.id === source.system), b = systemsOf(state).find(s => s.id === target.system); return Math.hypot(a.x - b.x, a.y - b.y); }
 export function strikeError(state, source, target, type, owner = 'player') {
   const w = STRATEGIC_WEAPONS[type];
   if (!w || !source || !target || source.destroyed || target.destroyed || source.owner !== owner) return 'Wähle einen eigenen Startplaneten und ein intaktes Ziel.';
   if (!reachablePlanet(state,target,owner)) return 'Die Flugroute zum Zielsystem ist nicht kartiert.';
   if (!(owner==='player'?state.tech:state.factions[owner]?.tech)?.includes(w.tech)) return 'Die erforderliche Waffentechnologie fehlt.';
   if (target.owner === owner || !target.owner || !atWar(state,owner,target.owner)) return 'Fernangriffe setzen Krieg mit dem Zielreich voraus.';
-  if (w.starKiller && state.planets.some(p => p.system === target.system && p.owner && (p.owner === owner || !atWar(state,owner,p.owner)))) return 'In diesem System liegen eigene oder nicht feindliche Kolonien.';
-  if (strikeDistance(source, target) > w.range * technologyEffects(state, owner).strikeRange) return 'Das Ziel liegt außerhalb der Waffenreichweite. Erforsche Subraum-Reichweite.';
+  if (w.starKiller && locationsOf(state).some(p => p.system === target.system && p.owner && (p.owner === owner || !atWar(state,owner,p.owner)))) return 'In diesem System liegen eigene oder nicht feindliche Kolonien.';
+  if (strikeDistance(source, target, state) > w.range * technologyEffects(state, owner).strikeRange) return 'Das Ziel liegt außerhalb der Waffenreichweite. Erforsche Subraum-Reichweite.';
   if (!source.buildings.some(b => b.type === w.facility && !b.remaining && b.enabled && b.status === 'aktiv' && !state.strikes.some(s => s.facilityId === b.id && s.source === source.id && s.phase === 'charge'))) return 'Es fehlt eine versorgte, freie Startanlage.';
   const cost = w.cost;
   if (!canAfford(state, source, cost, owner)) return 'Für die Ladung fehlen Credits oder lokale Rohstoffe.';
@@ -39,13 +40,14 @@ export function launchStrike(state, sourceId, targetId, type, { confirmed = fals
   if ((w.planetKiller || w.starKiller) && !confirmed) return 'Die endgültige Zerstörung muss bestätigt werden.';
   const facility = source.buildings.find(b => b.type === w.facility && !b.remaining && b.enabled && b.status === 'aktiv' && !state.strikes.some(s => s.source === source.id && s.facilityId === b.id && s.phase === 'charge'));
   pay(state, source, w.cost, owner);
-  const flight = source.system === target.system ? 4 : 10 + Math.ceil(strikeDistance(source, target) * 6);
+  const flight = source.system === target.system ? 4 : 10 + Math.ceil(strikeDistance(source, target, state) * 6);
   state.strikes.push({ id: uid(state, 'strike'), type, owner, source: source.id, target: target.id, facilityId: facility.id, phase: 'charge', remaining: w.charge, total: w.charge, flight });
   if(owner==='player')log(state, `${source.name}: ${w.name} gegen ${target.name} wird geladen (${w.charge} Tage).`, 'war'); return null;
 }
 export function cancelStrike(state, id) { const s = state.strikes.find(s => s.id === id); if (!s || s.owner !== 'player' || s.phase !== 'charge') return 'Nur eigene Ladeaufträge können abgebrochen werden.'; state.strikes = state.strikes.filter(s => s.id !== id); log(state, 'Ladeauftrag abgebrochen. Verbrauchte Materialien werden nicht erstattet.', 'warning'); return null; }
 export function destroyPlanet(state, p) {
   Object.assign(p, { destroyed: true, owner: null, population: 0, defense: 0, garrison: 0, shield: 0, stock: makeStock(), buildings: [], queues: [], net: {}, lastReport: null });
+  if(p.ruin){delete p.ruin.buildingId;p.ruin.status='salvaged';p.ruin.operator=null;p.ruin.remaining=0;}
   if (state.event?.planet === p.id) state.event = null;
   state.fleets = state.fleets.filter(f => f.mission || f.planetId !== p.id);
   for (const f of state.fleets) {
@@ -65,7 +67,7 @@ function impact(state, s) {
   if (p.destroyed || !p.owner || !atWar(state,s.owner,p.owner)) { tell( 'Fernangriff abgebrochen: Ziel zerstört oder Waffenstillstand.', 'warning'); return; }
   let power = w.power * technologyEffects(state, s.owner).strikePower;
   if (w.starKiller) {
-    const worlds = state.planets.filter(q => q.system === p.system && !q.destroyed);
+    const worlds = locationsOf(state).filter(q => q.system === p.system && !q.destroyed);
     if (worlds.some(q => q.owner && (q.owner === s.owner || !atWar(state,s.owner,q.owner)))) { tell( 'Stellarer Angriff wegen veränderter Systemkontrolle abgebrochen.', 'warning'); return; }
     const barrier = worlds.reduce((n, q) => n + baseStats(state, q).starBarrier, 0);
     for (const q of worlds) power = absorbShield(q, power);

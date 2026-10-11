@@ -1,3 +1,4 @@
+import { systemsOf, locationsOf } from './world.js';
 import { FACTIONS, SYSTEMS } from './data.js';
 import { INTERESTS, pairKey } from './realm-relations.js';
 import { NEWS_KINDS } from './space-news.js';
@@ -20,7 +21,7 @@ export function validateGalaxy(state,planetIds) {
   }
   const seen=new Set();
   for(const n of g.news) {
-    if(!object(n)||!text(n.id,64)||seen.has(n.id)||!day(n.day)||!NEWS_KINDS.includes(n.kind)||!text(n.title,160)||!text(n.body,800)||typeof n.read!=='boolean'||!Array.isArray(n.actors)||n.actors.length>2||new Set(n.actors).size!==n.actors.length||n.actors.some(id=>!FACTIONS[id])||n.system!==null&&!SYSTEMS.some(s=>s.id===n.system)||n.planet!==null&&(!planetIds.has(n.planet)||state.planets.find(p=>p.id===n.planet).system!==n.system)||!Array.isArray(n.audience)||!n.audience.length||new Set(n.audience).size!==n.audience.length||n.audience.some(id=>!FACTIONS[id]||n.system&&!state.intelligence[id].chartedSystems.includes(n.system)))fail();
+    if(!object(n)||!text(n.id,64)||seen.has(n.id)||!day(n.day)||!NEWS_KINDS.includes(n.kind)||!text(n.title,160)||!text(n.body,800)||typeof n.read!=='boolean'||!Array.isArray(n.actors)||n.actors.length>2||new Set(n.actors).size!==n.actors.length||n.actors.some(id=>!FACTIONS[id])||n.system!==null&&!systemsOf(state).some(s=>s.id===n.system)||n.planet!==null&&(!planetIds.has(n.planet)||locationsOf(state).find(p=>p.id===n.planet).system!==n.system)||!Array.isArray(n.audience)||!n.audience.length||new Set(n.audience).size!==n.audience.length||n.audience.some(id=>!FACTIONS[id]||n.system&&!state.intelligence[id].chartedSystems.includes(n.system)))fail();
     seen.add(n.id);
   }
   if(g.defeat!==null&&(!object(g.defeat)||!day(g.defeat.day)||!FACTIONS[g.defeat.conqueror]||g.defeat.conqueror==='player'||state.planets.some(p=>p.owner==='player')))fail();
