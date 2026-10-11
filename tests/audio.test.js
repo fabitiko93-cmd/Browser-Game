@@ -114,3 +114,51 @@ test('unsupported audio, rendering failures and malformed preferences cannot bre
  const {audio,jobs}=setup({renderScore:async()=>{throw Error('No renderer');}});await audio.unlock();await audio.scoreTask;
  assert.equal(audio.scoreSource,null);assert.equal(jobs.size,1);assert.ok(audio.nodes.size>0);
 });
+test('iPhone playback category is selected before creating or resuming the audio context',async()=>{
+ const session={type:'auto'};class PhoneContext extends Context{
+  constructor(){assert.equal(session.type,'playback');super();}
+  resume(){assert.equal(session.type,'playback');return super.resume();}
+ }
+ const {audio}=setup({Context:PhoneContext,session});assert.equal(session.type,'auto');
+ assert.equal(await audio.unlock(),true);assert.equal(session.type,'playback');
+ audio.setHidden(true);session.type='auto';audio.setHidden(false);assert.equal(await audio.recover(),true);
+ assert.equal(session.type,'playback');
+});
+test('a foreground gesture repairs a stale background flag without relying on pageshow',async()=>{
+ const document={hidden:false};const {audio,jobs}=setup({document});await audio.unlock();
+ document.hidden=true;audio.setHidden(true);assert.equal(jobs.size,0);
+ document.hidden=false;assert.equal(await audio.unlock(),true);assert.equal(audio.hidden,false);assert.equal(jobs.size,1);
+ document.hidden=true;assert.equal(await audio.unlock(),false);assert.equal(audio.hidden,true);
+});
+test('an interrupted context can recover even when an older resume promise never settles',async()=>{
+ class HangingContext extends Context{resume(){this.transition('running');return this.hang?new Promise(()=>{}):Promise.resolve();}}
+ const {audio}=setup({Context:HangingContext});await audio.unlock();audio.ctx.hang=true;
+ audio.ctx.transition('interrupted');void audio.recover();const stuck=audio.resumeTask;assert.ok(stuck);
+ audio.ctx.transition('interrupted');audio.ctx.hang=false;
+ const recovery=audio.recover();assert.notEqual(recovery,stuck);assert.equal(await recovery,true);
+});
+test('a partial initialization failure is discarded so the next gesture can retry',async()=>{
+ let attempts=0;const contexts=[];class FragileContext extends Context{
+  constructor(){super();contexts.push(this);}
+  createConvolver(){if(!attempts++)throw Error('Audio output unavailable');return super.createConvolver();}
+  close(){this.transition('closed');return Promise.resolve();}
+ }
+ const {audio,jobs}=setup({Context:FragileContext});assert.equal(await audio.unlock(),false);
+ assert.equal(contexts[0].state,'closed');assert.equal(audio.ctx,null);assert.equal(jobs.size,0);
+ assert.equal(await audio.unlock(),true);assert.equal(contexts.length,2);assert.equal(jobs.size,1);
+});
+test('manual audio restart replaces the output and preserves volumes and music position',async()=>{
+ class RestartContext extends Context{close(){this.transition('closed');return Promise.resolve();}}
+ const {audio,jobs}=setup({Context:RestartContext,renderScore:async()=>({duration:120})});
+ await audio.unlock();await audio.scoreTask;audio.update('musicVolume',.2);audio.ctx.currentTime=37;
+ const old=audio.ctx;assert.equal(await audio.restart(),true);assert.notEqual(audio.ctx,old);assert.equal(old.state,'closed');
+ assert.equal(audio.scoreSource.started[0][1],37);assert.equal(audio.settings.musicVolume,.2);assert.equal(jobs.size,1);
+});
+test('browsers rejecting the optional playback category still play audio and expose mute state',async()=>{
+ const changes=[],session={get type(){return 'auto';},set type(value){throw Error('Unsupported category');}};
+ const {audio,jobs}=setup({session,onChange:state=>changes.push(state)});assert.equal(audio.status,'waiting');
+ assert.equal(await audio.unlock(),true);assert.equal(audio.status,'ready');assert.ok(changes.includes('ready'));
+ audio.update('musicVolume',0);audio.update('effectsVolume',0);assert.equal(audio.status,'muted');
+ assert.equal(await audio.restart(),true);assert.equal(audio.settings.musicVolume,0);assert.equal(audio.settings.effectsVolume,0);assert.equal(audio.status,'muted');
+ audio.update('music',false);audio.update('effects',false);assert.equal(await audio.restart(),false);assert.equal(jobs.size,0);assert.equal(audio.ctx,null);
+});

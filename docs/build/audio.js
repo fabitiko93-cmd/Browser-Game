@@ -10,32 +10,54 @@ export function audioPreferences(value) {
 }
 const KEY='orbit3077-audio';
 export class SpaceAudio {
- constructor({storage=globalThis.localStorage,Context=globalThis.AudioContext??globalThis.webkitAudioContext,timer=globalThis.setInterval,clear=globalThis.clearInterval,renderScore=renderSpaceScore}={}) {
+ constructor({storage=globalThis.localStorage,Context=globalThis.AudioContext??globalThis.webkitAudioContext,timer=globalThis.setInterval,clear=globalThis.clearInterval,renderScore=renderSpaceScore,session=globalThis.navigator?.audioSession,document=globalThis.document,onChange=()=>{}}={}) {
   this.storage=storage;this.Context=Context;this.timer=timer;this.clear=clear;this.renderScore=renderScore;
+  this.session=session;this.document=document;this.onChange=onChange;
   this.ctx=null;this.interval=null;this.nodes=new Set();this.effects=new Set();this.hidden=false;this.unlocked=false;this.activated=false;
   this.scoreBuffer=null;this.scoreTask=null;this.scoreSource=null;this.scoreOffset=0;this.scoreStart=0;this.resumeTask=null;
   this.nextPad=0;this.nextArp=0;this.bar=0;this.arp=0;this.lastCue=-100;this.cueTimes=new Map();
   try{this.settings=audioPreferences(JSON.parse(storage?.getItem(KEY)??'null'));}catch{this.settings={...AUDIO_DEFAULTS};}
  }
- unlock() {this.activated=true;return this.resume(true);}
+ get status() {
+  if(!this.Context)return 'unsupported';
+  if(!(this.settings.music&&this.settings.musicVolume>0)&&!(this.settings.effects&&this.settings.effectsVolume>0))return 'muted';
+  if(this.hidden)return 'background';
+  if(!this.activated)return 'waiting';
+  return this.unlocked&&this.ctx?.state==='running'?'ready':'blocked';
+ }
+ changed() {this.onChange(this.status);}
+ unlock() {
+  this.activated=true;
+  // A real foreground gesture is authoritative even if Safari missed a visibility event.
+  if(this.document)this.hidden=Boolean(this.document.hidden);
+  return this.resume(true);
+ }
+ restart() {
+  const c=this.ctx;this.stopMusic();this.stopEffects();this.ctx=null;this.resumeTask=null;this.unlocked=false;
+  try{Promise.resolve(c?.close()).catch(()=>{});}catch{}
+  return this.unlock();
+ }
  recover() {return this.activated?this.resume():Promise.resolve(false);}
  resume(gesture=false) {
-  if(!this.Context||this.hidden||(!this.settings.music&&!this.settings.effects))return Promise.resolve(false);
+  if(!this.Context||this.hidden||(!this.settings.music&&!this.settings.effects)){this.changed();return Promise.resolve(false);}
   if(!gesture&&this.resumeTask)return this.resumeTask;
   try{
+   // iPhone's default Web Audio category obeys the silent switch; this game also plays music.
+   try{if(this.session&&this.session.type!=='playback')this.session.type='playback';}catch{}
    if(!this.ctx||this.ctx.state==='closed'){this.stopMusic();this.stopEffects();this.initialize();}
    const c=this.ctx;
-   if(c.state==='running'){this.unlocked=true;this.sync();return Promise.resolve(true);}
+   if(c.state==='running'){this.unlocked=true;this.sync();this.changed();return Promise.resolve(true);}
    // Call resume within the gesture, before awaiting score rendering or any other work.
    const resumed=c.resume(),task=Promise.resolve(resumed).then(()=>{
     if(this.ctx!==c||this.hidden)return false;this.unlocked=c.state==='running';
-    if(this.unlocked)this.sync();return this.unlocked;
-   }).catch(()=>false).finally(()=>{if(this.resumeTask===task)this.resumeTask=null;});
+    if(this.unlocked)this.sync();this.changed();return this.unlocked;
+   }).catch(()=>{this.changed();return false;}).finally(()=>{if(this.resumeTask===task)this.resumeTask=null;});
    this.resumeTask=task;return task;
-  }catch{return Promise.resolve(false);}
+  }catch{this.changed();return Promise.resolve(false);}
  }
  initialize() {
   this.ctx=new this.Context();const c=this.ctx;this.lastCue=-100;this.cueTimes.clear();
+  try{
   this.music=c.createGain();this.music.gain.value=0;this.sfx=c.createGain();this.sfx.gain.value=0;this.master=c.createDynamicsCompressor();
   this.liveMusic=c.createGain();this.liveMusic.connect(this.music);this.scoreGain=c.createGain();this.scoreGain.connect(this.music);
   this.master.threshold.value=-16;this.master.knee.value=18;this.master.ratio.value=3;this.master.attack.value=.01;this.master.release.value=.3;
@@ -44,8 +66,15 @@ export class SpaceAudio {
   this.sfx.connect(this.reverb);this.noise=noiseBuffer(c);
   c.onstatechange=()=>{
    if(this.ctx!==c)return;this.unlocked=this.activated&&!this.hidden&&c.state==='running';
+   if(c.state!=='running')this.resumeTask=null;
    if(this.unlocked)this.sync();else if(c.state==='closed'){this.resumeTask=null;this.stopMusic();this.stopEffects();}
+   this.changed();
   };
+  }catch(error){
+   this.ctx=null;this.unlocked=false;
+   try{Promise.resolve(c.close()).catch(()=>{});}catch{}
+   throw error;
+  }
  }
  prepareScore() {
   if(this.scoreTask)return;
@@ -58,6 +87,7 @@ export class SpaceAudio {
   this.settings=audioPreferences({...this.settings,[key]:value});
   try{this.storage?.setItem(KEY,JSON.stringify(this.settings));}catch{}
   this.sync();
+  this.changed();
  }
  sync() {
   if(!this.ctx)return;const c=this.ctx,now=c.currentTime;
@@ -137,8 +167,12 @@ export class SpaceAudio {
    this.resumeTask=null;this.stopMusic();this.stopEffects();this.unlocked=false;const c=this.ctx;
    try{Promise.resolve(c?.suspend()).then(()=>{if(c===this.ctx&&!this.hidden)void this.recover();}).catch(()=>{});}catch{}
   }else void this.recover();
+  this.changed();
  }
 }
-export function audioPanel(settings) {
- return `<div class="section-title">Klangraum</div><p class="lede">„Transit 3077“ · Space-Ambient mit Synth-Flächen, Melodien und sanften Rhythmen. Läuft auch bei pausiertem Spiel und setzt nach Appwechseln fort.</p>${[['music','Hintergrundmusik','musicVolume'],['effects','Aktionssounds','effectsVolume']].map(([id,label,volume])=>`<label class="check-label"><input type="checkbox" data-field="audio-${id}" ${settings[id]?'checked':''}>${label}</label><div class="range-row"><input type="range" min="0" max="100" value="${Math.round(settings[volume]*100)}" data-field="audio-${volume}" aria-label="${label}: Lautstärke"><output>${Math.round(settings[volume]*100)} %</output></div>`).join('')}<button class="button secondary" data-action="audio-test">Aktionssound testen</button>`;
+export function audioStatusText(status='waiting') {
+ return {ready:'Ton bereit. Lautstärke über die Medienlautstärke deines Geräts regeln.',waiting:'Ton startet nach dem ersten Antippen.',blocked:'Ton unterbrochen. Tippe auf „Ton neu starten“.',background:'Ton pausiert im Hintergrund.',muted:'Ton in den Spieleinstellungen ausgeschaltet oder auf 0 %.',unsupported:'Dieser Browser unterstützt die Audiowiedergabe nicht.'}[status]??'Ton startet nach dem ersten Antippen.';
+}
+export function audioPanel(settings,status) {
+ return `<div class="section-title">Klangraum</div><p class="lede">„Transit 3077“ · Space-Ambient mit Synth-Flächen, Melodien und sanften Rhythmen. Läuft auch bei pausiertem Spiel und setzt nach Appwechseln fort.</p>${[['music','Hintergrundmusik','musicVolume'],['effects','Aktionssounds','effectsVolume']].map(([id,label,volume])=>`<label class="check-label"><input type="checkbox" data-field="audio-${id}" ${settings[id]?'checked':''}>${label}</label><div class="range-row"><input type="range" min="0" max="100" value="${Math.round(settings[volume]*100)}" data-field="audio-${volume}" aria-label="${label}: Lautstärke"><output>${Math.round(settings[volume]*100)} %</output></div>`).join('')}<p class="note" data-audio-status role="status">${audioStatusText(status)}</p><div class="button-row"><button class="button secondary" data-action="audio-test">Aktionssound testen</button><button class="button secondary" data-action="audio-restart">Ton neu starten</button></div>`;
 }

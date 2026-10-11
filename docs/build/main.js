@@ -14,7 +14,7 @@ import { defaultCircuit, circuitPlanets } from './circuit-ui.js';
 import { createContract, cancelContract } from './trade.js';
 import { marketSelection } from './market-ui.js';
 import { setProductionPriority } from './infrastructure.js';
-import { SpaceAudio } from './audio.js';
+import { SpaceAudio, audioStatusText } from './audio.js';
 import { routeSelection } from './trade-ui.js';
 import { launchStrike, cancelStrike } from './strategic.js';
 import { STRATEGIC_WEAPONS } from './military-data.js';
@@ -35,7 +35,9 @@ import { renderHeader, renderResources, renderMapHead, renderMapFoot, renderNavi
 
 let state, storageError = false;
 try { state = loadGame() ?? createGame(); } catch (e) { state = createGame(); storageError = true; }
-const audio = new SpaceAudio();
+const audio = new SpaceAudio({onChange:status=>{
+  const el=document.querySelector('[data-audio-status]');if(el)el.textContent=audioStatusText(status);
+}});
 const ui = {
   audioSettings: audio.settings, resourcePage: 0, buildCategory: null,routeMode:'simple',routeDraft:null,tradeReserve:40,contractAmount:40,
   view: 'planet', planetId: (homePlanet(state)??state.planets[0]).id, systemId: (homePlanet(state)??state.planets[0]).system, panel: null, expanded: false, speed: 0, lastSpeed: 1,
@@ -103,6 +105,7 @@ function render() {
     if (['build', 'build-detail', 'building', 'economy', 'fleet'].includes(ui.panel)) ensureOwned();
   }
   ui.audioSettings = audio.settings;
+  ui.audioStatus = audio.status;
   ui.projection = forecastDay(state);
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
@@ -142,8 +145,7 @@ function render() {
 function panel(name) { ui.panel = name; ui.expanded = false; ui.buildType = null; ui.buildTile = null; ui.demolishConfirm = null; ui.warConfirm = null; ui.resetConfirm = false; }
 function ensureOwned() { if (currentPlanet().owner !== 'player') { ui.planetId = ownedPlanets(state)[0]?.id ?? 'nereid'; ui.systemId = currentPlanet().system; } }
 function selectedTarget(field) { const el = document.querySelector(`[data-field="${field}"]`); return el?.value ?? ui[field]; }
-document.addEventListener('pointerdown',()=>{void audio.unlock();},{passive:true});
-document.addEventListener('click',()=>{void audio.unlock();},{capture:true});
+for(const event of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(event,()=>{void audio.unlock();},{capture:true,passive:true});
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
   const action = el.dataset.action, p = currentPlanet();
@@ -166,6 +168,7 @@ document.addEventListener('click', e => {
   else if (action === 'message-send') return act(sendOffer(state,el.dataset.faction,el.dataset.type),'Angebot übermittelt.');
   else if (action === 'communication-manage') {panel('building');ui.selectedBuilding=el.dataset.id;}
   else if (action === 'audio-test') { void audio.unlock().then(()=>audio.play('research')); }
+  else if (action === 'audio-restart') { void audio.restart().then(()=>audio.play('research')); }
   else if (action === 'build-category') { ui.buildCategory = el.dataset.category; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'build-categories') { ui.buildCategory = null; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'trade-open') { ensureOwned(); panel('economy'); ui.economyMode='routes'; ui.routeTarget=state.planets.find(q=>q.owner===el.dataset.faction)?.id; ui.expanded=true; }

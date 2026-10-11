@@ -27,6 +27,12 @@ Arbeitstitel: ORBIT 3077.
 - Nachrichten geben keine internen Vorräte, Bevölkerungszahlen, geheimen Anlagen oder Flottenstärken preis. Öffentliche neue Hafenadressen ergänzen nur Bewohnung und Zugehörigkeit. Militärische Planung nutzt eigene Wissensarchive; erst die tatsächliche Gefechtsauflösung verwendet die reale Verteidigung.
 - Verlust der letzten eigenen Welt beendet die Simulation mit einem gespeicherten Niederlagenzustand; Sichern, Laden und Neustart bleiben verfügbar. Speicherformat v9 übernimmt v1–v8 mit bestehenden Kolonien, Waren, Archiven und laufenden Aufträgen. Kein Neustart für diesen Patch erforderlich. Oberfläche, Gebäudegrafiken und Musik bleiben im bisherigen Stil.
 
+## Audiofreigabe auf dem iPhone · 0.10.1
+
+- Die Wiedergabe verwendet die Audio-Session-Kategorie `playback`, soweit vom Browser unterstützt. Dadurch hängt Musik auf dem iPhone nicht mehr von der bisherigen Ambient-Einstellung und dem Lautlosmodus ab.
+- Fingerheben, Touchende und Tastaturbedienung geben den Ton ebenfalls frei. Ein Tipp repariert einen veralteten Hintergrundstatus; unterbrochene Wiederaufnahmeversuche und fehlgeschlagene Initialisierungen blockieren den nächsten Versuch nicht.
+- Die Toneinstellungen zeigen den Wiedergabestatus und bieten „Ton neu starten“. Lautstärken, Stummschaltungen und Musikposition bleiben dabei erhalten.
+
 ## Musik & Aktionssounds · 0.8.1
 
 - Neuer eigener Space-Soundtrack „Transit 3077“: zwei Minuten mit Synth-Flächen, Melodien, Arpeggios, ruhigen und rhythmischen Passagen. Nahtloser Audioloop unabhängig von Spieltempo, Pause und UI-Timern; durchgehend hörbare Klangflächen auch beim anfänglichen Live-Score.
