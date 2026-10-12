@@ -1,3 +1,4 @@
+import { moneyText, moneyMarkup } from './money.js';
 import { setTradeBoard } from './trade-board.js';
 import { createBloc, leaveBloc, blocOf, orderBlocSupply } from './power.js';
 import { orderRelic } from './ruins.js';
@@ -27,7 +28,7 @@ import { placeBuilding, demolish } from './economy.js';
 import { changeGovernment, diplomaticAction } from './politics.js';
 import { buildShip, orderFleet } from './fleets.js';
 import { startResearch } from './research.js';
-import { stepDay, resolveEvent } from './simulation.js';
+import { stepDay, advanceTime, resolveEvent } from './simulation.js';
 import { loadGame, saveGame, parseImport, exportGame } from './save.js';
 import { MapRenderer } from './map.js';
 import { icon } from './icons.js';
@@ -83,7 +84,7 @@ const surfaceLayout = new ResizeObserver(measureSurfaceViewport);
 for (const id of ['map', 'map-head', 'map-foot', 'sheet', 'recenter']) surfaceLayout.observe($(id));
 function currentPlanet() { return getPlanet(state, ui.planetId); }
 function toast(message, error = false) {
-  const el = $('toast'); el.textContent = message; el.classList.toggle('error', error); el.classList.add('visible');
+  const el = $('toast'); el.textContent = moneyText(message); el.classList.toggle('error', error); el.classList.add('visible');
   clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove('visible'), 3800);
 }
 function persist() {
@@ -115,7 +116,7 @@ function render() {
   $('resources').innerHTML = renderResources(state, ui);
   const shown=hudPlanet(state,ui),pages=resourcePages(state,shown);ui.resourcePage%=pages.length;$('resources').setAttribute('aria-label',`Vorräte von ${shown.name}. ${pages[ui.resourcePage].name}: antippen für ${pages[(ui.resourcePage+1)%pages.length].name}`);
   $('map-head').innerHTML = renderMapHead(state, ui);
-  $('map-foot').innerHTML = renderMapFoot(state, ui);
+  $('map-foot').innerHTML = moneyMarkup(renderMapFoot(state, ui));
   const compact = compactSurface(ui);
   $('map-head').hidden = compact;
   $('map-foot').classList.toggle('site-mode', compact);
@@ -150,6 +151,7 @@ function ensureOwned() { if (currentPlanet().owner !== 'player') { ui.planetId =
 function selectedTarget(field) { const el = document.querySelector(`[data-field="${field}"]`); return el?.value ?? ui[field]; }
 for(const event of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(event,()=>{void audio.unlock();},{capture:true,passive:true});
 document.addEventListener('click', e => {
+  syncClock(performance.now());
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
@@ -176,8 +178,8 @@ document.addEventListener('click', e => {
   else if (action === 'build-categories') { ui.buildCategory = null; $('sheet').querySelector('.sheet-content').scrollTop = 0; }
   else if (action === 'trade-open') { ensureOwned(); panel('economy'); ui.economyMode='routes'; ui.routeTarget=state.planets.find(q=>q.owner===el.dataset.faction)?.id; ui.expanded=true; }
   else if (action === 'shipyard-open') { ensureOwned(); panel('fleet'); ui.fleetMode='shipyard'; }
-  else if (action === 'speed-toggle') { if (ui.speed) { ui.lastSpeed = ui.speed; ui.speed = 0; } else ui.speed = ui.lastSpeed; accumulator = 0; }
-  else if (action === 'speed') { ui.lastSpeed = ({ 1: 2, 2: 4, 4: 1 })[ui.speed || ui.lastSpeed]; if (ui.speed) ui.speed = ui.lastSpeed; accumulator = 0; }
+  else if (action === 'speed-toggle') { if (ui.speed) { ui.lastSpeed = ui.speed; ui.speed = 0; } else ui.speed = ui.lastSpeed; }
+  else if (action === 'speed') { ui.lastSpeed = ({ 1: 2, 2: 4, 4: 1 })[ui.speed || ui.lastSpeed]; if (ui.speed) ui.speed = ui.lastSpeed; }
   else if (action === 'nav') { if (['build', 'economy'].includes(el.dataset.panel) || el.dataset.panel === 'fleet' && ['shipyard', 'bases', 'arsenal'].includes(ui.fleetMode)) ensureOwned(); panel(el.dataset.panel === 'map' || ui.panel === el.dataset.panel ? null : el.dataset.panel); if (ui.panel === 'build') ui.view = 'planet'; }
   else if (action === 'close') { panel(null); }
   else if (action === 'expand') ui.expanded = !ui.expanded;
@@ -293,6 +295,8 @@ document.addEventListener('change', async e => {
   else if (field === 'repeat') ui.repeat = e.target.checked;
   else if (field === 'empireName') { state.player.name = e.target.value.trim().slice(0, 32) || 'Nereid-Union'; persist(); }
   else ui[field] = e.target.value;
+  // Replacing the form during blur would remove the button being tapped on iOS.
+  if(e.target.type==='number'&&(field.startsWith('board')||field.startsWith('circuit')))return;
   render();
 });
 document.addEventListener('input', e => {
@@ -301,18 +305,23 @@ document.addEventListener('input', e => {
   if (e.target.dataset.field === 'empireName') state.player.name = e.target.value.trim().slice(0, 32) || 'Nereid-Union';
 });
 document.addEventListener('keydown', e=>{if(e.target.id==='resources'&&['Enter',' '].includes(e.key)){e.preventDefault();e.target.click();}});
-document.addEventListener('visibilitychange', () => { audio.setHidden(document.hidden); if (document.hidden) { ui.speed = 0; accumulator = 0; persist(); render(); } });
+document.addEventListener('visibilitychange', () => { syncClock(performance.now(),{allowHidden:document.hidden}); audio.setHidden(document.hidden); if (document.hidden) { ui.speed = 0; persist(); render(); } });
 window.addEventListener('pageshow',()=>audio.setHidden(document.hidden));
 window.addEventListener('focus',()=>{if(!document.hidden)void audio.recover();});
-window.addEventListener('pagehide', ()=>{audio.setHidden(true);persist();});
-let previousTime = performance.now(), accumulator = 0;
-function frame(now) {
-  const delta = Math.min(500, now - previousTime); previousTime = now;
-  if (state.started && !state.galaxy.defeat && !(state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued) && ui.speed && !document.hidden) {
-    accumulator += delta * ui.speed;
-    if (accumulator >= 3000) { accumulator -= 3000; const previous=new Set(state.logs); stepDay(state);const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render(); }
+window.addEventListener('pagehide', ()=>{syncClock(performance.now(),{allowHidden:true});ui.speed=0;audio.setHidden(true);persist();});
+let previousTime = performance.now(), lastResearchPaint = 0;
+function syncClock(now,{allowHidden=false}={}) {
+  const delta = Math.max(0,Math.min(500,now-previousTime)); previousTime=now;
+  if(state.started&&!state.galaxy.defeat&&!(state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued)&&ui.speed&&(!document.hidden||allowHidden)){
+    const day=state.day,previous=new Set(state.logs);advanceTime(state,delta*ui.speed/3000);
+    const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);
+    if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);
+    if(state.day!==day||added.length){if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render();}
+    else if(ui.panel==='economy'&&ui.economyMode==='research'&&state.research&&now-lastResearchPaint>=500){lastResearchPaint=now;render();}
   }
-  map.render(now); requestAnimationFrame(frame);
+}
+function frame(now) {
+  syncClock(now);map.render(now);requestAnimationFrame(frame);
 }
 render(); requestAnimationFrame(frame);
 if (storageError) toast('Gespeicherter Fortschritt konnte nicht geladen werden. Ein neuer Spielstand ist bereit.', true);

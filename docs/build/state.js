@@ -32,7 +32,7 @@ export function createGame(options = {}) {
   for (const p of planets.filter(p => p.startingWorld)) prepareStart(p);
   const home = planets.find(p => p.owner === 'player');
   const state = {
-    factions:initialFactions(), contracts:[], tradeLedger:[], effects: [], eventSchedule: initialEventSchedule(0), strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, nextId: 1, credits: 800, science: 0,
+    factions:initialFactions(), contracts:[], tradeLedger:[], effects: [], eventSchedule: initialEventSchedule(0), strikes: [], destroyedSystems: [], milestones: [], governance: initialGovernance(), surveys: [], version: SAVE_VERSION, started: false, day: 0, dayProgress: 0, nextId: 1, credits: 800, science: 0,
     player: { name: FACTIONS.player.name, ideology: 'democracy', tax: .16, stability: 75, term: 60, rulingSupport: 55 },
     planets, world: generated?.world ?? legacyWorld(), tech: [], research: null,
     relations: { corona:{...initialRelationExtras(),score:10,war:false,trade:false},collective:{...initialRelationExtras(),score:5,war:false,trade:false},vanguard:{...initialRelationExtras(),score:-15,war:false,trade:false},ilyri: { ...initialRelationExtras(), score: 25, war: false, trade: false }, khepri: { ...initialRelationExtras(), score: -10, war: false, trade: false }, aster: { ...initialRelationExtras(), score: -55, war: false, trade: false } },

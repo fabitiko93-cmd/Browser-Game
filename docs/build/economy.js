@@ -1,4 +1,4 @@
-import { realmAtWar } from './realm-relations.js';
+import { ordinaryDemand } from './needs.js';
 import { financialCondition, essentialBuilding, commerceIncome } from './finance.js';
 import { geologicalFactor, placementIssue } from './surface.js';
 import { serviceCount, buildingBlock, orderedBuildings } from './infrastructure.js';
@@ -97,9 +97,10 @@ export function simulatePlanet(state, planet, options = {}) {
    demandByResource[key]+=amount;const delivered=Math.min(amount,planet.stock[key]);planet.stock[key]-=delivered;
    living+=delivered>=amount?2:-4;if(delivered<amount)missingResources.add(key);
   }
-  if(!owned){
-   if(ownerTech.includes('computing')){const amount=planet.population*.003;demandByResource.electronics+=amount;planet.stock.electronics=Math.max(0,planet.stock.electronics-amount);if(planet.stock.electronics<amount)missingResources.add('electronics');}
-   for(const [key,amount] of [['energy',planet.population*.015],['alloy',planet.population*.003],['weapons',planet.population*.003*(realmAtWar(state,planet.owner)?3:1)]]){demandByResource[key]+=amount;planet.stock[key]=Math.max(0,planet.stock[key]-amount);}
+  for(const [key,amount]of Object.entries(ordinaryDemand(state,planet))){
+    demandByResource[key]+=amount;
+    if(planet.stock[key]+1e-9<amount)missingResources.add(key);
+    planet.stock[key]=Math.max(0,planet.stock[key]-amount);
   }
   const crowded = planet.population > housing(state, planet);
   const tax = owned ? state.player.tax : .16;

@@ -12,6 +12,7 @@ import { quoteSale } from '../src/trade.js';
 import { decide, policyEffects } from '../src/governance.js';
 import { parseImport, exportGame } from '../src/save.js';
 import { renderResources, renderSheet, signed } from '../src/ui.js';
+import { moneyAmount } from '../src/money.js';
 const home = s => getPlanet(s, 'nereid');
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
 const ship = (s, type = 'cruiser') => { const f = { id: type, type, name: type, owner: 'player', planetId: 'nereid', hp: 100, supply: 100, mission: null, route: null }; s.fleets.push(f); return f; };
@@ -43,7 +44,7 @@ test('HUD and economy rates predict the same next-day consumption, including mai
   const forecast = forecastDay(s), before = {...home(s).stock}, credit = s.credits;
   const ui = {planetId:'nereid',projection:forecast,panel:'economy',economyMode:'production'};
   const hud = renderResources(s, ui), panel = renderSheet(s, ui);
-  assert.ok(hud.includes(`${signed(forecast.budget.net)} ¢`)); assert.ok(panel.includes('Reichshaushalt / Tag'));
+  assert.ok(hud.includes(moneyAmount(forecast.budget.net,{signed:true,compact:true}))); assert.ok(panel.includes('Reichshaushalt / Tag'));
   stepDay(s); close(s.credits - credit, forecast.budget.net);
   for (const resource of Object.keys(before)) close(home(s).stock[resource] - before[resource], forecast.planets[0].net[resource]);
 });
@@ -117,7 +118,7 @@ test('technocracy has visible and actual science, development and energy-efficie
 test('v2 saves retain completed technologies and pending research when adding the new prerequisite roots', () => {
   const old = createGame({ legacy: true }); old.version = 2; old.tech = ['fusion','lasers','propulsion','habitats'];
   old.research = null; old.lastDayReport = null;
-  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 10);
+  const loaded = parseImport(exportGame(old)); assert.equal(loaded.version, 11);
   for (const id of [...old.tech,'grid','targeting','engineTuning']) assert.ok(loaded.tech.includes(id));
   assert.deepEqual(loaded.planets, old.planets); assert.deepEqual(loaded.fleets, old.fleets);
   old.tech = []; old.research = {id:'fusion',remaining:3,total:6};

@@ -1,7 +1,6 @@
 import { RESOURCE_KEYS } from './data.js';
 import { getPlanet } from './state.js';
-import { marketTarget, marketMidpoint, recordTrade } from './trade.js';
-import { policyEffects } from './governance.js';
+import { marketTarget, marketMidpoint, recordTrade, exportFactor, diminishingTerms } from './trade.js';
 
 export const emptyTradeBoard = (day=0, exports=false) => ({exports, budget:0, escrow:0, periodStart:day, orders:{}});
 export function setTradeBoard(state,id,key,target,maxPrice,budget,exports) {
@@ -32,7 +31,7 @@ export function playerAsk(state,p,key) {
  if(p.owner!=='player'||p.destroyed||!p.tradeBoard?.exports)return {amount:0,price:0};
  const floor={alloy:120,crystal:40,optics:40,weapons:40,electronics:30,medicine:30,goods:30,fuel:30}[key]??0;
  const reserve=Math.max(floor,marketTarget(state,p,key,30),p.tradeBoard.orders[key]?.target??0);
- const price=marketMidpoint(state,p,key)*Math.max(.7,Math.min(1.5,policyEffects(state).trade));
+ const price=marketMidpoint(state,p,key)*Math.max(.7,diminishingTerms(exportFactor(state),1.5,1.65,.15));
  return {price,amount:Math.max(0,p.stock[key]-reserve)};
 }
 export function receivePublicOrder(state,p,key,quantity,seller) {

@@ -11,7 +11,7 @@ import { renderSheet } from '../src/ui.js';
 import { TECHNOLOGIES, BUILDINGS } from '../src/data.js';
 const home=s=>getPlanet(s,'nereid');
 const add=(p,type,x=7,y=7)=>{const b={id:`${p.id}-${type}`,type,x,y,remaining:0,enabled:true,status:'aktiv'};p.buildings.push(b);return b;};
-function ready(type='missile') {const s=createGame({ legacy: true });s.credits=100000;s.tech=['targeting','missileDoctrine','fusionWarheads','annihilator','starBreaker'];for(const k of Object.keys(home(s).stock))home(s).stock[k]=100000;s.relations.ilyri.war=true;add(home(s),type==='starbreaker'?'stellarForge':type==='worldbreaker'?'planetLance':'missileSilo');return s;}
+function ready(type='missile') {const s=createGame({ legacy: true });s.credits=type==='starbreaker'?200000:100000;s.tech=['targeting','missileDoctrine','fusionWarheads','annihilator','starBreaker'];for(const k of Object.keys(home(s).stock))home(s).stock[k]=100000;s.relations.ilyri.war=true;add(home(s),type==='starbreaker'?'stellarForge':type==='worldbreaker'?'planetLance':'missileSilo');return s;}
 function finish(s){for(let i=0;i<100&&s.strikes.length;i++)tickStrikes(s);}
 test('basenbau enforces research before booking and shields require active supplied infrastructure',()=>{
  const s=createGame({ legacy: true }),p=home(s),before=structuredClone(s);assert.ok(placeBuilding(s,p,'shield',7,7));assert.deepEqual(s,before);
@@ -48,7 +48,7 @@ test('destruction diverts cargo to surviving home and preserves a valid save',()
  const s=createGame({ legacy: true }),p=getPlanet(s,'cinder');p.owner='player';p.population=40;orderFleet(s,['starter-f'],p.id,'transport',{resource:'ore',amount:20,repeat:true});destroyPlanet(s,p);const f=s.fleets[1];assert.equal(f.route,null);assert.equal(f.mission.target,'nereid');assert.equal(f.mission.kind,'return-cargo');assert.deepEqual(validateSave(structuredClone(s)),s);
 });
 test('real v3 saves gain frontier and exploration worlds without losing existing colony or fleet progress',()=>{
- const s=createGame({ legacy: true });s.version=3;s.planets=s.planets.slice(0,7);for(const p of s.planets){delete p.shield;delete p.destroyed;}delete s.strikes;delete s.milestones;delete s.destroyedSystems;const before=structuredClone(s);const loaded=validateSave(s);assert.equal(loaded.version,10);assert.equal(loaded.planets.length,49);assert.deepEqual(loaded.fleets,before.fleets);for(const p of before.planets)assert.deepEqual(loaded.planets.find(q=>q.id===p.id),{...p,shield:0,destroyed:false});
+ const s=createGame({ legacy: true });s.version=3;s.planets=s.planets.slice(0,7);for(const p of s.planets){delete p.shield;delete p.destroyed;}delete s.strikes;delete s.milestones;delete s.destroyedSystems;const before=structuredClone(s);const loaded=validateSave(s);assert.equal(loaded.version,11);assert.equal(loaded.planets.length,49);assert.deepEqual(loaded.fleets,before.fleets);for(const p of before.planets)assert.deepEqual(loaded.planets.find(q=>q.id===p.id),{...p,shield:0,destroyed:false});
 });
 test('meilenstein rewards are paid once and recorded separately from recurring income',()=>{
  const s=createGame({ legacy: true });getPlanet(s,'cinder').owner='player';getPlanet(s,'elys').owner='player';const before=s.credits;tickGoals(s);assert.equal(s.credits-before,500);tickGoals(s);assert.equal(s.credits-before,500);assert.ok(s.milestones.includes('colonies3'));

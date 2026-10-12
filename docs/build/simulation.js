@@ -14,18 +14,18 @@ import { runDailyEconomy } from './budget.js';
 import { RESOURCE_KEYS } from './data.js';
 import { tickPolitics } from './politics.js';
 import { tickShipyards, tickFleets, tickOpponents } from './fleets.js';
-import { tickResearch } from './research.js';
+import { advanceResearch, finishResearch, nextResearchCompletion } from './research.js';
 import { tickExplorationAI } from './exploration.js';
 import { tickCommunications } from './communications.js';
 
-export function stepDay(state) {
+function completeDay(state) {
   if(state.galaxy?.defeat||state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued)return;
   state.day++;
   const before = new Map(locationsOf(state).map(p => [p.id, { ...p.stock }]));
   const openingCredits = state.credits;
   const budget = runDailyEconomy(state);
   const afterRecurring = new Map(locationsOf(state).map(p => [p.id, { ...p.stock }]));
-  tickShipyards(state); tickResearch(state); tickForeignDevelopment(state); tickFleets(state, { economyProcessed: true }); tickOpponents(state); tickPolitics(state);
+  tickShipyards(state); finishResearch(state); tickForeignDevelopment(state); tickFleets(state, { economyProcessed: true }); tickOpponents(state); tickPolitics(state);
   tickGovernance(state); tickContracts(state); tickStrikes(state); tickGoals(state); tickDiplomacy(state); tickEvents(state);
   syncRuins(state);
   tickTradeBoards(state);tickBlocs(state);tickHegemony(state);
@@ -35,3 +35,19 @@ export function stepDay(state) {
   budget.resources = Object.fromEntries(locationsOf(state).filter(p => p.owner === 'player').map(p => [p.id, Object.fromEntries(RESOURCE_KEYS.map(k => [k, { recurring: afterRecurring.get(p.id)[k] - before.get(p.id)[k], oneOff: p.stock[k] - afterRecurring.get(p.id)[k] }]))]));
   state.lastDayReport = budget;
 }
+export function advanceTime(state,days) {
+  if(!Number.isFinite(days)||days<0)throw new Error('Ungültiger Zeitfortschritt.');
+  let left=days;
+  while(left>1e-10) {
+    if(state.galaxy?.defeat||state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued)return;
+    const untilDay=1-(state.dayProgress??0);
+    const elapsed=Math.min(left,untilDay,nextResearchCompletion(state));
+    const boundary=elapsed>=untilDay-1e-10;
+    state.dayProgress=(state.dayProgress??0)+elapsed;
+    advanceResearch(state,elapsed,{deferBoundary:boundary});
+    left=Math.max(0,left-elapsed);
+    if(boundary){state.dayProgress=0;completeDay(state);}
+    else if(elapsed<=1e-10){finishResearch(state);}
+  }
+}
+export const stepDay=state=>advanceTime(state,1);

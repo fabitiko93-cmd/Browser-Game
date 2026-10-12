@@ -100,3 +100,5 @@
 .planet-title-button svg { color:var(--muted); }
 
 .management-fold>summary{min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text)}.management-fold>summary.section-title{align-items:flex-start;margin:4px 0;letter-spacing:.7px;font-size:11px}.management-fold>summary .minor{font-weight:400;font-size:10px;color:var(--muted)}.management-fold>summary:after{content:"+";align-self:flex-end;margin-top:-22px;color:var(--muted)}.management-fold[open]>summary:after{content:"−"}.management-fold[open]>summary{margin-bottom:10px}.input-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.input-pair .text-input{width:100%;min-width:0}
+
+.resource-bank>[data-resource="credits"]{flex:1.65}.resource-pill[data-resource="credits"] .resource-value{font-size:11px;white-space:nowrap}.resource-pill[data-resource="credits"] .resource-trend{font-size:9px}

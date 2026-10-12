@@ -9,6 +9,7 @@ import { SHIPS } from './data.js';
 import { FACTIONS, BUILDINGS, TECHNOLOGIES } from './data.js';
 import { initialGovernance, policyEffects, decide, decisionCost } from './governance.js';
 import { technologyEffects } from './technology.js';
+import { researchDays } from './research.js';
 import { terrainAt, uid } from './state.js';
 function foundations(ids) {
  const result=new Set();
@@ -42,12 +43,11 @@ export function tickForeignDevelopment(state) {
    const reserve=['security','expansion'].includes(doctrine)?500:300;
    if(useful&&(program==='ration'&&f.credits>100||balance>6&&investmentAllowed(state,id,decisionCost(state,program,id)+reserve)))decide(state,program,id);
   }
-  if(f.research&&--f.research.remaining<=0){f.tech.push(f.research.id);f.research=null;}
   if(!f.research){
    const available=Object.entries(TECHNOLOGIES).filter(([key,t])=>!f.tech.includes(key)&&t.cost<=f.science&&t.requires.every(q=>f.tech.includes(q))&&(!t.requiresAny||t.requiresAny.some(q=>f.tech.includes(q)))&&!(t.excludes??[]).some(q=>f.tech.includes(q)));
    const priorities=realmAtWar(state,id)||['security','expansion'].includes(doctrine)?['targeting','lasers','fortification','computing','newsNetwork','advancedDiplomacy']:['planetaryAnalysis','computing','newsNetwork','advancedDiplomacy'];
    available.sort((a,b)=>(priorities.includes(a[0])?priorities.indexOf(a[0]):20)-(priorities.includes(b[0])?priorities.indexOf(b[0]):20)||(a[0]==='planetaryAnalysis'?0:1)-(b[0]==='planetaryAnalysis'?0:1)||(a[1].branch===FACTIONS[id].research?0:1)-(b[1].branch===FACTIONS[id].research?0:1)||a[1].tier-b[1].tier||a[1].cost-b[1].cost);
-   if(available.length){const [key,t]=available[0];f.science-=t.cost;f.research={id:key,remaining:Math.max(2,Math.ceil(t.days*policyEffects(state,id).researchTime*technologyEffects(state,id).researchTime))};}
+   if(available.length){const [key,t]=available[0];f.science-=t.cost;const total=researchDays(state,key,id);f.research={id:key,remaining:total,total};}
   }
   if(f.tech.includes('politicalReforms')&&f.governance.laws.administration==='local'&&f.governance.lawReady<=state.day){const cost=Math.ceil(60*policyEffects(state,id).reformCost*technologyEffects(state,id).reformCost);if(f.credits>=cost){f.credits-=cost;f.governance.laws.administration={democracy:'federal',communism:'councils',monarchy:'crown',military:'command',technocracy:'experts',nationalSocialism:'directive',federation:'compact',corporate:'concessions',oligarchy:'houses',theocracy:'synod'}[FACTIONS[id].ideology];f.governance.lawReady=state.day+5;}}
   if(state.day<f.nextBuild)continue;f.nextBuild=state.day+45;

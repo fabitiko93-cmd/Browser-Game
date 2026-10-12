@@ -67,7 +67,8 @@ test('thermal sites multiply planetary, political and research effects without b
     const vent = planetSurface(p).tiles.find(t => t.vent), b = facility('geothermal', vent);
     const base = buildingPotential(s, p, facility('geothermal', neutralTile(p))).energy;
     const enhanced = buildingPotential(s, p, b).energy; close(enhanced / base, 1.4);
-    p.buildings = [b]; p.stock = makeStock({ food: 1000 }); simulatePlanet(s, p); close(p.net.energy, enhanced);
+    p.buildings = [b]; p.stock = makeStock({ food: 1000 }); simulatePlanet(s, p);
+    close(p.lastReport.productionByResource.energy, enhanced); close(p.net.energy, enhanced - 200 * .015);
     close(geologicalFactor(p, facility('solar', vent), 'energy'), p.solarFactor);
     close(geologicalFactor(p, facility('recycler', richTile(p)), 'ore'), p.oreFactor);
     assert.equal(siteBonus(p, 'crystal', richTile(p).x, richTile(p).y), null);

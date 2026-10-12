@@ -14,9 +14,9 @@ test('local production consumes input, population consumes food, and forecast do
   const s = createGame({ legacy: true }), snapshot = JSON.stringify(s), p = home(s), initialAlloy = p.stock.alloy;
   const projected = forecast(s, p);
   assert.equal(JSON.stringify(s), snapshot);
-  assert.equal(projected.net.alloy, 5);
+  assert.ok(Math.abs(projected.net.alloy - (5 - 180 * .003)) < 1e-8);
   days(s, 1);
-  assert.equal(p.stock.alloy, initialAlloy + 5);
+  assert.equal(p.stock.alloy, initialAlloy + projected.net.alloy);
   assert.ok(p.stock.food > 180); assert.ok(s.science > 0); assert.ok(s.credits > 800);
 });
 test('building orders are atomic and become functional only after construction', () => {
@@ -27,8 +27,10 @@ test('building orders are atomic and become functional only after construction',
   assert.equal(placeBuilding(s, p, 'laser', 7, 7), null);
   assert.equal(p.stock.alloy, 172);
   const weaponBefore = p.stock.weapons;
-  days(s, 3); assert.equal(p.stock.weapons, weaponBefore);
-  days(s, 1); assert.ok(p.stock.weapons > weaponBefore);
+  for(let i=0;i<3;i++){days(s,1);assert.equal(p.lastReport.productionByResource.weapons,0);}
+  assert.ok(p.stock.weapons < weaponBefore); // Ordinary consumption continues during construction.
+  const beforeCompletion=p.stock.weapons;
+  days(s,1); assert.ok(p.lastReport.productionByResource.weapons>0);assert.ok(p.stock.weapons>beforeCompletion);
 });
 test('raw material shortages halt production instead of creating negative resources', () => {
   const s = createGame({ legacy: true }), p = home(s);

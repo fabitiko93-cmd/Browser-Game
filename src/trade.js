@@ -5,6 +5,7 @@ import { technologyEffects } from './technology.js';
 import { BUILDINGS, RESOURCE_KEYS } from './data.js';
 import { BASE_PRICES } from './development-data.js';
 import { serviceCount } from './infrastructure.js';
+import { ordinaryDemand } from './needs.js';
 import { getPlanet, log, uid } from './state.js';
 import { portKnown } from './intelligence.js';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -14,10 +15,10 @@ export function marketDemand(state,p,key) {
  const effects=policyEffects(state,p.owner),tech=technologyEffects(state,p.owner);
  let demand=p.buildings.filter(b=>b.enabled&&b.remaining<=0).reduce((n,b)=>n+(BUILDINGS[b.type].input?.[key]??0)*(key==='energy'?tech.inputEnergy*effects.inputEnergy:1),0);
  if(key==='food')demand+=p.population*.05*effects.foodDemand*tech.foodDemand;
- if(key==='energy')demand+=p.population*.015;
- if(key==='alloy'||key==='weapons')demand+=p.population*.003;
- if(key==='goods'&&state.factions?.[p.owner]?.tech.includes('consumerCulture'))demand+=p.population*.008;
- if(key==='medicine'&&state.factions?.[p.owner]?.tech.includes('biomedicine'))demand+=p.population*.002;
+ demand+=ordinaryDemand(state,p)[key]??0;
+ const ownerTech=p.owner==='player'?state.tech:state.factions?.[p.owner]?.tech??[];
+ if(key==='goods'&&ownerTech.includes('consumerCulture'))demand+=p.population*.008;
+ if(key==='medicine'&&ownerTech.includes('biomedicine'))demand+=p.population*.002;
  return demand;
 }
 // Funded public procurement bids cover upcoming buildings and ships; they are not daily consumption.
@@ -35,11 +36,18 @@ export function marketMidpoint(state,p,key,extraStock=0) {
  const scarcity=daily>.01?clamp(.35+2.65/(1+Math.max(0,coverage)/9),.28,3):clamp(.7-(p.stock[key]+extraStock)/180,.25,.7);
  return BASE_PRICES[key]*scarcity;
 }
+export function exportFactor(state,owner='player') {
+ return policyEffects(state,owner).trade*technologyEffects(state,owner).trade*(1+.04*Math.min(1,state.planets.filter(q=>q.owner===owner).reduce((n,q)=>n+serviceCount(q,'trade'),0)));
+}
+export function diminishingTerms(raw,threshold,ceiling,bend) {
+ const overlap=Math.max(0,raw-threshold);
+ return raw<=threshold?raw:threshold+(ceiling-threshold)*overlap/(bend+overlap);
+}
 export function marketPrice(state,p,key,side='sell',extraStock=0,owner='player') {
  const midpoint=marketMidpoint(state,p,key,extraStock);
  if(side==='buy')return midpoint*1.12;
  const r=relationBetween(state,owner,p.owner),partnership=r?.cooperation&&!r.embargo?1.12:1;
- const terms=Math.min(.92,.7*policyEffects(state,owner).trade*technologyEffects(state,owner).trade*(1+.04*Math.min(1,state.planets.filter(q=>q.owner===owner).reduce((n,q)=>n+serviceCount(q,'trade'),0))))*partnership;
+ const terms=diminishingTerms(.7*exportFactor(state,owner),.868,.98,.12)*partnership;
  return midpoint*terms;
 }
 export function marketSignal(state,p,key) {

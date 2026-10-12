@@ -4,6 +4,16 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Balanceabschluss · 0.10.5
+
+- Spieler und KI verbrauchen Energie, Legierung, Waffen und nach Freischaltung Elektronik nach denselben Regeln. Krieg erhöht den tatsächlichen Waffenbedarf. Zahlungsunfähigkeit belastet die Zufriedenheit beider Seiten; HUD, Tagesabrechnung und Marktbedarf berücksichtigen den gemeinsamen Verbrauch.
+- Handelsboni liefern auch bei Kombination aus Regierung, Freihandel, Forschung und Programmen einen weiteren Ertrag. Mehrerträge nehmen ab, statt an einer frühen Preisgrenze vollständig zu verschwinden. Das gilt auch für den öffentlichen eigenen Handelsplatz; dessen Preise berücksichtigen jetzt Forschungs- und Hafenboni. Bedarf, reale Käuferbudgets, Waren und Reisezeit begrenzen den Absatz weiterhin.
+- Eine interne Recheneinheit entspricht einer Milliarde Credits. Die Startkasse zeigt **800 Mrd. ¢**, größere Kassen und Projekte **Bio. ¢**. Einnahmen, Preise, Unterhalt, Schulden, Meldungen und Baukosten verwenden dieselbe Darstellung; kleine Preise erscheinen in Mio. Credits. Preis- und Budgeteingaben sind ausdrücklich in Mrd. Credits beschriftet und buchen denselben Betrag.
+- Die Weltenlanze kostet **48 Bio. ¢**, ihre erste Ladung **22 Bio. ¢**; die Resonanzschmiede **120 Bio. ¢**, ihre erste Ladung **80 Bio. ¢**. Versorgung, Materialien und laufender Unterhalt kommen hinzu. Eine unveränderte Startwelt erreicht diese Finanzierung nach zwei bis drei Jahren auch mit den vorhandenen Steuerstufen und Regierungsformen nicht. Bereits bezahlte Bauten und Ladungen werden nicht nachberechnet.
+- Forschungszeiten werden ohne Aufrunden und ohne versteckte Zweitagesgrenze berechnet. **5 Tage −10 % = 4,5 tatsächliche Spieltage**, auch bei einem Beginn mitten im Tag. Spieler und KI nutzen dieselbe Zeitachse. Die Prognose berücksichtigt Abschlüsse vor der nächsten Tagesabrechnung. Pause, Finanzierungspausen, Hintergrund und Speichern/Laden erhalten die Restzeit und den angebrochenen Spieltag.
+- Spielstand v11 übernimmt bestehende Welten, Kassen, Bestände, Missionen und zugesagte Forschungsrestzeiten. Die neue Dauer gilt für neue Aufträge. Das vorhandene Hochformatdesign und die Audio-Wiedergabe bleiben erhalten; Zahlenfelder im Handelsformular verschlucken beim Verlassen keinen Speichern-Tipp mehr.
+- Der vereinbarte Balanceabschluss ist anhand fester Kriterien geprüft. Ergebnisse und Grenzen stehen in [BALANCE.md](BALANCE.md). Sozialmodell, Tutorial und zusätzliche Katastrophenmechaniken bleiben vorgemerkt; sie gehören nicht zu diesem Patch.
+
 ## Politische Balance und Forschungsnetze · 0.10.4
 
 - Acht politische Profile sind nach ihrer Wirkung auf reale Betriebe, Forschung, Handel und finanzierte Flotten neu gewichtet. Demokratie und Theokratie behalten ihre durch die Wachstumsbalance bereits wirksamen Schwerpunkte. Der gemeinsame politische Rechenweg gilt weiterhin für Spieler und KI.

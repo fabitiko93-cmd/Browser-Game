@@ -166,7 +166,7 @@ test('AI request cadence is bounded, cannot duplicate a negotiation, and needs a
 test('v6 migration keeps running routes and balances, adds nine worlds, and records only plausible earlier visits',()=>{
  const s=createGame({ legacy: true });diplomaticAction(s,'ilyri','trade');orderFleet(s,['starter-f'],'thalassa','transport',{resource:'ore',amount:20,repeat:true});
  const old=structuredClone(s);old.version=6;old.planets=old.planets.slice(0,28);delete old.intelligence;delete old.communications;
- const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,10);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,old.credits);
+ const loaded=parseImport(JSON.stringify(old));assert.equal(loaded.version,11);assert.equal(loaded.planets.length,49);assert.equal(loaded.credits,old.credits);
  for(const p of old.planets)assert.deepEqual(getPlanet(loaded,p.id),p);assert.deepEqual(loaded.fleets,old.fleets);
  assert.equal(knowledgeOf(loaded,getPlanet(loaded,'thalassa')).civil,undefined);
  for(let i=0;i<20;i++)stepDay(loaded);assert.deepEqual(parseImport(exportGame(loaded)),loaded);

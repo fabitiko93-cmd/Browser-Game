@@ -10,6 +10,7 @@ import { tickShields } from './strategic.js';
 import { RESOURCE_KEYS } from './data.js';
 import { simulatePlanet } from './economy.js';
 import { fleetUpkeep, maintainFleets } from './fleets.js';
+import { advanceResearch } from './research.js';
 
 // The same recurring-day calculation powers simulation, the HUD and the ledger.
 export function runDailyEconomy(state) {
@@ -40,10 +41,9 @@ export function runDailyEconomy(state) {
   for (const p of locationsOf(state)) {
     if (!p.owner) continue;
     p.net = Object.fromEntries(RESOURCE_KEYS.map(k => [k, p.stock[k] - before.get(p.id)[k]]));
-    if (p.owner === 'player') {
-      p.lastReport.bankrupt = !funded;
-      if (!funded) p.happiness = Math.max(0, p.happiness - 1);
-    }
+    const cash=p.owner==='player'?state.credits:state.factions[p.owner].credits;
+    p.lastReport.bankrupt=cash<0;
+    if(cash<0)p.happiness=Math.max(0,p.happiness-1);
   }
   if(openingCredits>=0&&state.credits<0)log(state,'Zahlungsunfähigkeit: Kosten werden als Schulden gebucht. Prüfe Wirtschaft → Finanzen.','warning');
   else if(openingCredits<0&&state.credits>=0)log(state,'Haushalt erholt: Schulden getilgt. Finanzbedingte Bau- und Forschungspausen enden.','success');
@@ -51,6 +51,7 @@ export function runDailyEconomy(state) {
 }
 export function forecastDay(state) {
   const copy = structuredClone(state);
+  advanceResearch(copy,1-(copy.dayProgress??0),{deferBoundary:true});
   copy.day++;
   const budget = runDailyEconomy(copy);
   return { budget, planets: copy.planets, anchors:copy.world.anchors };

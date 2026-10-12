@@ -1,8 +1,8 @@
 # Vorgemerkte Entwicklung
 
-Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Politische Profile und diplomatische Forschungsnetze sind mit 0.10.4 neu gewichtet. Zuerst folgt der abgegrenzte Balanceabschluss des vorhandenen Spiels. Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte Erweiterungen.
+Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt. Abnahme und gemessene Grenzen stehen in [BALANCE.md](BALANCE.md). Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte, noch nicht implementierte Erweiterungen.
 
-## Abschluss der bestehenden Balance
+## Abschluss der bestehenden Balance · erledigt mit 0.10.5
 
 ### Abnahmekriterien
 
@@ -17,7 +17,7 @@ Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Poli
 - Eine einzelne unveränderte Startkolonie soll nach zwei bis drei Spieljahren passiver Vermögensbildung kein vollständiges einsatzfähiges Vernichtungsprojekt finanzieren können. Die Prüfung berücksichtigt auch vorhandene Steuerstufen und Regierungsformen.
 - Verglichen wird das gesamte vorhandene Projekt: Startanlage, notwendige Versorgungsinfrastruktur, erste Ladung sowie laufende Kosten während Bau und Ladung. Forschung und lokale Materialverfügbarkeit bleiben eigenständige Bedingungen.
 - Vorhandene Kosten und laufende Versorgung werden so gewichtet, dass eine entwickelte industrielle Wirtschaft und finanzierbare Betriebsleistung nötig sind. Wirtschaftlicher Ausbau und tragfähiger Handel sollen den Zugang gegenüber bloßem Abwarten deutlich verbessern.
-- Die Darstellung verwendet auf dem iPhone kompakte deutsche Einheiten wie Mrd. und Bio.; Tagesraten und Kosten bleiben vergleichbar und korrekt. Interne Recheneinheiten und bestehende Spielstände können erhalten bleiben. Der genaue Darstellungsfaktor ist noch festzulegen.
+- Die Darstellung verwendet auf dem iPhone kompakte deutsche Einheiten wie Mrd. und Bio.; Tagesraten und Kosten bleiben vergleichbar und korrekt. Festgelegter Darstellungsfaktor: eine interne Recheneinheit entspricht einer Milliarde Credits. Interne Beträge und bestehende Spielstände bleiben erhalten.
 
 ### Begrenzter Umfang und Abschluss
 

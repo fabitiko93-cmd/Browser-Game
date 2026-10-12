@@ -159,7 +159,7 @@ test('communication and diplomacy views expose interests and news without a seco
 });
 test('v8 migration preserves every colony, mission, balance and observation and adds no retroactive news',()=>{
   const s=createGame({ legacy: true });s.version=8;delete s.galaxy;for(const r of Object.values(s.relations)){delete r.warSince;delete r.truceUntil;}
-  const old=structuredClone(s),loaded=parseImport(exportGame(s));assert.equal(loaded.version,10);assert.deepEqual(loaded.planets,old.planets);assert.deepEqual(loaded.fleets,old.fleets);assert.deepEqual(loaded.intelligence,old.intelligence);assert.equal(loaded.credits,old.credits);assert.equal(loaded.galaxy.news.length,0);assert.deepEqual(parseImport(exportGame(loaded)),loaded);
+  const old=structuredClone(s),loaded=parseImport(exportGame(s));assert.equal(loaded.version,11);assert.deepEqual(loaded.planets,old.planets);assert.deepEqual(loaded.fleets,old.fleets);assert.deepEqual(loaded.intelligence,old.intelligence);assert.equal(loaded.credits,old.credits);assert.equal(loaded.galaxy.news.length,0);assert.deepEqual(parseImport(exportGame(loaded)),loaded);
 });
 test('v8 in-flight AI cargo retains its previously permitted trade access without a retroactive treaty charge',()=>{
   const s=createGame({ legacy: true }),p=funded(s,'aster'),q=getPlanet(s,'thalassa');q.stock.ore=0;q.lastReport={demandByResource:{ore:10},productionByResource:{}};
