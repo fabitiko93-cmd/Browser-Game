@@ -1,6 +1,29 @@
 # Vorgemerkte Entwicklung
 
-Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Politische Profile und diplomatische Forschungsnetze sind mit 0.10.4 neu gewichtet. Sozialmodell und freiwilliger Spieleinstieg sind für den nächsten Patch vorgemerkt; weitere Entwürfe bleiben gesondert planbar.
+Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Politische Profile und diplomatische Forschungsnetze sind mit 0.10.4 neu gewichtet. Zuerst folgt der abgegrenzte Balanceabschluss des vorhandenen Spiels. Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte Erweiterungen.
+
+## Abschluss der bestehenden Balance
+
+### Abnahmekriterien
+
+1. Faire Grundlage: vergleichbare Kosten und Verbräuche werden bei Spieler und KI nach denselben Regeln abgerechnet.
+2. Tragfähige Spielweisen: wirtschaftlicher Ausbau, Handel und militärische Expansion funktionieren unter passenden Bedingungen; keine davon ist in sämtlichen Situationen überlegen.
+3. Lohnende Investitionen: Gebäude, Forschung und Verträge liefern in ihrem vorgesehenen Einsatz einen spürbaren Gegenwert.
+4. Beherrschbare Folgen: Engpässe und Fehlentscheidungen haben Konsequenzen; vorhandene Gegenmaßnahmen funktionieren. Der bewusst mögliche gemeinsame Untergang durch Vernichtung bleibt erhalten.
+5. Glaubwürdige Geldgrößen und Kostenverhältnisse: Staatskassen planetarer Reiche werden in Milliarden und Billionen Credits dargestellt. Dieselbe Einheit gilt für Einnahmen, Unterhalt, Preise, Verträge, Schulden und Kaufentscheidungen. Die reine Zahlenskalierung ersetzt keine Balance der tatsächlichen Erschwinglichkeit.
+
+### Grenze für die Finanzierung der Vernichtungswaffen
+
+- Eine einzelne unveränderte Startkolonie soll nach zwei bis drei Spieljahren passiver Vermögensbildung kein vollständiges einsatzfähiges Vernichtungsprojekt finanzieren können. Die Prüfung berücksichtigt auch vorhandene Steuerstufen und Regierungsformen.
+- Verglichen wird das gesamte vorhandene Projekt: Startanlage, notwendige Versorgungsinfrastruktur, erste Ladung sowie laufende Kosten während Bau und Ladung. Forschung und lokale Materialverfügbarkeit bleiben eigenständige Bedingungen.
+- Vorhandene Kosten und laufende Versorgung werden so gewichtet, dass eine entwickelte industrielle Wirtschaft und finanzierbare Betriebsleistung nötig sind. Wirtschaftlicher Ausbau und tragfähiger Handel sollen den Zugang gegenüber bloßem Abwarten deutlich verbessern.
+- Die Darstellung verwendet auf dem iPhone kompakte deutsche Einheiten wie Mrd. und Bio.; Tagesraten und Kosten bleiben vergleichbar und korrekt. Interne Recheneinheiten und bestehende Spielstände können erhalten bleiben. Der genaue Darstellungsfaktor ist noch festzulegen.
+
+### Begrenzter Umfang und Abschluss
+
+- Konkrete Korrekturen: ungleiche Verbrauchsabrechnung, früh ausgereizte Handelsboni sowie Credit-Darstellung und die Finanzierung bereits vorhandener Endspielwaffen.
+- Danach dieselben festgelegten Wirtschaftslagen und Spielweisen vergleichen. Weitere Werte werden in diesem Durchlauf nur bei einer belegten Schieflage geändert.
+- Nach erfüllten Kriterien wird der Stand als ausreichend ausgewogen festgehalten. Weitere Feinjustierung folgt aus konkreten Spielerfahrungen; neue Features eröffnen eine eigene Balanceprüfung.
 
 ## Lebensbedingungen statt pauschaler Steuer-Mali
 
