@@ -29,6 +29,7 @@
 | `src/communications.js` / `src/communications-ui.js` | Reichsweiter Posteingang, Vertragsangebote, Antwortfristen und Gebäudesignale |
 | `src/save.js` | Lokaler Spielstand, Validierung, Import und Export |
 | `src/map.js` | Canvas-Karten, Oberflächen, Planeten, Sterne, Auswahl, Verschieben und Zoom |
+| `src/battle-demo.js` / `src/battle-page.js` / `src/battle-scene.js` | Separate 3D-Übung, eigener Spielzeit-Takt, Befehle, Touchkamera, Modelle, Effekte und Grafikressourcen |
 | `src/surface.js` / `src/surface-ui.js` | Seedbasierte Geologie, Standortboni, Bauphasen, automatische Verbindungen und Standortvorschau |
 | `src/surface-renderer.js` / `src/surface-buildings.js` | Ursprüngliche Kachel- und Gebäudeoptik mit zwischengespeicherter Grafik und Bauplatzmarkierung |
 | `src/ui.js` / `src/icons.js` | Verwaltungsansichten und SVG-Symbole |
@@ -60,8 +61,9 @@ Ein Spieltag dauert bei 1× drei Sekunden. Geschwindigkeit: Pause, 1×, 2×, 4×
 Beim Wechsel in den Hintergrund wird pausiert; es gibt keine Offline-Zeitfortschreibung.
 Reisen und Fabriken werden jeweils im Tagesablauf verarbeitet. Flottenaufträge validieren Kosten, Zugang und Auswahl vor jeder Buchung.
 
-Der Build kopiert die eigenständigen ES-Module nach `docs/build/` und erzeugt den Service Worker aus dem vollständigen Dateiinhalt.
-Der Cache besitzt einen automatisch ermittelten Hash. Keine externe Bibliothek, Schrift oder CDN ist zum Spielen nötig.
+Der Build kopiert die eigenständigen ES-Module nach `docs/build/`, bündelt nur `battle-scene.js` mit dem fest gepinnten Three.js über esbuild und erzeugt den Service Worker aus dem vollständigen Dateiinhalt.
+Der Cache besitzt einen automatisch ermittelten Hash. Bibliothek und Modelle liegen lokal; zum Spielen werden keine externen Dienste, Schriften oder CDNs benötigt.
+3D-Probe 0.11.0: `battle.html` startet einen eigenständigen Übungszustand, ohne Spielstandmodule zu importieren. `main` synchronisiert die laufende Spielzeit, pausiert und speichert vor dem Wechsel; Rückkehr lädt das Reich wie bisher pausiert. Die Übung verwendet feste Schritte von 1/60 Spieltag und denselben 3-Sekunden-Tagesmaßstab. Fokus verändert tatsächliche Zielwahl und Schaden; Rückzug bewegt Schiffe aus Reichweite. `BattleScene` rendert acht Schiffe aus vier geprüften Quaternius-GLBs, begrenzt Auflösung und gleichzeitige Texturdekodierung und entsorgt Geometrie, Materialien, Texturen und ImageBitmaps bei Neustart. Nur die Übung importiert das Grafikbundle. `prepare-ship-assets.py` reproduziert GLBs und Herkunftsnachweis aus dem dokumentierten Originalarchiv; Pillow wird nur für diesen optionalen Vorbereitungsschritt benötigt. Produktions-Builds verwenden die bereits vorbereiteten Dateien. Dauerhafte strategische Schlachten sind noch nicht Teil dieses Moduls.
 Speicherformat: v9. v1, v2, v3, v4, v5, v6, v7 und v8 werden beim Laden ohne Verlust von Planeten, Waren oder Missionen migriert. Erforschte alte Technologien bleiben erhalten; ihre neuen Grundlagen werden ergänzt. Laufende Forschungs- und Werftaufträge behalten ihre Restzeit. Neue Spielerprogramme werden nicht automatisch aktiviert. v5 erhält drei fremde Hauptwelten und vier Güter; bereits zerstörte Sterne bleiben zerstört.
 Politische Profile und Gesetze multiplizieren konkrete Wirtschafts- und Flottenwerte; Zufriedenheit addiert sich. Grundgesetze bleiben gemeinsam; bestimmte Einwanderungs-, Forschungs- und Verwaltungsoptionen sowie Reformprogramme passen nur zu bestimmten Regierungsformen. Institutionelle Reformforschung schaltet weitere Möglichkeiten frei. Unpassende Optionen werden bei Regierungswechsel oder Altspielstandmigration auf die gemeinsame Grundoption zurückgesetzt. Werftzeiten werden bei Auftragserteilung berechnet; bestehende Aufträge behalten ihre Restzeit.
 Flottenverbände reisen mit dem langsamsten Schiff. Panzerung reduziert Kampfschaden, Versorgungsschiffe übertragen vorhandene Versorgung. Frachterkapazität wird pro Schiffstyp geprüft.

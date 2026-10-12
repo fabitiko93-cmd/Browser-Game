@@ -103,3 +103,6 @@
 
 .resource-bank>[data-resource="credits"]{flex:1.65}.resource-pill[data-resource="credits"] .resource-value{font-size:11px;white-space:nowrap}.resource-pill[data-resource="credits"] .resource-trend{font-size:9px}
 .resource-pill{overflow:hidden}.resource-top{min-width:0;overflow:hidden}.resource-value{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.resource-trend{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+
+/* A separate asset preview leaves the strategic battle rules unchanged. */
+.battle-preview-card{padding:12px 14px;margin-bottom:16px;border:1px solid #8fa9e535;border-radius:12px;background:linear-gradient(120deg,#1a2943,#151931)}.battle-preview-card>strong{font-size:13px;color:#cee0ff}.battle-preview-card>p{font-size:11px;line-height:1.6;color:#a7b8d9;margin:6px 0 10px}.battle-preview-card>.button{width:100%}

@@ -4,6 +4,14 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## 3D-Probeschlacht · 0.11.0
+
+- Unter **Flotte → Probeschlacht öffnen** oder direkt über [battle.html](https://fabitiko93-cmd.github.io/Browser-Game/battle.html) starten. Das Reich wird vor dem Wechsel gespeichert und pausiert. Die Übung verwendet eigene Schiffe und einen eigenen Spielzeit-Takt; sie verändert keine Ressourcen, Forschungen oder Flotten des Spielstands.
+- Vier echte Quaternius-Rümpfe, acht Schiffe, freie Touchkamera und nahe Schiffskamera, gerichtete Geschütze, Triebwerke, Laserfeuer, Treffereffekte und aufleuchtende Schilde. Eigene Schiffe und Gegner lassen sich antippen; Feuerbündelung und Rückzug wirken auf die Übungssimulation.
+- Pause, 1×/2×/4× und Neustart. Ein Übungstag dauert bei 1× drei Sekunden. Der Hintergrund pausiert die Übung; es gibt keine Kalender- oder Offline-Fortschreibung.
+- Vier lokal mitgelieferte GLB-Modelle mit 1024px-Texturen benötigen zusammen etwa 1,5 MB. Quaternius veröffentlicht die Originale unter CC0; Quelle, Änderungen und Prüfsummen stehen in `web/models/quaternius/`. Three.js wird als lokales Modul gebündelt, einschließlich MIT-Lizenz. Zur Laufzeit werden keine externen Modelle oder Bibliotheken geladen.
+- Dies ist die erste Grafik- und Bedienungsprobe. Dauerhafte strategische Gefechte über Wochen oder Monate **Spielzeit** und ihre spätere Verbindung mit der 3D-Ansicht sind noch nicht umgesetzt. Die bestehenden strategischen Kampfregeln bleiben erhalten.
+
 ## Lesbare Credits und Ressourcenanzeige · 0.10.6
 
 - Wieder gewöhnliche Creditsummen: **2.400 ¢** statt einer Mio./Mrd./Bio.-Einteilung. Tagesraten, Preise, Kosten und Budgetfelder verwenden dieselben Beträge; Spielstände brauchen keine Umrechnung.

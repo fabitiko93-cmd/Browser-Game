@@ -1,5 +1,11 @@
 # Vorgemerkte Entwicklung
 
+## Immersive 3D-Gefechte · erster Schritt mit 0.11.0
+
+- Nutzerentscheidung: Quaternius als Ausgangsset verwenden. Gefechtsdauer bedeutet Wochen und Monate **Spielzeit**, keine Kalenderzeit.
+- Erledigt: separate Probeschlacht mit vier aufbereiteten Rümpfen, Touch- und Schiffskamera, Waffen-/Schildeffekten und wirksamen Übungsbefehlen. Sie arbeitet unabhängig von den tatsächlichen Flotten und dem gespeicherten Reich.
+- Nächste besprochene Schritte: dauerhafte Gefechte mit tatsächlichem Schaden, Versorgung, Verstärkung und Rückzug; danach die taktischen Befehle und 3D-Ansicht an diese laufenden strategischen Gefechte anbinden. Diese Schritte sind noch nicht implementiert; ihre genauen Regeln werden separat festgelegt.
+
 Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt. Abnahme und gemessene Grenzen stehen in [BALANCE.md](BALANCE.md). Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte, noch nicht implementierte Erweiterungen.
 
 ## Abschluss der bestehenden Balance · erledigt mit 0.10.5

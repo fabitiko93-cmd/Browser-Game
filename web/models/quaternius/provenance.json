@@ -1,0 +1,115 @@
+{
+  "author": "Quaternius",
+  "pack": "Ultimate Spaceships Pack, May 2021",
+  "license": "CC0-1.0",
+  "authorPage": "https://quaternius.com/packs/ultimatespaceships.html",
+  "download": "https://opengameart.org/sites/default/files/ultimate_spaceships_-_may_2021.zip",
+  "archiveSha256": "ab7a725a2a1066d1f4c01fe27b2135f6138ca0b8a0a709eb9469957d26777670",
+  "changes": "OBJ mesh, UVs and normals preserved; UV image origin adapted to glTF; texture resized to 1024px JPEG; packaged as GLB.",
+  "models": [
+    {
+      "name": "Executioner",
+      "file": "executioner.glb",
+      "sourceObj": "Ultimate Spaceships - May 2021/Executioner/OBJ/Executioner.obj",
+      "sourceTexture": "Ultimate Spaceships - May 2021/Executioner/Textures/Executioner_Blue.png",
+      "vertices": 3819,
+      "triangles": 3388,
+      "texture": [
+        1024,
+        1024
+      ],
+      "bytes": 355156,
+      "sha256": "d7353882c6f01467dbf294ab35818aeefd78bb1d73deb0de1a73194e8ed0a053",
+      "bounds": [
+        [
+          -5.011061,
+          -0.774754,
+          -3.077949
+        ],
+        [
+          5.011061,
+          1.07241,
+          6.124222
+        ]
+      ]
+    },
+    {
+      "name": "Challenger",
+      "file": "challenger.glb",
+      "sourceObj": "Ultimate Spaceships - May 2021/Challenger/OBJ/Challenger.obj",
+      "sourceTexture": "Ultimate Spaceships - May 2021/Challenger/Textures/Challenger_Green.png",
+      "vertices": 2124,
+      "triangles": 1748,
+      "texture": [
+        1024,
+        1024
+      ],
+      "bytes": 327668,
+      "sha256": "017c345c0c07fe67f58d12ad6df07cffc55b4a6b774740495ba142677fc8939c",
+      "bounds": [
+        [
+          -5.251113,
+          -0.821451,
+          -3.051916
+        ],
+        [
+          5.251113,
+          2.2006,
+          7.128331
+        ]
+      ]
+    },
+    {
+      "name": "Striker",
+      "file": "striker.glb",
+      "sourceObj": "Ultimate Spaceships - May 2021/Striker/OBJ/Striker.obj",
+      "sourceTexture": "Ultimate Spaceships - May 2021/Striker/Textures/Striker_Blue.png",
+      "vertices": 4911,
+      "triangles": 4530,
+      "texture": [
+        1024,
+        1024
+      ],
+      "bytes": 418840,
+      "sha256": "f0199d0f8f7224613f193881b23f911ecd0382aefbd901b0c1f1bd760c8f4cdc",
+      "bounds": [
+        [
+          -2.516808,
+          -1.432785,
+          -3.529073
+        ],
+        [
+          2.516808,
+          1.25186,
+          4.897094
+        ]
+      ]
+    },
+    {
+      "name": "Spitfire",
+      "file": "spitfire.glb",
+      "sourceObj": "Ultimate Spaceships - May 2021/Spitfire/OBJ/Spitfire.obj",
+      "sourceTexture": "Ultimate Spaceships - May 2021/Spitfire/Textures/Spitfire_Red.png",
+      "vertices": 4100,
+      "triangles": 3512,
+      "texture": [
+        1024,
+        1024
+      ],
+      "bytes": 368668,
+      "sha256": "45c83cb0b1c88b5c1f1c440dec3d1cdd92a300b55357c92664980cf93b6230c8",
+      "bounds": [
+        [
+          -5.261844,
+          -2.02536,
+          -3.139415
+        ],
+        [
+          5.261844,
+          1.029819,
+          4.393893
+        ]
+      ]
+    }
+  ]
+}

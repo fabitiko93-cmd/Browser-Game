@@ -1,0 +1,13 @@
+Ultimate Spaceships Pack — Quaternius (May 2021)
+
+The creator publishes this pack under Creative Commons CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Creator and license declaration:
+https://quaternius.com/packs/ultimatespaceships.html
+https://opengameart.org/content/lowpoly-spaceships-pack
+
+Prepared for ORBIT 3077 from the author's OBJ meshes and textures.
+Modifications and original download hash are recorded in provenance.json.
+Model geometry, normals and UV layout are preserved. Textures are resized
+and encoded as JPEG; assets are repackaged as self-contained glTF 2 GLB.
