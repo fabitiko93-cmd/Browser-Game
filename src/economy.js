@@ -18,6 +18,8 @@ export function buildingPotential(state, planet, building) {
 }
 
 export function housing(state, planet) { return planet.buildings.filter(b => BUILDINGS[b.type].housing && b.remaining <= 0 && b.enabled).reduce((n, b) => n + BUILDINGS[b.type].housing * technologyEffects(state, planet.owner).housing, 0); }
+// Approval changes growth continuously; 80% retains the former base rate.
+export const happinessGrowth = happiness => Math.min(1.6, Math.max(0, (happiness - 50) / 30) ** 3);
 export function workforce(state, planet) {
   const regime = IDEOLOGIES[planet.owner === 'player' ? state.player.ideology : FACTIONS[planet.owner]?.ideology ?? 'democracy'];
   return Math.floor(planet.population * .7 * regime.workers * (1 + .06 * Math.min(1, serviceCount(planet,'education'))) * policyEffects(state, planet.owner).workers * technologyEffects(state, planet.owner).workers);
@@ -103,7 +105,9 @@ export function simulatePlanet(state, planet, options = {}) {
   const tax = owned ? state.player.tax : .16;
   const target = Math.max(5, Math.min(95, 72 + regime.happiness + effects.happiness + living + health*5 + civic*5 - (tax - .16) * 160 - (fed < demand ? 35 : 0) - (crowded ? 18 : 0)));
   planet.happiness += (target - planet.happiness) * .08;
-  if (!crowded && fed >= demand && planet.happiness > 50) planet.population = Math.min(housing(state, planet), planet.population + .45 * effects.growth * tech.growth * (1+health*.1));
+  const populationBefore = planet.population;
+  const growthFactor = happinessGrowth(planet.happiness);
+  if (!crowded && fed >= demand) planet.population = Math.min(housing(state, planet), planet.population + .45 * effects.growth * tech.growth * (1+health*.1) * growthFactor);
   if (fed < demand) planet.population = Math.max(1, planet.population - .3);
   const taxes = planet.population * tax * regime.tax * effects.tax * tech.tax;
   const commerce = commerceIncome(planet, fed >= demand);
@@ -115,6 +119,6 @@ export function simulatePlanet(state, planet, options = {}) {
     state.science += science;
   }
   planet.net = Object.fromEntries(RESOURCE_KEYS.map(k => [k, planet.stock[k] - before[k]]));
-  planet.lastReport = { workers: used, available: workforce(state, planet), housing: housing(state, planet), income, taxes, commerce, upkeep, science, demand, fed, demandByResource, productionByResource, missingResources:[...missingResources], bankrupt: owned && state.credits < 1 };
+  planet.lastReport = { workers: used, available: workforce(state, planet), housing: housing(state, planet), growth: planet.population - populationBefore, growthFactor, income, taxes, commerce, upkeep, science, demand, fed, demandByResource, productionByResource, missingResources:[...missingResources], bankrupt: owned && state.credits < 1 };
 }
 export { forecast } from './budget.js';

@@ -4,6 +4,13 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Wirtschaftliche Balance · 0.10.3
+
+- Zufriedenheit beeinflusst den Bevölkerungszuwachs stufenlos. Bei 80 % gilt die bisherige Grundrate; hohe Zustimmung beschleunigt Wachstum bis Faktor 1,6. Hohe Steuern bringen kurzfristig mehr Einnahmen, verlangsamen aber den Aufbau von Bevölkerung und Arbeitskräften. Nahrung und Wohnraum bleiben Voraussetzungen. Wirtschaft und Regierungsvorschau zeigen die tatsächliche Änderung je Spieltag.
+- Fremde Reiche gleichen neue Produktionsanlagen mit laufendem Bedarf, vorhandenen Kapazitäten und öffentlichen Absatzmöglichkeiten ab. Überfüllte Anlagen pausieren und laufen bei sinkenden Vorräten wieder an; dadurch werden reale Arbeitskräfte und Unterhaltsmittel frei. Industrieprogramme werden für tatsächliche Engpässe finanziert.
+- Zivile Investitionen, Frachter und Kampfverbände berücksichtigen auch den späteren Unterhalt laufender Bau- und Werftaufträge. Handelsreiche können bei ausgelasteten Routen mehrere bezahlte Frachter betreiben; Schutz- und Expansionsreiche verfolgen begrenzte eigene Flottenziele. Expansionisten stellen bis zu zwei Landungsschiffe bereit und können kleine vorübergehende Fehlbeträge aus vorhandenen Reserven finanzieren. Ansprüche, Ankündigungen, Wissen und Verträge bleiben Voraussetzungen für Kriege.
+- Bestehende Spielstände bleiben nutzbar. Bestände, Gebäude, Forschungen, Bevölkerung und laufende Missionen werden beim Laden erhalten; die neue Balance wirkt ab dem nächsten Spieltag. Bereits angesammelte Überschüsse werden durch Verbrauch und Handel abgebaut.
+
 ## Welten, Wirtschaft und Vorherrschaft · 0.10
 
 - **Neue Partien erzeugen einen neuen Sektor:** 16 unterschiedlich angeordnete Sterne, 49 neu verteilte Welten, wechselnder Heimatplanet und Nachbarschaften. 19 Reiche beginnen jeweils auf einer versorgbaren Heimatwelt. Unbewohnte Planetensysteme, drei reine Sternsysteme und wenige planetare bzw. orbitale Ruinen erweitern die Erkundung. In generierten Welten beeinflusst die Entfernung Reisezeit und Energiebedarf. Alte Spielstände behalten ihre Welt und bisherigen Reisezeiten.

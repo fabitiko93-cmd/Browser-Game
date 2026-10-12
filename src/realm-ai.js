@@ -8,11 +8,14 @@ import { communicationReady, declareMessage } from './communications.js';
 import { INTERESTS, relationBetween, realmAtWar, realmExists, beginWar, endWar } from './realm-relations.js';
 import { publishNews, reportTreaty, realmName } from './space-news.js';
 import { getPlanet } from './state.js';
+import { investmentAllowed, militaryCapacity } from './realm-economy.js';
+import { financialCondition } from './finance.js';
 
 const owned = (s,id) => s.planets.filter(p=>p.owner===id&&!p.destroyed);
 export function realmBalance(state,id) {
   const bloc=blocCosts(state,id);
-  return bloc.income-bloc.cost+owned(state,id).reduce((n,p)=>n+(p.lastReport?.income??0)-(p.lastReport?.upkeep??0),0)-fleetUpkeep(state,id)-Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length*2;
+  const e=policyEffects(state,id),t=technologyEffects(state,id);
+  return bloc.income-bloc.cost+owned(state,id).reduce((n,p)=>n+(p.lastReport?.income??0)-p.buildings.filter(b=>b.enabled&&!b.remaining).reduce((a,b)=>a+BUILDINGS[b.type].upkeep*e.upkeep*t.buildingUpkeep,0),0)-fleetUpkeep(state,id)-financialCondition(state,id).interest-Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length*2;
 }
 const military = (s,id) => s.fleets.filter(f=>f.owner===id&&(SHIPS[f.type].strength>0||f.type==='lander'));
 const queued = (s,id) => owned(s,id).flatMap(p=>p.queues).filter(q=>SHIPS[q.type].strength>0||q.type==='lander');
@@ -37,17 +40,16 @@ export function offerEvaluation(state,id,type) {
 function militaryBuild(state,id,strategy) {
   const worlds=owned(state,id),f=state.factions[id],ships=military(state,id),queue=queued(state,id);
   const war=realmAtWar(state,id),ambitious=strategy.doctrine==='expansion';
-  const cap=war?7:ambitious?5:strategy.doctrine==='security'?3:2;
+  const cap=militaryCapacity(state,id);
   if(strategy.focus==='recovery'||ships.length+queue.length>=cap||worlds.some(p=>p.queues.length))return;
   const yard=worlds.find(p=>p.buildings.some(b=>b.type==='shipyard'&&!b.remaining&&b.enabled&&b.status==='aktiv'));
   if(!yard)return;
   const landers=ships.filter(f=>f.type==='lander').length+queue.filter(q=>q.type==='lander').length;
   const combat=ships.filter(f=>f.type!=='lander').length+queue.filter(q=>q.type!=='lander').length;
-  let type=(war||ambitious)&&combat>=3&&landers<(war?2:1)&&f.tech.includes('fortification')?'lander':f.tech.includes('coordination')&&war&&combat>=3?'cruiser':f.tech.includes('lasers')?'destroyer':'corvette';
+  let type=(war||ambitious)&&combat>=3&&landers<2&&f.tech.includes('fortification')?'lander':f.tech.includes('coordination')&&war&&combat>=3?'cruiser':f.tech.includes('lasers')?'destroyer':'corvette';
   const def=SHIPS[type],upkeep=(def.upkeep??1)*policyEffects(state,id).fleetUpkeep*technologyEffects(state,id).fleetUpkeep;
-  const pending=queue.reduce((n,q)=>n+(SHIPS[q.type].upkeep??1),0)*policyEffects(state,id).fleetUpkeep*technologyEffects(state,id).fleetUpkeep;
   // Leave enough treasury for civilian development and pay for future maintenance too.
-  if(f.credits<def.cost.credits+220||realmBalance(state,id)<upkeep+pending+3)return;
+  if(!investmentAllowed(state,id,def.cost.credits,upkeep,war||ambitious))return;
   buildShip(state,yard,type,id);
 }
 function sharedSystem(state,id,view) { return owned(state,id).some(p=>p.system===view.system); }
@@ -70,7 +72,8 @@ function strongestGroup(state,id) {
 }
 function enoughArmy(state,id,view) {
   const group=strongestGroup(state,id),power=group.reduce((n,f)=>n+fleetStrength(state,f),0);
-  return power>=Math.max(30,estimateDefense(state,id,view)*1.15)&&group.some(f=>f.type==='lander');
+  const margin=state.galaxy.strategies[id].doctrine==='expansion'?1.05:1.15;
+  return power>=Math.max(30,estimateDefense(state,id,view)*margin)&&group.some(f=>f.type==='lander');
 }
 function attackKnownEnemy(state,id,enemy) {
   const view=knownWarTarget(state,id,enemy);if(!view)return;
@@ -128,13 +131,13 @@ function planConflict(state,id,strategy) {
   if(plan) {
     const r=relationBetween(state,id,plan.enemy),view=knownWarTarget(state,id,plan.enemy);
     if(!r||r.score>-35||r.pactUntil>state.day||r.trade||r.defensePact||!view||strategy.focus==='recovery'){strategy.warPlan=null;return;}
-    if(state.day>=plan.declareAt&&enoughArmy(state,id,view)) {
+    if(state.day>=plan.declareAt&&enoughArmy(state,id,view)&&investmentAllowed(state,id,0,0,true)) {
       if(beginWar(state,id,plan.enemy,plan.target)){reportTreaty(state,id,plan.enemy,'war');if(plan.enemy==='player')declareMessage(state,id,'Kriegserklärung','Unsere Regierung erklärt den Krieg. Die zuvor angekündigten regionalen Ansprüche bestehen fort.',true);}
       strategy.warPlan=null;
     }
     return;
   }
-  if(state.day<180||strategy.focus==='recovery'||!['expansion','security'].includes(strategy.doctrine)||!communicationReady(state,id)||realmBalance(state,id)<3)return;
+  if(state.day<180||strategy.focus==='recovery'||!['expansion','security'].includes(strategy.doctrine)||!communicationReady(state,id)||!investmentAllowed(state,id,0,0,true))return;
   const candidate=Object.keys(FACTIONS).filter(other=>other!==id&&realmExists(state,other)&&!blocPartners(state,id,other)).map(enemy=>({enemy,r:relationBetween(state,id,enemy),view:knownWarTarget(state,id,enemy)})).filter(({r,view})=>r&&view&&r.score<=-35&&!r.trade&&!r.defensePact&&r.pactUntil<=state.day&&(r.truceUntil??0)<=state.day&&sharedSystem(state,id,view)).sort((a,b)=>a.r.score-b.r.score)[0];
   if(!candidate||!enoughArmy(state,id,candidate.view))return;
   strategy.warPlan={enemy:candidate.enemy,target:candidate.view.id,declareAt:state.day+36};

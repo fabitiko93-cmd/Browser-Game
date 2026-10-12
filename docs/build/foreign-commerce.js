@@ -8,6 +8,9 @@ import { playerBid, playerAsk, receivePublicOrder, buyPublicSurplus } from './tr
 import { recordBlocDelivery } from './power.js';
 import { orderRelic, ruinKnown } from './ruins.js';
 import { locationsOf } from './world.js';
+import { commerceCapacity, investmentAllowed } from './realm-economy.js';
+import { policyEffects } from './governance.js';
+import { technologyEffects } from './technology.js';
 
 export function finishCommerce(state, fleet, mission, target) {
   const previous=getPlanet(state,mission.source), origin=previous&&!previous.destroyed&&previous.owner===fleet.owner?previous:state.planets.find(p=>p.owner===fleet.owner&&!p.destroyed), key=mission.intent?.resource??mission.cargo.resource;
@@ -78,8 +81,9 @@ export function tickForeignCommerce(state) {
       if(!offer.purchase)origin.stock[offer.key]-=offer.amount;origin.stock.energy-=offer.fuel;
       f.mission={group:uid(state,'commerce'),kind:offer.internal?'resupply':'commerce',source:origin.id,target:offer.target.id,buyer:offer.purchase?owner:offer.target.owner,remaining:offer.days,total:offer.days,cargo:offer.purchase?null:{resource:offer.key,amount:offer.amount},...(offer.purchase?{mode:'purchase',intent:{resource:offer.key,amount:offer.amount,maxPrice:offer.maxPrice}}:{})};
     }
-    if(state.day%30!==Object.keys(state.factions).indexOf(owner)%30||freighters.length||planets.some(p=>p.queues.some(q=>q.type==='freighter')))continue;
+    if(state.day%30!==Object.keys(state.factions).indexOf(owner)%30||freighters.length>=commerceCapacity(state,owner)||planets.some(p=>p.queues.length)||freighters.length&&freighters.some(f=>!f.mission))continue;
     const port=planets.find(p=>p.buildings.some(b=>b.type==='shipyard'&&b.enabled&&b.status==='aktiv'));
-    if(port&&faction.credits>250)buildShip(state,port,'freighter',owner);
+    const upkeep=SHIPS.freighter.upkeep??1;
+    if(port&&investmentAllowed(state,owner,SHIPS.freighter.cost.credits,upkeep*policyEffects(state,owner).fleetUpkeep*technologyEffects(state,owner).fleetUpkeep))buildShip(state,port,'freighter',owner);
   }
 }
