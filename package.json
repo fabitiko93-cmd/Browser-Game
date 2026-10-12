@@ -1,12 +1,13 @@
 {
   "name": "orbit-3077",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22" },
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:check": "node scripts/build.mjs --check",
+    "audio:render": "node scripts/audio-assets.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node --test"
   }

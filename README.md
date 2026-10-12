@@ -27,6 +27,15 @@ Arbeitstitel: ORBIT 3077.
 - Nachrichten geben keine internen Vorräte, Bevölkerungszahlen, geheimen Anlagen oder Flottenstärken preis. Öffentliche neue Hafenadressen ergänzen nur Bewohnung und Zugehörigkeit. Militärische Planung nutzt eigene Wissensarchive; erst die tatsächliche Gefechtsauflösung verwendet die reale Verteidigung.
 - Verlust der letzten eigenen Welt beendet die Simulation mit einem gespeicherten Niederlagenzustand; Sichern, Laden und Neustart bleiben verfügbar. Speicherformat v9 übernimmt v1–v8 mit bestehenden Kolonien, Waren, Archiven und laufenden Aufträgen. Kein Neustart für diesen Patch erforderlich. Oberfläche, Gebäudegrafiken und Musik bleiben im bisherigen Stil.
 
+## Direkte Audiowiedergabe · 0.10.2
+
+- Ein im WebKit-Test reproduzierter Timerfehler ist korrigiert: Browser-Zeitgeber behalten ihren Window-Kontext statt das Audioobjekt als Empfänger zu verwenden.
+- Soundtrack und zehn Aktionssounds spielen als eingecheckte MP3-Dateien direkt über native Player, ohne AudioContext-Freigabe und ohne Rendering auf dem iPhone. Gleiche Musik, rund 1,7 MB Audio, getrennte Einstellungen und fortgesetzte Musikposition.
+- Soundtest startet unmittelbar im Tipp. Hängende Starts und ein stehender Wiedergabezeitgeber werden sichtbar; „Direkter Audiotest“ prüft mit dem normalen Player-Control unabhängig vom Spielstart. Der Status benennt die Browserantwort statt hörbaren Ton zu behaupten.
+- Offline-Audio beantwortet Safari-Byte-Range-Anfragen mit korrekten binären 206-Antworten. Der Build kopiert die Audiodateien unverändert.
+- Bei älteren iOS-Versionen kann Home-Screen-Audio auch außerhalb des Spielcodes scheitern. Apple dokumentiert eine Korrektur in Safari 26.2; zum Vergleich kann ein normaler Safari-Tab verwendet werden. Spielstände und Browserdaten müssen nicht gelöscht werden.
+- Optionale Regeneration der MP3-Dateien: `npm run audio:render`, mit lokal verfügbarem `web-audio-engine` und `ffmpeg`; `ORBIT_AUDIO_ENGINE` kann auf die installierte Renderer-Datei zeigen. Build und Spielen benötigen diese Werkzeuge nicht.
+
 ## Audiofreigabe auf dem iPhone · 0.10.1
 
 - Die Wiedergabe verwendet die Audio-Session-Kategorie `playback`, soweit vom Browser unterstützt. Dadurch hängt Musik auf dem iPhone nicht mehr von der bisherigen Ambient-Einstellung und dem Lautlosmodus ab.
