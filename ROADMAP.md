@@ -10,14 +10,14 @@ Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt
 2. Tragfähige Spielweisen: wirtschaftlicher Ausbau, Handel und militärische Expansion funktionieren unter passenden Bedingungen; keine davon ist in sämtlichen Situationen überlegen.
 3. Lohnende Investitionen: Gebäude, Forschung und Verträge liefern in ihrem vorgesehenen Einsatz einen spürbaren Gegenwert. Forschungszeitverkürzungen wirken exakt auf die tatsächliche Entwicklungsdauer, einschließlich Bruchteilen eines Spieltags.
 4. Beherrschbare Folgen: Engpässe und Fehlentscheidungen haben Konsequenzen; vorhandene Gegenmaßnahmen funktionieren. Der bewusst mögliche gemeinsame Untergang durch Vernichtung bleibt erhalten.
-5. Glaubwürdige Geldgrößen und Kostenverhältnisse: Staatskassen planetarer Reiche werden in Milliarden und Billionen Credits dargestellt. Dieselbe Einheit gilt für Einnahmen, Unterhalt, Preise, Verträge, Schulden und Kaufentscheidungen. Die reine Zahlenskalierung ersetzt keine Balance der tatsächlichen Erschwinglichkeit.
+5. Lesbare Geldsummen und glaubwürdige Kostenverhältnisse: Auf Nutzerwunsch seit 0.10.6 wieder gewöhnliche Creditsummen ohne Größenklassen. Dieselbe Einheit gilt für Einnahmen, Unterhalt, Preise, Verträge, Schulden und Kaufentscheidungen. Die reine Zahlenskalierung ersetzt keine Balance der tatsächlichen Erschwinglichkeit.
 
 ### Grenze für die Finanzierung der Vernichtungswaffen
 
 - Eine einzelne unveränderte Startkolonie soll nach zwei bis drei Spieljahren passiver Vermögensbildung kein vollständiges einsatzfähiges Vernichtungsprojekt finanzieren können. Die Prüfung berücksichtigt auch vorhandene Steuerstufen und Regierungsformen.
 - Verglichen wird das gesamte vorhandene Projekt: Startanlage, notwendige Versorgungsinfrastruktur, erste Ladung sowie laufende Kosten während Bau und Ladung. Forschung und lokale Materialverfügbarkeit bleiben eigenständige Bedingungen.
 - Vorhandene Kosten und laufende Versorgung werden so gewichtet, dass eine entwickelte industrielle Wirtschaft und finanzierbare Betriebsleistung nötig sind. Wirtschaftlicher Ausbau und tragfähiger Handel sollen den Zugang gegenüber bloßem Abwarten deutlich verbessern.
-- Die Darstellung verwendet auf dem iPhone kompakte deutsche Einheiten wie Mrd. und Bio.; Tagesraten und Kosten bleiben vergleichbar und korrekt. Festgelegter Darstellungsfaktor: eine interne Recheneinheit entspricht einer Milliarde Credits. Interne Beträge und bestehende Spielstände bleiben erhalten.
+- Die Darstellung verwendet auf dem iPhone wieder gewöhnliche Creditsummen mit deutschen Tausendertrennzeichen, ohne Mio./Mrd./Bio.-Einteilungen. Tagesraten und Kosten bleiben vergleichbar und korrekt. Interne Beträge, erhöhte Projektkosten und bestehende Spielstände bleiben erhalten.
 
 ### Begrenzter Umfang und Abschluss
 

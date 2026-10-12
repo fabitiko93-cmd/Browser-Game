@@ -92,6 +92,14 @@ function persist() {
   catch { if (!storageError) { storageError = true; toast('Automatisches Speichern ist in diesem Browser nicht verfügbar. Sichere deinen Spielstand als Datei.', true); } }
 }
 function act(result, success) { audio.play(result?'error':'confirm'); if (result) toast(result, true); else { if (success) toast(success); persist(); } render(); }
+function fitResourceNumbers() {
+  for(const el of $('resources').querySelectorAll('.resource-value,.resource-trend')){
+    el.style.fontSize='';
+    const width=el.clientWidth,base=parseFloat(getComputedStyle(el).fontSize),minimum=el.classList.contains('resource-value')?9:8;
+    if(width&&el.scrollWidth>width)el.style.fontSize=`${Math.max(minimum,Math.floor(base*width/el.scrollWidth*10)/10)}px`;
+  }
+}
+new ResizeObserver(fitResourceNumbers).observe($('resources'));
 function render() {
   if(state.galaxy.defeat) {
     ui.speed=0;ui.panel=null;$('sheet').hidden=true;$('sheet').innerHTML='';
@@ -114,6 +122,7 @@ function render() {
   map.state = state;
   $('header').innerHTML = renderHeader(state, ui);
   $('resources').innerHTML = renderResources(state, ui);
+  fitResourceNumbers();
   const shown=hudPlanet(state,ui),pages=resourcePages(state,shown);ui.resourcePage%=pages.length;$('resources').setAttribute('aria-label',`Vorräte von ${shown.name}. ${pages[ui.resourcePage].name}: antippen für ${pages[(ui.resourcePage+1)%pages.length].name}`);
   $('map-head').innerHTML = renderMapHead(state, ui);
   $('map-foot').innerHTML = moneyMarkup(renderMapFoot(state, ui));

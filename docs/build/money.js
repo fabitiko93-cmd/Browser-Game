@@ -1,13 +1,9 @@
-// Save values remain accounting units; one unit represents one billion credits.
-export const CREDIT_SCALE=1e9;
-export const CREDIT_INPUT_UNIT='Mrd. ¢';
+// Display the same credit amounts that are stored and actually booked.
+export const CREDIT_INPUT_UNIT='¢';
 export function moneyAmount(value,{signed=false,compact=false}={}) {
   const n=Number(value)||0,absolute=Math.abs(n);
-  const units=[[1e12,'Trd.'],[1e9,'Trio.'],[1e6,'Brd.'],[1000,'Bio.'],[1,'Mrd.'],[.001,'Mio.'],[.000001,'Tsd.']];
-  const [divisor,unit]=absolute===0?[1,'Mrd.']:units.find(([limit])=>absolute>=limit)??[1/CREDIT_SCALE,''];
   const prefix=n<0?'−':signed?'+':'';
-  const amount=(absolute/divisor).toLocaleString('de-DE',{maximumFractionDigits:compact?1:2});
-  return `${prefix}${amount}${unit?' '+(compact?unit.replace('.',''):unit):''}`;
+  return prefix+absolute.toLocaleString('de-DE',{maximumFractionDigits:compact?1:2});
 }
 export const money=(value,options)=>`${moneyAmount(value,options)} ¢`;
 function accountingNumber(text) {

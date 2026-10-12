@@ -4,6 +4,12 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Lesbare Credits und Ressourcenanzeige · 0.10.6
+
+- Wieder gewöhnliche Creditsummen: **2.400 ¢** statt einer Mio./Mrd./Bio.-Einteilung. Tagesraten, Preise, Kosten und Budgetfelder verwenden dieselben Beträge; Spielstände brauchen keine Umrechnung.
+- Die einzeilige Ressourcenanzeige hält Zahlen innerhalb ihres Feldes. Bei Platzmangel passt sich die Zahlengröße an; lange Beschriftungen greifen nicht in Nachbarressourcen über. Das bestehende Umschalten der Ressourcenseiten bleibt erhalten.
+- Hohe Projektkosten bleiben unverändert: Weltenlanze 48.000 Credits plus erste Ladung 22.000; Resonanzschmiede 120.000 plus erste Ladung 80.000. Materialien und Betrieb kommen hinzu. Forschungskosten, Boni und exakt verkürzte Entwicklungszeiten bleiben erhalten.
+
 ## Balanceabschluss · 0.10.5
 
 - Spieler und KI verbrauchen Energie, Legierung, Waffen und nach Freischaltung Elektronik nach denselben Regeln. Krieg erhöht den tatsächlichen Waffenbedarf. Zahlungsunfähigkeit belastet die Zufriedenheit beider Seiten; HUD, Tagesabrechnung und Marktbedarf berücksichtigen den gemeinsamen Verbrauch.

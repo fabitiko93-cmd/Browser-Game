@@ -148,18 +148,18 @@ test('public player exports also benefit from trade research and stacked policie
   assert.ok(s.factions.ilyri.credits>=180);
 });
 
-test('billion-scale money retains small prices, signs and the same units without altering saved messages or HTML attributes',()=>{
-  assert.equal(money(2400),'2,4 Bio. ¢');assert.equal(money(48000),'48 Bio. ¢');assert.equal(money(-12.5),'−12,5 Mrd. ¢');
-  assert.equal(money(.024),'24 Mio. ¢');assert.equal(money(0),'0 Mrd. ¢');
-  assert.equal(moneyText('Kosten: 1.200 ¢; Erlös +12.50 Credits.'),'Kosten: 1,2 Bio. ¢; Erlös +12,5 Mrd. ¢.');
+test('plain credit sums retain prices, signs and the same units without altering saves or HTML attributes',()=>{
+  assert.equal(money(2400),'2.400 ¢');assert.equal(money(48000),'48.000 ¢');assert.equal(money(-12.5),'−12,5 ¢');
+  assert.equal(money(.024),'0,02 ¢');assert.equal(money(0),'0 ¢');
+  assert.equal(moneyText('Kosten: 1.200 ¢; Erlös +12.50 Credits.'),'Kosten: 1.200 ¢; Erlös +12,5 ¢.');
   const html='<input value="3" data-name="100 Credits"><p>60 Credits · 35 Optik</p>';
-  const formatted=moneyMarkup(html);assert.equal(formatted,'<input value="3" data-name="100 Credits"><p>60 Mrd. ¢ · 35 Optik</p>');assert.equal(moneyMarkup(formatted),formatted);
+  const formatted=moneyMarkup(html);assert.equal(formatted,'<input value="3" data-name="100 Credits"><p>60 ¢ · 35 Optik</p>');assert.equal(moneyMarkup(formatted),formatted);
   const s=laboratory();s.credits=2400;const snapshot=exportGame(s),forecast=forecastDay(s);
-  assert.ok(renderResources(s,{planetId:'nereid',projection:forecast}).includes('2,4 Bio'));
+  assert.ok(renderResources(s,{planetId:'nereid',projection:forecast}).includes('2.400'));
   assert.ok(renderResources(s,{planetId:'nereid',projection:forecast}).includes(moneyAmount(forecast.budget.net,{signed:true,compact:true})));
-  assert.ok(renderSheet(s,{panel:'economy',economyMode:'finances',planetId:'nereid'}).includes('2,4 Bio. ¢'));
+  assert.ok(renderSheet(s,{panel:'economy',economyMode:'finances',planetId:'nereid'}).includes('2.400 ¢'));
   const market=renderSheet(s,{panel:'economy',economyMode:'routes',routeMode:'markets',planetId:'nereid'});
-  assert.ok(market.includes('Preisgrenze / Einheit · Mrd. ¢'));assert.ok(market.includes('Gesamtbudget je 30 Tage · Mrd. ¢'));assert.ok(market.includes('data-field="boardPrice" value="3"'));
+  assert.ok(market.includes('Preisgrenze / Einheit · ¢'));assert.ok(market.includes('Gesamtbudget je 30 Tage · ¢'));assert.ok(market.includes('data-field="boardPrice" value="3"'));
   assert.equal(exportGame(s),snapshot);
 });
 
