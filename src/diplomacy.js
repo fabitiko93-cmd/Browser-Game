@@ -4,9 +4,38 @@ import { serviceCount } from './infrastructure.js';
 import { FACTIONS } from './data.js';
 import { log, ownedPlanets } from './state.js';
 import { declareMessage } from './communications.js';
+import { relationBetween, realmExists } from './realm-relations.js';
 export const initialRelationExtras = () => ({ truceUntil:0, warSince:0, pactUntil: 0, cooperation: false, embargo: false, envoyReady: 0, aidReady: 0, portAccess:false, researchPact:false, defensePact:false });
-export const cooperationCount = state => Object.values(state.relations).filter(r => r.cooperation && !r.war && !r.embargo).length;
-export const diplomacyScience = state => 1 + cooperationCount(state) * .08 + Object.values(state.relations).filter(r=>r.researchPact&&!r.war&&!r.embargo).length*.06;
+const researchWeights = { cooperation:.08, researchPact:.06 };
+// Early exchanges bring new knowledge; overlapping larger networks approach +40%.
+function networkBonus(raw) {
+  const overlap=Math.max(0,raw-.14);
+  return raw<=.14 ? raw : .14+.26*overlap/(.26+overlap);
+}
+export function researchNetwork(state,owner='player',change=null) {
+  let raw=0,partners=0,cooperations=0;
+  if(!realmExists(state,owner))return {raw,partners,cooperations,bonus:0,factor:1};
+  for(const other of Object.keys(FACTIONS)) {
+    if(other===owner||!realmExists(state,other))continue;
+    const r=relationBetween(state,owner,other);
+    if(!r?.trade||r.war||r.embargo)continue;
+    let contribution=0;
+    for(const [field,weight]of Object.entries(researchWeights)) {
+      const active=change?.other===other&&change.field===field?change.active:r[field];
+      if(active){contribution+=weight;if(field==='cooperation')cooperations++;}
+    }
+    raw+=contribution;if(contribution>0)partners++;
+  }
+  const bonus=networkBonus(raw);
+  return {raw,partners,cooperations,bonus,factor:1+bonus};
+}
+export const cooperationCount = state => researchNetwork(state).cooperations;
+export const diplomacyScience = (state,owner='player') => researchNetwork(state,owner).factor;
+export function researchAgreementGain(state,other,field,owner='player') {
+  const current=researchNetwork(state,owner).bonus,active=Boolean(relationBetween(state,owner,other)?.[field]);
+  const changed=researchNetwork(state,owner,{other,field,active:!active}).bonus;
+  return Math.max(0,active?current-changed:changed-current);
+}
 export const sanctionUpkeep = state => Object.values(state.relations).filter(r => r.embargo).length * 1.5 + Object.values(state.relations).filter(r=>r.defensePact&&!r.war&&!r.embargo).length*2;
 export function cancelForeignRoutes(state, faction) {
   for (const f of state.fleets) if (f.route && routePlanets(f.route).some(id => state.planets.find(p => p.id === id)?.owner === faction)) f.route = null;
@@ -24,9 +53,10 @@ export function treatyAction(state, faction, action) {
     if (!state.planets.some(p => p.owner === faction)) return 'Dieses Reich besitzt keine Kolonien mehr.';
     if (state.credits < price) return `Für das Abkommen fehlen ${price} Credits.`;
     state.credits -= price;
+    const scienceGain=action==='cooperation'?researchAgreementGain(state,faction,'cooperation'):0;
     if (action === 'pact') r.pactUntil = state.day + 180;
     else { r.cooperation = true; r.aidReady = state.day + 60; }
-    log(state, `${FACTIONS[faction].name}: ${action === 'pact' ? 'Nichtangriffspakt für 180 Tage' : 'Partnerschaft: +8 % Forschung, +12 % Exporterlös und Hilfe im Krieg'} vereinbart.`, 'politics');
+    log(state, `${FACTIONS[faction].name}: ${action === 'pact' ? 'Nichtangriffspakt für 180 Tage' : `Partnerschaft: Forschungsnetz +${(scienceGain*100).toFixed(2).replace('.',',')} Prozentpunkte, +12 % Exporterlös und Hilfe im Krieg`} vereinbart.`, 'politics');
   } else if (action === 'cancel-pact') {
     if (r.pactUntil <= state.day) return 'Es besteht kein Nichtangriffspakt.';
     r.pactUntil = 0; r.score = Math.max(-100, r.score - 15); log(state, `Nichtangriffspakt mit ${FACTIONS[faction].name} gekündigt; Beziehungen −15.`, 'politics');
@@ -67,7 +97,8 @@ export function advancedTreaty(state,faction,action){
  if(r.war||r.embargo||!r.trade||r.score<threshold)return `Benötigt Handel, Frieden und Beziehungen von mindestens ${threshold}.`;
  if(!state.planets.some(p=>p.owner===faction))return 'Dieses Reich besitzt keine Planeten mehr.';
  if(state.credits<cost)return 'Für das Abkommen fehlen Credits.';
+ const scienceGain=clean==='research-pact'?researchAgreementGain(state,faction,'researchPact'):0;
  state.credits-=cost;r[field]=true;
- const label={ports:'Hafennutzung: Versorgung und Reparatur gegen örtliche Warenpreise','research-pact':'Forschungsaustausch: +6 % Forschung','defense-pact':'Beistand: verstärkte Versorgungshilfe alle 30 Kriegstage, 2 Credits Unterhalt pro Tag'}[clean];
+ const label={ports:'Hafennutzung: Versorgung und Reparatur gegen örtliche Warenpreise','research-pact':`Forschungsaustausch: Forschungsnetz +${(scienceGain*100).toFixed(2).replace('.',',')} Prozentpunkte`,'defense-pact':'Beistand: verstärkte Versorgungshilfe alle 30 Kriegstage, 2 Credits Unterhalt pro Tag'}[clean];
  log(state,`${FACTIONS[faction].name}: ${label}.`,'politics');if(clean==='defense-pact')reportTreaty(state,'player',faction,'alliance');return null;
 }

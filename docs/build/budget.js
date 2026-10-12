@@ -28,7 +28,7 @@ export function runDailyEconomy(state) {
   for(const p of state.world.anchors){const r=runAnchor(state,p);p.lastReport={income:0,taxes:0,commerce:0,upkeep:r.upkeep,science:r.science};if(p.owner==='player'){buildings+=r.upkeep;science+=r.science;}else if(p.owner){foreignTotals[p.owner].credits-=r.upkeep;foreignTotals[p.owner].science+=r.science;}}
   const bloc=runBlocBudget(state);
   const beforeForeignPorts=state.credits;
-  for(const [id,f] of Object.entries(state.factions)){ f.credits+=foreignTotals[id].credits-fleetUpkeep(state,id)-foreignInterest[id]-2*Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length;f.science+=foreignTotals[id].science*blocScience(state,id); maintainFleets(state,f.credits>=0,id); }
+  for(const [id,f] of Object.entries(state.factions)){ f.credits+=foreignTotals[id].credits-fleetUpkeep(state,id)-foreignInterest[id]-2*Object.keys(FACTIONS).filter(other=>relationBetween(state,id,other)?.defensePact).length;f.science+=foreignTotals[id].science*diplomacyScience(state,id)*blocScience(state,id); maintainFleets(state,f.credits>=0,id); }
   const portIncome=state.credits-beforeForeignPorts;
   tickShields(state);
   science *= diplomacyScience(state)*blocScience(state,'player');

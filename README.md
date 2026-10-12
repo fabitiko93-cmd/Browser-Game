@@ -4,6 +4,16 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Politische Balance und Forschungsnetze · 0.10.4
+
+- Acht politische Profile sind nach ihrer Wirkung auf reale Betriebe, Forschung, Handel und finanzierte Flotten neu gewichtet. Demokratie und Theokratie behalten ihre durch die Wachstumsbalance bereits wirksamen Schwerpunkte. Der gemeinsame politische Rechenweg gilt weiterhin für Spieler und KI.
+- Monarchie und Oligarchie haben kleinere allgemeine Steuer- und Sparvorteile. Die Oligarchie erzielt dafür bessere Exportkonditionen, entwickelt Forschung aber etwas langsamer. Föderale Steuerteilung belastet den Haushalt weniger stark. Konzernherrschaft profitiert stärker von tatsächlich hergestellten zivilen Gütern statt von pauschalen Abgaben.
+- Kommunismus stellt mehr Arbeitskräfte für ausgelastete Produktionsketten bereit. Die Militärregierung gewinnt Gefechtsstärke und spart 22 % Flottenunterhalt, bei weiterhin eingeschränkter ziviler Produktion und Beschäftigung. Nationalsozialismus setzt stärker auf Personal und Rüstungsserien; professionelle Militärverwaltung bleibt im Flottenbetrieb und in der Gefechtsstärke überlegen.
+- Technokratie behält +25 % Forschung, 15 % kürzere Entwicklung und 8 % weniger Fabrik-Energiebedarf. Der allgemeine Gebäudeaufschlag sinkt von 18 % auf 8 %, damit zusätzliche Labore ihren Vorteil auch finanzieren können.
+- Diplomatische Forschung hat abnehmende Mehrerträge: die ersten 14 Prozentpunkte wirken vollständig, größere Netze nähern sich insgesamt 40 %. Mit allen 18 Partnern und beiden Abkommen ergeben sich rund +37,44 % statt +252 %. Eigene Forschungsanlagen bleiben erforderlich. Krieg, Sanktionen oder der Verlust aller Partnerkolonien beenden den Bonus. Reale Forschungsabkommen wirken beidseitig nach derselben Netzregel.
+- Die Diplomatieansicht zeigt den Gesamtbonus und den aktuellen Unterschied mit und ohne ein einzelnes Abkommen, einschließlich Abschlussvorschau und passender Protokolle. Die Tagesabrechnung und das HUD nutzen dieselbe Berechnung. Bestehende Spielstände, Programme und Restzeiten laufender Aufträge bleiben erhalten.
+- Sozialmodell mit Armut, dauerhaften Belastungen, Streiks und echter Auswanderung sowie ein freiwilliger Tutorial-Einstieg sind für den nächsten Patch in [ROADMAP.md](ROADMAP.md) vorgemerkt. Details werden vor der Umsetzung weiter ausgearbeitet.
+
 ## Wirtschaftliche Balance · 0.10.3
 
 - Zufriedenheit beeinflusst den Bevölkerungszuwachs stufenlos. Bei 80 % gilt die bisherige Grundrate; hohe Zustimmung beschleunigt Wachstum bis Faktor 1,6. Hohe Steuern bringen kurzfristig mehr Einnahmen, verlangsamen aber den Aufbau von Bevölkerung und Arbeitskräften. Nahrung und Wohnraum bleiben Voraussetzungen. Wirtschaft und Regierungsvorschau zeigen die tatsächliche Änderung je Spieltag.

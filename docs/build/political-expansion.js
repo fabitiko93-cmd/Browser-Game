@@ -6,15 +6,15 @@ export const NEW_IDEOLOGIES = {
   theocracy: system('Theokratie','Religiöse Institutionen tragen Regierung und soziale Versorgung; Forschung folgt verbindlichen Lehrgrundsätzen.','spiritual','Synode','Religiöse Gemeinschaftsrechte','Hoch')
 };
 export const NEW_PROFILES = {
-  federation:{workers:1.03,happiness:7,growth:1.08,envoy:1.12,science:1.09,tax:.9,reformCost:1.15,upkeep:1.04},
-  corporate:{science:1.03,trade:1.24,tax:1.08,civilianProduction:1.1,shipTime:.95,happiness:-5,workers:.97,envoy:.92},
-  oligarchy:{happiness:2,tax:1.12,upkeep:.92,trade:1.1,reformStability:.85,workers:.96,reformCost:1.22,science:.96},
+  federation:{workers:1.03,happiness:7,growth:1.08,envoy:1.12,science:1.09,tax:.94,reformCost:1.15,upkeep:1.04},
+  corporate:{science:1.03,trade:1.24,tax:1.04,civilianProduction:1.15,shipTime:.95,happiness:-5,workers:.97,envoy:.92},
+  oligarchy:{happiness:2,tax:1.06,upkeep:.96,trade:1.18,reformStability:.85,workers:.96,reformCost:1.22,science:.96,researchTime:1.06},
   theocracy:{happiness:9,growth:1.12,foodDemand:.94,workers:1.04,science:.88,researchTime:1.12,envoy:.94}
 };
 export const NEW_REASONS = {
   federation:'Lokale Selbstverwaltung stärkt Zustimmung und Zuzug; gemeinsame Fachnetze fördern Forschung und Diplomatie. Geteilte Steuerhoheit senkt Abgaben, föderale Abstimmung verteuert Reformen und Verwaltung.',
   corporate:'Vertragsnetze und gebündeltes Kapital steigern Exporterlöse, Abgaben und zivile Produktion. Profitorientierte Versorgung senkt Zustimmung und Beschäftigung; wirtschaftliche Eigeninteressen erschweren Diplomatie.',
-  oligarchy:'Eingespielte Handelshäuser erheben Abgaben effizient und betreiben schlanke Verwaltung. Geschlossene Machtzirkel beschränken Arbeitsmarktzugang und Fachdebatten; institutionelle Änderungen benötigen teure Zustimmung.',
+  oligarchy:'Eingespielte Handelshäuser erzielen bessere Exportkonditionen, erheben Abgaben effizient und betreiben schlanke Verwaltung. Geschlossene Machtzirkel beschränken Arbeitsmarktzugang und Fachdebatten; die Prüfung neuer Forschung und institutionelle Änderungen dauern länger beziehungsweise benötigen teure Zustimmung.',
   theocracy:'Gemeinschaftliche Versorgung, verbindliche Rituale und soziale Netzwerke stärken Zusammenhalt, Zuzug und Nahrungsverteilung. Lehrgebundene Forschung prüft neue Ansätze länger und begrenzt offenen Austausch.'
 };
 export const NEW_FACTIONS = {

@@ -7,20 +7,20 @@ import { log } from './state.js';
 export const PROFILES = {
   ...NEW_PROFILES,
   democracy: { workers:1.02, happiness:8, trade: 1.18, envoy: 1.2, science: 1.12, shipTime: 1.12, reformCost: 1.15 },
-  communism: { science:1.06, happiness:3, production: 1.12, workers: 1.12, trade: .85, upkeep: 1.08 },
-  monarchy: { science:1.04, workers:1.04, happiness:6, upkeep: .88, tax: 1.1, reformStability: .75, reformCost: 1.2 },
-  military: { science:1.08, workers:.96, happiness:2, shipTime: .82, militaryProduction: 1.18, fleetUpkeep: .9, civilianProduction: .93 },
-  technocracy: { workers:1.04, happiness:2, science: 1.25, researchTime: .85, inputEnergy: .92, upkeep: 1.18 },
-  nationalSocialism: { science:1.10, workers:1.10, happiness:2, shipTime: .82, militaryProduction: 1.2, combat: 1.08, reformCost: .8, trade: .85, upkeep: 1.12 }
+  communism: { science:1.06, happiness:3, production: 1.12, workers: 1.14, trade: .85, upkeep: 1.08 },
+  monarchy: { science:1.04, workers:1.04, happiness:6, upkeep: .94, tax: 1.04, reformStability: .75, reformCost: 1.2 },
+  military: { science:1.08, workers:.96, happiness:2, shipTime: .82, militaryProduction: 1.18, fleetUpkeep: .78, combat:1.12, civilianProduction: .93 },
+  technocracy: { workers:1.04, happiness:2, science: 1.25, researchTime: .85, inputEnergy: .92, upkeep: 1.08 },
+  nationalSocialism: { science:1.10, workers:1.12, happiness:2, shipTime: .8, militaryProduction: 1.25, combat: 1.05, reformCost: .8, trade: .85, upkeep: 1.08 }
 };
 export const PROFILE_REASONS = {
   ...NEW_REASONS,
   democracy: 'Wettbewerb und offene Fachdebatten fördern Handel, Diplomatie und Forschung; Mitbestimmung hebt Zustimmung und Beschäftigung. Parlamentarische Abstimmung erhöht Reformkosten und verzögert Werftentscheidungen.',
   communism: 'Zentrale Produktionsplanung und breite Beschäftigung erhöhen Ausstoß und Personalangebot; soziale Grundversorgung stützt Zustimmung und Ausbildung. Verwaltungsaufwand und staatlich geregelter Außenhandel kosten Unterhalt und Exporterlös.',
   monarchy: 'Eine dauerhafte Verwaltung reduziert laufende Kosten und verbessert Abgabenerhebung; Kontinuität stärkt Zustimmung, Ausbildung und Beschäftigung. Eingespielte Machtstrukturen machen Reformen teurer, aber weniger destabiliserend.',
-  military: 'Eine gemeinsame Befehlskette standardisiert Flottenbetrieb und priorisiert Rüstung und Werften. Militärische Forschung und Sicherheitsversorgung erhalten Vorrang; zivile Betriebe verlieren Personal und organisatorische Kapazität.',
+  military: 'Eine gemeinsame Befehlskette, einheitliche Wartung und ausgebildete Besatzungen senken Flottenkosten und erhöhen Gefechtsstärke. Militärische Forschung, Rüstung und Werften erhalten Vorrang; zivile Betriebe verlieren Personal und organisatorische Kapazität.',
   technocracy: 'Ausbildung und Fachgremien erhöhen qualifiziertes Personal, sichern Grundversorgung, verkürzen Entwicklung und optimieren Energieeinsatz. Wissenschaftliche Verwaltung und spezialisierte Infrastruktur erhöhen laufende Kosten.',
-  nationalSocialism: 'Zentralisierte Mobilisierung und Rüstungsaufträge beschleunigen Werften und Waffenfertigung; staatliche Arbeitslenkung, Zweckforschung und Versorgungsprogramme erweitern Personal und technische Entwicklung. Umfangreiche Kontrollapparate kosten Unterhalt; auf den eigenen Machtblock konzentrierter Handel reduziert Exporterlöse.'
+  nationalSocialism: 'Zentralisierte Mobilisierung, standardisierte Serienfertigung und Rüstungsaufträge beschleunigen Werften und Waffenproduktion. Staatliche Arbeitslenkung erweitert das Personalangebot; Zweckforschung und militärische Ausbildung verbessern Entwicklung und Gefechtsstärke. Umfangreiche Kontrollapparate kosten Unterhalt; auf den eigenen Machtblock konzentrierter Handel reduziert Exporterlöse.'
 };
 export const LAWS = {
   economy: { name: 'Wirtschaftsordnung', options: {
