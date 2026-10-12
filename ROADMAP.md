@@ -8,7 +8,7 @@ Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Poli
 
 1. Faire Grundlage: vergleichbare Kosten und Verbräuche werden bei Spieler und KI nach denselben Regeln abgerechnet.
 2. Tragfähige Spielweisen: wirtschaftlicher Ausbau, Handel und militärische Expansion funktionieren unter passenden Bedingungen; keine davon ist in sämtlichen Situationen überlegen.
-3. Lohnende Investitionen: Gebäude, Forschung und Verträge liefern in ihrem vorgesehenen Einsatz einen spürbaren Gegenwert.
+3. Lohnende Investitionen: Gebäude, Forschung und Verträge liefern in ihrem vorgesehenen Einsatz einen spürbaren Gegenwert. Forschungszeitverkürzungen wirken exakt auf die tatsächliche Entwicklungsdauer, einschließlich Bruchteilen eines Spieltags.
 4. Beherrschbare Folgen: Engpässe und Fehlentscheidungen haben Konsequenzen; vorhandene Gegenmaßnahmen funktionieren. Der bewusst mögliche gemeinsame Untergang durch Vernichtung bleibt erhalten.
 5. Glaubwürdige Geldgrößen und Kostenverhältnisse: Staatskassen planetarer Reiche werden in Milliarden und Billionen Credits dargestellt. Dieselbe Einheit gilt für Einnahmen, Unterhalt, Preise, Verträge, Schulden und Kaufentscheidungen. Die reine Zahlenskalierung ersetzt keine Balance der tatsächlichen Erschwinglichkeit.
 
@@ -21,9 +21,17 @@ Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Poli
 
 ### Begrenzter Umfang und Abschluss
 
-- Konkrete Korrekturen: ungleiche Verbrauchsabrechnung, früh ausgereizte Handelsboni sowie Credit-Darstellung und die Finanzierung bereits vorhandener Endspielwaffen.
+- Konkrete Korrekturen: ungleiche Verbrauchsabrechnung, früh ausgereizte Handelsboni, exakte Forschungszeiten sowie Credit-Darstellung und die Finanzierung bereits vorhandener Endspielwaffen.
 - Danach dieselben festgelegten Wirtschaftslagen und Spielweisen vergleichen. Weitere Werte werden in diesem Durchlauf nur bei einer belegten Schieflage geändert.
 - Nach erfüllten Kriterien wird der Stand als ausreichend ausgewogen festgehalten. Weitere Feinjustierung folgt aus konkreten Spielerfahrungen; neue Features eröffnen eine eigene Balanceprüfung.
+
+### Exakte Forschungszeit
+
+- Festgelegt durch den Nutzer: Eine Verkürzung von 10 % soll die tatsächliche Forschungsdauer um 10 % reduzieren. Fünf Spieltage werden zu 4,5 Tagen, drei Spieltage zu 2,7 Tagen. Die Berechnung darf keine ganzen Tage aufrunden; eine versteckte Mindestdauer darf den Bonus ebenfalls nicht abschneiden.
+- Entwicklungsdauer, tatsächlicher Fortschritt und Abschluss müssen Bruchteile eines Spieltags berücksichtigen. Die Zeit wird ab Beginn des Projekts gemessen; eine dezimale Vorschau bei weiterhin ausschließlich täglichen Abschlüssen genügt nicht.
+- Spieler und KI verwenden dieselbe Berechnung und denselben Zeitfortschritt. Laufende Forschung behält ihre bereits zugesagte Restzeit; neue Projekte verwenden die präzise Dauer.
+- Pausen, Spieltempo, Unterbrechungen wegen fehlender Finanzierung und Hintergrundpausen dürfen weder Zeit verschenken noch doppelt abbuchen. Speichern, Laden und Import erhalten die Bruchteile.
+- Die Anzeige verwendet lesbare deutsche Dezimalwerte, während Berechnung und gespeicherter Fortschritt präzise bleiben. Bestehende politische und technische Zeitfaktoren kombinieren weiterhin nach derselben Regel.
 
 ## Lebensbedingungen statt pauschaler Steuer-Mali
 
