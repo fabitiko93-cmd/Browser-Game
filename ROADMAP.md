@@ -1,6 +1,6 @@
-# Vorgemerkt für den nächsten Patch
+# Vorgemerkte Entwicklung
 
-Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Der aktuelle zweite Balance-Teil betrifft politische Profile und diplomatische Forschungsnetze.
+Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Politische Profile und diplomatische Forschungsnetze sind mit 0.10.4 neu gewichtet. Sozialmodell und freiwilliger Spieleinstieg sind für den nächsten Patch vorgemerkt; weitere Entwürfe bleiben gesondert planbar.
 
 ## Lebensbedingungen statt pauschaler Steuer-Mali
 
@@ -16,3 +16,18 @@ Diese Punkte sind mit dem Nutzer besprochen, aber noch nicht implementiert. Der 
 - Ein leicht geführtes Tutorial soll freiwillig als erste Quest gestartet werden können und einmal durch die vorhandenen Mechaniken führen.
 - Alternativ können freiwillige Aufgaben dieselbe Einführung übernehmen. Welche Darstellung und Reihenfolge am besten passt, wird als Nächstes genauer geplant.
 - Der freie Spielstart bleibt möglich. Noch keine festgelegten Questtexte, Belohnungen oder neuen Spielmechaniken.
+
+## Vernichtung und gemeinsamer Untergang
+
+### Festgelegt durch den Nutzer
+
+- Großflächige Vernichtung darf einen Vorherrschaftssieg dauerhaft unmöglich machen. Das ist eine beabsichtigte Folge: Vernichtung solchen Ausmaßes hinterlässt keinen Gewinner. Die feste ursprüngliche Bezugsgröße der aktuellen Siegbedingung wird deshalb nicht als Balancefehler behandelt oder durch eine automatische Ersatz-Siegbedingung umgangen.
+- Die Vernichtung ganzer Systeme und Planeten soll zusätzliche Risiken bergen. Als konkreter Ansatz wurde die Entstehung eines Schwarzen Loches genannt, das nach einer Zeit N das Ende einleitet. Dieser Risikomechanismus ist noch nicht implementiert.
+
+### Noch auszuarbeiten
+
+- Welche Vernichtungswaffen eine solche Entwicklung auslösen können, wie häufig sie auftritt und wie mehrere Einsätze das Risiko beeinflussen.
+- Verlauf und Dauer der Katastrophe, ihre räumliche Ausbreitung und welche Prognose dem Spieler zugänglich ist.
+- Warnungen vor dem Waffeneinsatz, Beobachtung durch Analyse und öffentliche Berichte über die bestehenden Nachrichtenkanäle.
+- Ob überhaupt Gegenmaßnahmen vorgesehen sind. Keine Rettungsaufgabe oder Abwendbarkeit ist beschlossen; ein gemeinsamer Untergang bleibt ausdrücklich möglich.
+- Gleiches Waffenrisiko für Spieler und KI und angemessene KI-Abwägung vor dem Einsatz. Zeitpunkt und Umfang der Umsetzung sind noch offen.
