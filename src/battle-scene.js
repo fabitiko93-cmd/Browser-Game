@@ -11,7 +11,7 @@ const FORWARD = new THREE.Vector3(0, 0, -1);
 export class BattleScene {
   constructor(canvas, { onSelect, onUnavailable, onProgress } = {}) {
     this.canvas = canvas; this.onSelect = onSelect; this.onUnavailable = onUnavailable; this.onProgress = onProgress;
-    this.models = new Map(); this.ships = new Map(); this.disposed = false; this.mode = 'fleet'; this.dirty = true;
+    this.models = new Map(); this.ships = new Map(); this.disposed = false; this.mode = 'ship'; this.dirty = true;
     this.a = new THREE.Vector3(); this.b = new THREE.Vector3(); this.quaternion = new THREE.Quaternion(); this.color = new THREE.Color();
     this.followed = new THREE.Vector3(); this.raycaster = new THREE.Raycaster();
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -19,7 +19,7 @@ export class BattleScene {
     this.renderer.setPixelRatio(this.pixelRatio); this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.5;
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x050813);
-    this.camera = new THREE.PerspectiveCamera(44, 1, 1, 35000);
+    this.camera = new THREE.PerspectiveCamera(42, 1, 1, 35000);
     this.camera.position.set(65, 65, 1610);
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true; this.controls.dampingFactor = .12;
@@ -109,9 +109,9 @@ export class BattleScene {
     }
     ctx.putImageData(image, 0, 0);
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(800, 40, 24), new THREE.MeshPhongMaterial({ map: texture, shininess: 8, specular: 0x142a3e }));
-    planet.position.set(-1800, -950, -4900); planet.rotation.z = -.3; this.scene.add(planet);
-    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(817, 32, 20), new THREE.ShaderMaterial({
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(520, 40, 24), new THREE.MeshPhongMaterial({ map: texture, shininess: 8, specular: 0x142a3e }));
+    planet.position.set(-3300, -1300, -8300); planet.rotation.z = -.3; this.scene.add(planet);
+    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(531, 32, 20), new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.BackSide,
       vertexShader: 'varying vec3 vNormal;void main(){vNormal=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader: 'varying vec3 vNormal;void main(){float rim=pow(1.-abs(vNormal.z),3.);gl_FragColor=vec4(.15,.38,.8,rim*.2);}',
@@ -145,7 +145,7 @@ export class BattleScene {
       if (this.disposed) return;
     }
     for (const ship of battle.ships) this.makeShip(ship);
-    this.resize(); this.setMode('fleet', battle);
+    this.resize(); this.setMode('ship', battle);
   }
 
   makeShip(ship) {
@@ -157,7 +157,7 @@ export class BattleScene {
     body.traverse(object => {
       if (!object.isMesh) return;
       object.userData.shipId = ship.id;
-      object.material = new THREE.MeshPhongMaterial({ map: object.material.map, color: ship.side === 'friendly' ? 0xcde4ff : 0xf5c5ce, shininess: 35, specular: 0x647181 });
+      object.material = new THREE.MeshPhongMaterial({ map: object.material.map, color: ship.side === 'friendly' ? 0xd5e8ff : 0xffd3d9, shininess: 48, specular: 0x77899c, emissive: 0x142039, emissiveIntensity: .16 });
       if (object.material.map) object.material.map.anisotropy = Math.min(2, this.renderer.capabilities.getMaxAnisotropy());
     });
     const group = new THREE.Group(); group.add(bodyRoot); group.updateWorldMatrix(true, true);
@@ -189,7 +189,9 @@ export class BattleScene {
     if (this.disposed) return;
     const width = Math.max(1, this.canvas.clientWidth), height = Math.max(1, this.canvas.clientHeight);
     this.renderer.setSize(width, height, false); this.camera.aspect = width / height;
-    this.viewportTop = (document.querySelector('.battle-toolbar')?.getBoundingClientRect().bottom ?? 0) + 47;
+    const toolbar = document.querySelector('.battle-toolbar')?.getBoundingClientRect().bottom ?? 0;
+    const notice = document.querySelector('.battle-notice')?.getBoundingClientRect().bottom ?? 0;
+    this.viewportTop = Math.max(toolbar + 42, notice + 7);
     this.viewportBottom = document.querySelector('.battle-bottom')?.getBoundingClientRect().top ?? height;
     this.camera.setViewOffset(width, height, 0, height / 2 - (this.viewportTop + this.viewportBottom) / 2, width, height);
     this.camera.updateProjectionMatrix(); this.dirty = true;
@@ -197,11 +199,13 @@ export class BattleScene {
 
   setMode(mode, battle) {
     this.mode = mode;
-    const own = this.ships.get(battle.selected), enemy = mode === 'enemy';
+    const focusId = mode === 'target' ? battle.target : battle.selected, focus = this.ships.get(focusId);
+    const enemy = mode === 'target'; this.focusId = focusId;
     const elevation = Math.min(1, Math.max(.25, (this.viewportBottom - this.viewportTop) / 260));
-    if (mode === 'ship' && own) {
-      this.controls.target.copy(own.group.position);
-      this.camera.position.copy(own.group.position).add(this.a.set(.6, .4 * elevation, 3.5).multiplyScalar(DEMO_CLASSES[battle.ships.find(s => s.id === battle.selected).type].size));
+    if ((mode === 'ship' || mode === 'target') && focus) {
+      this.controls.target.copy(focus.group.position);
+      const sign = enemy ? -1 : 1;
+      this.camera.position.copy(focus.group.position).add(this.a.set(sign * .6, .7 * elevation, sign * 4.2).multiplyScalar(DEMO_CLASSES[battle.ships.find(s => s.id === focusId).type].size));
     } else if (mode === 'overview') {
       const friendly = this.a.fromArray(fleetCenter(battle, 'friendly')), hostile = this.b.fromArray(fleetCenter(battle, 'enemy'));
       const separation = friendly.distanceTo(hostile);
@@ -219,7 +223,7 @@ export class BattleScene {
   updateAttachments(battle, time) {
     let guns = 0, engines = 0;
     for (const ship of battle.ships) {
-      const view = this.ships.get(ship.id); if (!view.group.visible) continue;
+      const view = this.ships.get(ship.id); if (!view?.group.visible) continue;
       for (const gun of view.guns) this.gunBatch.setMatrixAt(guns++, gun.matrixWorld);
       for (const { engine, plume } of view.engines) {
         this.coreBatch.setMatrixAt(engines, engine.matrixWorld);
@@ -251,9 +255,11 @@ export class BattleScene {
     }
     for (const event of events) if (event.kind === 'impact' && event.shield) { const target = this.ships.get(event.target); if (target) target.pulse = .85; }
     for (const view of this.ships.values()) { view.shield.visible = view.pulse > .01 && view.group.visible; view.shield.material.uniforms.strength.value = view.pulse; }
+    const focusId = this.mode === 'target' ? battle.target : battle.selected;
+    if ((this.mode === 'ship' || this.mode === 'target') && focusId !== this.focusId) this.setMode(this.mode, battle);
     if (this.mode !== 'overview') {
-      if (this.mode === 'ship') this.a.copy(this.ships.get(battle.selected).group.position);
-      else this.a.fromArray(fleetCenter(battle, this.mode === 'enemy' ? 'enemy' : 'friendly'));
+      if (this.mode === 'ship' || this.mode === 'target') this.a.copy(this.ships.get(focusId)?.group.position ?? this.controls.target);
+      else this.a.fromArray(fleetCenter(battle, 'friendly'));
       this.b.subVectors(this.a, this.followed); this.camera.position.add(this.b); this.controls.target.add(this.b); this.followed.copy(this.a);
     }
     this.updateAttachments(battle, time); this.effects.update(battle, time, events, this.ships);
@@ -268,8 +274,30 @@ export class BattleScene {
       this.a.copy(view.group.position); this.a.y += view.size.y * .55 + 1.5;
     }
     this.a.project(this.camera);
-    if (this.a.z < -1 || this.a.z > 1 || Math.abs(this.a.x) > .95 || Math.abs(this.a.y) > .95) return null;
-    return { x: (this.a.x + 1) * this.canvas.clientWidth / 2, y: (1 - this.a.y) * this.canvas.clientHeight / 2 - (id.startsWith('fleet:') ? 13 : 8) };
+    const width = this.canvas.clientWidth, height = this.canvas.clientHeight;
+    let x = (this.a.x + 1) * width / 2, y = (1 - this.a.y) * height / 2 - (id.startsWith('fleet:') ? 13 : 8);
+    const offscreen = this.a.z < -1 || this.a.z > 1 || x < 12 || x > width - 12 || y < this.viewportTop + 14 || y > this.viewportBottom - 14;
+    const arrow = x > width / 2 ? y < (this.viewportTop + this.viewportBottom) / 2 ? '↗' : '↘' : y < (this.viewportTop + this.viewportBottom) / 2 ? '↖' : '↙';
+    if (!id.startsWith('fleet:') && this.a.z > 1) return null;
+    x = Math.max(14, Math.min(width - 14, x)); y = Math.max(this.viewportTop + 18, Math.min(this.viewportBottom - 18, y));
+    return { x, y, offscreen, arrow };
+  }
+
+  focusBounds(battle) {
+    if (this.mode === 'overview') return null;
+    const view = this.ships.get(this.mode === 'target' ? battle.target : battle.selected);
+    if (!view?.group.visible) return null;
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) {
+      this.a.set(x * view.size.x / 2, y * view.size.y / 2, z * view.size.z / 2).applyMatrix4(view.group.matrixWorld).project(this.camera);
+      if (this.a.z < -1 || this.a.z > 1) return null;
+      const px = (this.a.x + 1) * this.canvas.clientWidth / 2, py = (1 - this.a.y) * this.canvas.clientHeight / 2;
+      left = Math.min(left, px); right = Math.max(right, px); top = Math.min(top, py); bottom = Math.max(bottom, py);
+    }
+    left = Math.max(8, left - 7); right = Math.min(this.canvas.clientWidth - 8, right + 7);
+    top = Math.max(this.viewportTop + 8, top - 7); bottom = Math.min(this.viewportBottom - 8, bottom + 7);
+    if (right - left < 10 || bottom - top < 6) return null;
+    return { x: left, y: top, width: right - left, height: bottom - top };
   }
 
   releaseObjects(objects) {

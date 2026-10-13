@@ -14,29 +14,39 @@
   <main id="battle-app">
     <canvas id="battle-canvas" aria-label="Dreidimensionales Übungsgefecht. Mit einem Finger drehen, mit zwei Fingern zoomen und verschieben. Schiffe antippen." role="img"></canvas>
     <header class="battle-header">
-      <div><span class="battle-brand">ORBIT <b>3077</b></span><h1>Orbitalgefecht</h1><span class="demo-tag">PROBESCHLACHT</span></div>
+      <div><span class="battle-brand">ORBIT <b>3077</b> · ÜBUNG</span><h1>Orbitalgefecht</h1></div>
       <a class="control-button back-button" href="./" aria-label="Zurück zum Reich">← Reich</a>
     </header>
     <div class="battle-summary"><span><i class="side-dot friendly"></i><b id="friendly-count">4</b> eigene</span><span><i class="side-dot enemy"></i><b id="enemy-count">4</b> Gegner</span><span id="battle-day">Tag 0,0</span></div>
     <div class="battle-toolbar" aria-label="Kamera und Zeit">
-      <button class="control-button" id="camera-mode" aria-label="Kamera: Eigene Flotte" title="Eigene Flotte, Feindflotte, Übersicht, Schiffskamera">◉ <span>Eigene Flotte</span></button>
+      <button class="control-button" id="camera-mode" aria-label="Kamera: Nahansicht" title="Nahansicht, Zielkamera, Flotte, Taktik">◉ <span>Nahansicht</span></button>
       <button class="control-button" id="battle-pause" aria-label="Probeschlacht pausieren">Ⅱ</button>
       <button class="control-button" id="battle-speed" aria-label="Geschwindigkeit ändern">1×</button><button class="control-button" id="restart" aria-label="Probeschlacht neu starten">↻</button>
     </div>
     <div id="ship-labels" class="ship-labels" aria-hidden="true"></div>
+    <div id="focus-bracket" class="focus-bracket" aria-hidden="true" hidden></div>
     <p id="battle-range" class="battle-range">Flottenabstand · 50,0 km</p>
     <p id="battle-notice" class="battle-notice" role="status" aria-live="polite">Modelle werden geladen …</p>
     <section id="battle-bottom" class="battle-bottom" aria-label="Gefechtskommando">
       <p class="gesture-hint" id="gesture-hint">Drehen · Aufziehen zum Zoomen · Schiff antippen</p>
       <div class="ship-selector" id="ship-selector" aria-label="Eigenes Schiff auswählen"></div>
       <div class="command-card">
-        <div class="selected-heading"><div><span class="small-label">AUSGEWÄHLTES SCHIFF</span><h2 id="selected-name">Aurora</h2><span id="selected-class">Schlachtkreuzer</span></div><div class="target-heading"><span class="small-label">ZIEL</span><button id="cycle-target" class="target-button"><span id="target-name">Nemesis</span><span aria-hidden="true">↻</span></button></div></div><span class="ship-order" id="selected-order">Torpedobatterie · Im Gefecht</span>
+        <div class="selected-heading"><div><h2 id="selected-name">Aurora</h2><span id="selected-class">Schlachtkreuzer</span></div><button id="target-picker" class="target-button" aria-haspopup="dialog" aria-controls="contacts-dialog"><small>ZIELE WÄHLEN</small><span id="target-name">Nemesis</span><span aria-hidden="true">⌄</span></button></div><span class="ship-order" id="selected-order">Torpedobatterie · Im Gefecht</span>
         <div class="ship-health"><label>Hülle <b id="hull-value">100 %</b><span class="health-track"><i id="hull-bar"></i></span></label><label>Schild <b id="shield-value">100 %</b><span class="health-track shield"><i id="shield-bar"></i></span></label></div>
         
         <div class="command-actions"><button id="focus-fire" class="control-button primary" aria-pressed="false">Feuer bündeln</button><button id="retreat" class="control-button danger">Rückzug</button></div>
       </div>
       <p class="demo-footnote">Übungsgefecht · Dein Reich bleibt pausiert.</p>
     </section>
+    <dialog id="contacts-dialog" class="contacts-dialog" aria-labelledby="contacts-heading">
+      <header class="contacts-heading"><div><h2 id="contacts-heading">Gegnerische Kontakte <span id="contact-count">4</span></h2><p>Einzelziel wählen oder eine Klasse priorisieren.</p></div><button id="contacts-close" class="control-button" aria-label="Zielauswahl schließen" autofocus>×</button></header>
+      <div class="contact-tools"><input id="contact-search" type="search" placeholder="Schiff suchen …" aria-label="Gegner nach Name oder Klasse suchen" autocomplete="off"><select id="contact-sort" aria-label="Gegner sortieren"><option value="class">Klasse</option><option value="distance">Distanz</option><option value="hull">Hülle</option></select></div>
+      <div id="contact-filters" class="contact-filters" aria-label="Schiffsklasse filtern"></div>
+      <div id="contact-list" class="contact-list" aria-label="Gegnerische Schiffe"></div>
+      <p id="contact-empty" class="contact-empty" hidden>Keine passenden aktiven Kontakte.</p>
+      <footer class="contact-pages"><span id="contact-results">4 Kontakte</span><button id="contact-prev" class="control-button" aria-label="Vorherige Kontaktseite">‹</button><span id="contact-page">1 / 1</span><button id="contact-next" class="control-button" aria-label="Nächste Kontaktseite">›</button></footer>
+      <div class="contact-actions"><button id="contact-priority" class="control-button primary">Klasse für Schwerpunkt wählen</button><button id="contact-inspect" class="control-button">Ziel ansehen</button></div>
+    </dialog>
     <div id="battle-loading" class="loading-screen"><div class="loading-orbit" aria-hidden="true"></div><h2>Flotten werden bereitgestellt</h2><p id="loading-progress">Quaternius-Schiffe laden …</p><p>Vier Schiffstypen · echte 3D-Modelle</p></div>
     <div id="battle-error" class="error-screen" hidden><h2>Probeschlacht nicht verfügbar</h2><p id="battle-error-text"></p><button class="control-button primary" id="retry">Erneut versuchen</button><a class="control-button" href="./">Zurück zum Reich</a></div>
   </main>

@@ -27,7 +27,7 @@ export function createDemoBattle() {
     ['wraith', 'Wraith', 'enemy', 'interceptor', -35, -20, -915],
   ];
   return {
-    day: 0, remainder: 0, tick: 0, phase: 'engaged', selected: 'aurora', target: 'nemesis', focus: false,
+    day: 0, remainder: 0, tick: 0, phase: 'engaged', selected: 'aurora', target: 'nemesis', focus: false, priority: null,
     projectileId: 0, projectiles: [],
     ships: lineup.map(([id, name, side, type, x, y, z], i) => {
       const def = DEMO_CLASSES[type];
@@ -52,31 +52,37 @@ export function selectDemoShip(battle, id) {
   const ship = battle.ships.find(s => s.id === id && activeShip(s));
   if (!ship) return false;
   if (ship.side === 'friendly') battle.selected = id;
-  else battle.target = id;
+  else { battle.target = id; battle.priority = null; }
   return true;
 }
-export function commandDemo(battle, command) {
+export function commandDemo(battle, command, value = null) {
   if (battle.phase !== 'engaged') return false;
   if (command === 'focus') battle.focus = !battle.focus;
+  else if (command === 'priority') {
+    if (!Object.hasOwn(DEMO_CLASSES, value) || !battle.ships.some(ship => ship.side === 'enemy' && ship.type === value && activeShip(ship))) return false;
+    battle.priority = value; battle.focus = true;
+    battle.target = battle.ships.find(ship => ship.side === 'enemy' && ship.type === value && activeShip(ship)).id;
+  }
   else if (command === 'retreat') {
     for (const ship of battle.ships) if (ship.side === 'friendly' && activeShip(ship)) ship.order = 'retreat';
-    battle.focus = false;
+    battle.focus = false; battle.priority = null;
   } else return false;
   return true;
 }
 
 function targetFor(battle, attacker) {
   const range = WEAPONS[DEMO_CLASSES[attacker.type].weapon].range;
-  let best, score = Infinity;
+  let best, preferred, score = Infinity, preferredScore = Infinity;
   for (const ship of battle.ships) {
     if (ship.side === attacker.side || !activeShip(ship)) continue;
     const separation = distance(ship.position, attacker.position);
     if (separation > range) continue;
-    if (attacker.side === 'friendly' && battle.focus && ship.id === battle.target) return ship;
+    if (attacker.side === 'friendly' && battle.focus && !battle.priority && ship.id === battle.target) return ship;
     const candidate = separation - (ship.type === attacker.type ? 300 : 0);
     if (candidate < score) { score = candidate; best = ship; }
+    if (attacker.side === 'friendly' && battle.focus && ship.type === battle.priority && candidate < preferredScore) { preferredScore = candidate; preferred = ship; }
   }
-  return best;
+  return preferred ?? best;
 }
 export function demoTarget(battle, ship) {
   return battle.ships.find(target => target.id === ship.target && activeShip(target));
@@ -175,7 +181,8 @@ export function advanceDemoBattle(battle, days) {
     if (!enemy.length) battle.phase = 'victory';
     else if (!friendly.length) battle.phase = battle.ships.some(s => s.side === 'friendly' && s.escaped) ? 'withdrawn' : 'defeat';
     if (!friendly.some(s => s.id === battle.selected) && friendly.length) battle.selected = friendly[0].id;
-    if (!enemy.some(s => s.id === battle.target) && enemy.length) battle.target = enemy[0].id;
+    if (battle.priority && !enemy.some(s => s.type === battle.priority)) { battle.priority = null; battle.focus = false; events.push({ kind: 'priority-end', day: battle.day }); }
+    if (!enemy.some(s => s.id === battle.target) && enemy.length) battle.target = (enemy.find(s => s.type === battle.priority) ?? enemy[0]).id;
   }
   if (battle.phase !== 'engaged') { battle.remainder = 0; battle.projectiles.length = 0; }
   return events;
