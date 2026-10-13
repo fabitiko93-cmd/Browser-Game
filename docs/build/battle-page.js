@@ -1,11 +1,27 @@
 import { BattleScene } from './battle-scene.js';
-import { createDemoBattle, advanceDemoBattle, selectDemoShip, commandDemo, activeShip, DEMO_CLASSES } from './battle-demo.js';
+import { createDemoBattle, advanceDemoBattle, selectDemoShip, commandDemo, activeShip, DEMO_CLASSES, fleetDistanceKm, WEAPONS } from './battle-demo.js';
 import { MediaAudio } from './audio-media.js';
 
 const $ = id => document.getElementById(id);
 const audio = new MediaAudio();
-let battle, view, ready = false, paused = false, speed = 1, lastFrame = 0, visualTime = 0, lastHud = 0, lastSound = 0, generation = 0;
+let battle, view, ready = false, paused = false, speed = 1, lastFrame = 0, lastRender = 0, visualTime = 0, lastHud = 0, lastSound = 0, generation = 0;
+let pendingEvents = [];
+const shipButtons = new Map(), labelNodes = [];
+const cameraModes = ['fleet', 'enemy', 'overview', 'ship'];
+const cameraLabels = { fleet: 'Eigene Flotte', enemy: 'Feindflotte', overview: 'Übersicht', ship: 'Schiffskamera' };
 const dayFormat = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+function setText(id, text) { const element = $(id); if (element.textContent !== String(text)) element.textContent = text; }
+function setDisabled(id, value) { if ($(id).disabled !== value) $(id).disabled = value; }
+function initializeHud() {
+  shipButtons.clear();
+  $('ship-selector').replaceChildren();
+  for (const ship of battle.ships.filter(s => s.side === 'friendly')) {
+    const button = document.createElement('button'); button.dataset.ship = ship.id; button.textContent = ship.name;
+    $('ship-selector').append(button); shipButtons.set(ship.id, button);
+  }
+  $('ship-labels').replaceChildren(); labelNodes.length = 0;
+  for (let i = 0; i < 2; i++) { const label = document.createElement('span'); label.className = 'ship-label'; label.hidden = true; $('ship-labels').append(label); labelNodes.push(label); }
+}
 
 function notice(text) { $('battle-notice').textContent = text; }
 function failed(message) {
@@ -17,18 +33,19 @@ function failed(message) {
 
 async function start() {
   const currentGeneration = ++generation;
-  ready = false; paused = false; lastFrame = 0; visualTime = 0; lastHud = 0; lastSound = 0;
+  ready = false; paused = false; lastFrame = 0; lastRender = 0; visualTime = 0; lastHud = 0; lastSound = 0; pendingEvents = [];
   view?.dispose(); view = null;
   const oldCanvas = $('battle-canvas');
   oldCanvas.replaceWith(oldCanvas.cloneNode(false));
   battle = createDemoBattle();
+  initializeHud();
   $('battle-loading').hidden = false;
   $('battle-error').hidden = true;
   $('loading-progress').textContent = 'Quaternius-Schiffe laden …';
   notice('');
   try {
     view = new BattleScene($('battle-canvas'), {
-      onSelect: id => { if (ready && selectDemoShip(battle, id)) { if (view.mode === 'ship') view.setMode('ship', battle); audio.play('confirm'); paint(); } },
+      onSelect: id => { if (ready && selectDemoShip(battle, id)) { if (view.mode === 'ship') view.setMode('ship', battle); audio.play('confirm'); paint(); lastRender = 0; } },
       onUnavailable: failed,
       onProgress: (loaded, total) => { if (currentGeneration === generation) $('loading-progress').textContent = `${loaded} von ${total} Schiffstypen bereit`; },
     });
@@ -38,8 +55,8 @@ async function start() {
     view.render(battle, 0);
     ready = true;
     $('battle-loading').hidden = true;
-    $('camera-mode').querySelector('span').textContent = 'Übersicht';
-    $('camera-mode').setAttribute('aria-label', 'Kamera: Übersicht');
+    $('camera-mode').querySelector('span').textContent = 'Eigene Flotte';
+    $('camera-mode').setAttribute('aria-label', 'Kamera: Eigene Flotte');
     paint(); view.resize();
   } catch (error) {
     if (currentGeneration !== generation) return;
@@ -51,53 +68,65 @@ async function start() {
 function paint() {
   const friendly = battle.ships.filter(s => s.side === 'friendly'), enemy = battle.ships.filter(s => s.side === 'enemy' && activeShip(s));
   const ship = friendly.find(s => s.id === battle.selected), def = DEMO_CLASSES[ship.type];
-  $('friendly-count').textContent = friendly.filter(activeShip).length;
-  $('enemy-count').textContent = enemy.length;
-  $('battle-day').textContent = `Tag ${dayFormat.format(battle.day)}`;
-  const html = friendly.map(s => `<button data-ship="${s.id}" class="${s.id === battle.selected ? 'selected' : ''} ${activeShip(s) ? '' : 'disabled'}" aria-pressed="${s.id === battle.selected}" ${activeShip(s) ? '' : 'disabled'}>${s.name}</button>`).join('');
-  if ($('ship-selector').innerHTML !== html) $('ship-selector').innerHTML = html;
-  $('selected-name').textContent = ship.name;
-  $('selected-class').textContent = def.name;
-  $('selected-order').textContent = ship.escaped ? 'Entkommen' : !ship.hull ? 'Verloren' : ship.order === 'retreat' ? 'Rückzug' : battle.focus ? 'Feuer bündeln' : 'Im Gefecht';
+  setText('friendly-count', friendly.filter(activeShip).length);
+  setText('enemy-count', enemy.length);
+  setText('battle-day', `Tag ${dayFormat.format(battle.day)}`);
+  setText('battle-range', `Flottenabstand · ${dayFormat.format(fleetDistanceKm(battle))} km`);
+  for (const own of friendly) {
+    const button = shipButtons.get(own.id), selected = own.id === battle.selected, disabled = !activeShip(own);
+    button.classList.toggle('selected', selected); button.classList.toggle('disabled', disabled);
+    if (button.disabled !== disabled) button.disabled = disabled;
+    if (button.getAttribute('aria-pressed') !== String(selected)) button.setAttribute('aria-pressed', String(selected));
+  }
+  setText('selected-name', ship.name); setText('selected-class', def.name);
+  const order = ship.escaped ? 'Entkommen' : !ship.hull ? 'Verloren' : ship.order === 'retreat' ? 'Rückzug' : battle.focus ? 'Feuer bündeln' : 'Im Gefecht';
+  setText('selected-order', `${WEAPONS[def.weapon].name} · ${order}`);
   const hull = Math.round(ship.hull / def.hull * 100), shield = Math.round(ship.shield / def.shield * 100);
-  $('hull-value').textContent = `${hull} %`; $('shield-value').textContent = `${shield} %`;
-  $('hull-bar').style.width = `${hull}%`; $('shield-bar').style.width = `${shield}%`;
+  setText('hull-value', `${hull} %`); setText('shield-value', `${shield} %`);
+  if ($('hull-bar').style.width !== `${hull}%`) $('hull-bar').style.width = `${hull}%`;
+  if ($('shield-bar').style.width !== `${shield}%`) $('shield-bar').style.width = `${shield}%`;
   $('hull-bar').parentElement.classList.toggle('damaged', hull < 30);
   const target = enemy.find(s => s.id === battle.target);
-  $('cycle-target').innerHTML = `${target?.name ?? 'Kein Ziel'} <span>↻</span>`;
-  $('cycle-target').disabled = !enemy.length || battle.phase !== 'engaged';
-  $('focus-fire').setAttribute('aria-pressed', String(battle.focus));
-  $('focus-fire').textContent = battle.focus ? 'Feuer gebündelt ✓' : 'Feuer bündeln';
-  $('focus-fire').disabled = battle.phase !== 'engaged' || friendly.every(s => !activeShip(s) || s.order === 'retreat');
-  $('retreat').disabled = battle.phase !== 'engaged' || friendly.every(s => !activeShip(s) || s.order === 'retreat');
-  $('battle-pause').textContent = paused ? '▶' : 'Ⅱ';
-  $('battle-pause').setAttribute('aria-label', paused ? 'Probeschlacht fortsetzen' : 'Probeschlacht pausieren');
-  $('battle-speed').textContent = `${speed}×`;
+  setText('target-name', target?.name ?? 'Kein Ziel');
+  setDisabled('cycle-target', !enemy.length || battle.phase !== 'engaged');
+  if ($('focus-fire').getAttribute('aria-pressed') !== String(battle.focus)) $('focus-fire').setAttribute('aria-pressed', String(battle.focus));
+  setText('focus-fire', battle.focus ? 'Feuer gebündelt ✓' : 'Feuer bündeln');
+  setDisabled('focus-fire', battle.phase !== 'engaged' || friendly.every(s => !activeShip(s) || s.order === 'retreat'));
+  setDisabled('retreat', battle.phase !== 'engaged' || friendly.every(s => !activeShip(s) || s.order === 'retreat'));
+  setText('battle-pause', paused ? '▶' : 'Ⅱ');
+  const pauseLabel = paused ? 'Probeschlacht fortsetzen' : 'Probeschlacht pausieren';
+  if ($('battle-pause').getAttribute('aria-label') !== pauseLabel) $('battle-pause').setAttribute('aria-label', pauseLabel);
+  setText('battle-speed', `${speed}×`);
   const results = { victory: 'Gegnerische Flotte ausgeschaltet.', defeat: 'Eigene Flotte verloren.', withdrawn: 'Rückzug abgeschlossen.' };
-  if (results[battle.phase]) { notice(results[battle.phase]); $('battle-pause').disabled = true; }
-  else $('battle-pause').disabled = false;
+  if (results[battle.phase]) { notice(results[battle.phase]); setDisabled('battle-pause', true); }
+  else setDisabled('battle-pause', false);
 }
 
 function labels() {
-  const ids = [battle.selected, battle.target], html = [];
-  for (const id of ids) {
-    const ship = battle.ships.find(s => s.id === id), position = view.labelPosition(id);
-    if (!position || position.y < document.querySelector('.battle-toolbar').getBoundingClientRect().bottom + 8 || position.y > $('battle-bottom').getBoundingClientRect().top - 8) continue;
-    html.push(`<span class="ship-label ${ship.side === 'enemy' ? 'enemy' : ''}" style="left:${position.x}px;top:${position.y}px">${ship.name.toUpperCase()}</span>`);
+  const ids = view.mode === 'overview' ? ['fleet:friendly', 'fleet:enemy'] : [view.mode === 'enemy' ? battle.target : battle.selected, view.mode === 'enemy' ? 'fleet:friendly' : 'fleet:enemy'];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i], label = labelNodes[i], ship = battle.ships.find(s => s.id === id), side = ship?.side ?? id.split(':')[1];
+    const position = view.labelPosition(id, battle);
+    label.hidden = !position || position.y < view.viewportTop + 8 || position.y > view.viewportBottom - 8;
+    if (label.hidden) continue;
+    const text = ship?.name.toUpperCase() ?? (side === 'friendly' ? 'EIGENE FLOTTE' : 'FEINDFLOTTE');
+    if (label.textContent !== text) label.textContent = text;
+    label.classList.toggle('enemy', side === 'enemy');
+    const x = Math.max(56, Math.min(view.canvas.clientWidth - 56, position.x));
+    label.style.transform = `translate3d(${x}px,${position.y}px,0) translate(-50%,-50%)`;
   }
-  $('ship-labels').innerHTML = html.join('');
 }
 
 document.addEventListener('click', event => {
   const selected = event.target.closest('[data-ship]');
-  if (selected && selectDemoShip(battle, selected.dataset.ship)) { if (view?.mode === 'ship') view.setMode('ship', battle); audio.play('confirm'); paint(); return; }
+  if (selected && selectDemoShip(battle, selected.dataset.ship)) { if (view?.mode === 'ship') view.setMode('ship', battle); audio.play('confirm'); paint(); lastRender = 0; return; }
   const id = event.target.closest('button')?.id;
   if (['restart', 'retry'].includes(id)) { speed = 1; void start(); return; }
   if (!ready) return;
   if (id === 'camera-mode') {
-    const mode = view.mode === 'overview' ? 'ship' : 'overview';
+    const mode = cameraModes[(cameraModes.indexOf(view.mode) + 1) % cameraModes.length];
     view.setMode(mode, battle);
-    const label = mode === 'overview' ? 'Übersicht' : 'Schiffskamera';
+    const label = cameraLabels[mode];
     $('camera-mode').querySelector('span').textContent = label;
     $('camera-mode').setAttribute('aria-label', `Kamera: ${label}`);
   } else if (id === 'battle-pause') { paused = !paused; lastFrame = 0; }
@@ -109,6 +138,7 @@ document.addEventListener('click', event => {
   } else if (id === 'focus-fire' && commandDemo(battle, 'focus')) notice(battle.focus ? 'Eigene Schiffe konzentrieren ihr Feuer auf das gewählte Ziel.' : 'Schiffe wählen wieder eigene Ziele.');
   else if (id === 'retreat' && commandDemo(battle, 'retreat')) notice('Alle eigenen Schiffe ziehen sich zurück und erwidern das Feuer.');
   paint();
+  lastRender = 0;
 });
 for (const event of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(event, () => { void audio.unlock(); }, { capture: true, passive: true });
 document.addEventListener('visibilitychange', () => {
@@ -125,11 +155,16 @@ function frame(now) {
   if (ready && !document.hidden) {
     const running = !paused && battle.phase === 'engaged';
     const events = running ? advanceDemoBattle(battle, seconds * speed / 3) : [];
+    pendingEvents.push(...events);
     if (!paused) visualTime += seconds;
-    view.render(battle, visualTime, events, running ? seconds : 0);
+    if ((running || (!paused && view.animating) || view.dirty || !lastRender || pendingEvents.length) && (!lastRender || now - lastRender >= 1000 / 30 - 1)) {
+      view.render(battle, visualTime, pendingEvents, !paused ? Math.min(.1, (now - (lastRender || now)) / 1000) : 0);
+      pendingEvents.length = 0; lastRender = now;
+      labels();
+    }
     if (events.some(e => e.kind === 'fire') && visualTime - lastSound > 1.8) { audio.play('attack'); lastSound = visualTime; }
     if (events.some(e => e.kind === 'destroy')) audio.play('warning');
-    if (now - lastHud > 150) { paint(); labels(); lastHud = now; }
+    if (now - lastHud > 200) { paint(); lastHud = now; }
   }
   requestAnimationFrame(frame);
 }

@@ -19,17 +19,18 @@
     </header>
     <div class="battle-summary"><span><i class="side-dot friendly"></i><b id="friendly-count">4</b> eigene</span><span><i class="side-dot enemy"></i><b id="enemy-count">4</b> Gegner</span><span id="battle-day">Tag 0,0</span></div>
     <div class="battle-toolbar" aria-label="Kamera und Zeit">
-      <button class="control-button" id="camera-mode" aria-label="Kamera: Übersicht" title="Zwischen Übersicht und Schiffskamera wechseln">◉ <span>Übersicht</span></button>
+      <button class="control-button" id="camera-mode" aria-label="Kamera: Eigene Flotte" title="Eigene Flotte, Feindflotte, Übersicht, Schiffskamera">◉ <span>Eigene Flotte</span></button>
       <button class="control-button" id="battle-pause" aria-label="Probeschlacht pausieren">Ⅱ</button>
       <button class="control-button" id="battle-speed" aria-label="Geschwindigkeit ändern">1×</button><button class="control-button" id="restart" aria-label="Probeschlacht neu starten">↻</button>
     </div>
     <div id="ship-labels" class="ship-labels" aria-hidden="true"></div>
+    <p id="battle-range" class="battle-range">Flottenabstand · 50,0 km</p>
     <p id="battle-notice" class="battle-notice" role="status" aria-live="polite">Modelle werden geladen …</p>
     <section id="battle-bottom" class="battle-bottom" aria-label="Gefechtskommando">
       <p class="gesture-hint" id="gesture-hint">Drehen · Aufziehen zum Zoomen · Schiff antippen</p>
       <div class="ship-selector" id="ship-selector" aria-label="Eigenes Schiff auswählen"></div>
       <div class="command-card">
-        <div class="selected-heading"><div><span class="small-label">AUSGEWÄHLTES SCHIFF</span><h2 id="selected-name">Aurora</h2><span id="selected-class">Schlachtkreuzer</span></div><div class="target-heading"><span class="small-label">ZIEL</span><button id="cycle-target" class="target-button">Nemesis <span>↻</span></button></div></div><span class="ship-order" id="selected-order">Im Gefecht</span>
+        <div class="selected-heading"><div><span class="small-label">AUSGEWÄHLTES SCHIFF</span><h2 id="selected-name">Aurora</h2><span id="selected-class">Schlachtkreuzer</span></div><div class="target-heading"><span class="small-label">ZIEL</span><button id="cycle-target" class="target-button"><span id="target-name">Nemesis</span><span aria-hidden="true">↻</span></button></div></div><span class="ship-order" id="selected-order">Torpedobatterie · Im Gefecht</span>
         <div class="ship-health"><label>Hülle <b id="hull-value">100 %</b><span class="health-track"><i id="hull-bar"></i></span></label><label>Schild <b id="shield-value">100 %</b><span class="health-track shield"><i id="shield-bar"></i></span></label></div>
         
         <div class="command-actions"><button id="focus-fire" class="control-button primary" aria-pressed="false">Feuer bündeln</button><button id="retreat" class="control-button danger">Rückzug</button></div>

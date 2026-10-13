@@ -4,10 +4,12 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
-## 3D-Probeschlacht · 0.11.0
+## 3D-Probeschlacht · 0.11.1
 
 - Unter **Flotte → Probeschlacht öffnen** oder direkt über [battle.html](https://fabitiko93-cmd.github.io/Browser-Game/battle.html) starten. Das Reich wird vor dem Wechsel gespeichert und pausiert. Die Übung verwendet eigene Schiffe und einen eigenen Spielzeit-Takt; sie verändert keine Ressourcen, Forschungen oder Flotten des Spielstands.
-- Vier echte Quaternius-Rümpfe, acht Schiffe, freie Touchkamera und nahe Schiffskamera, gerichtete Geschütze, Triebwerke, Laserfeuer, Treffereffekte und aufleuchtende Schilde. Eigene Schiffe und Gegner lassen sich antippen; Feuerbündelung und Rückzug wirken auf die Übungssimulation.
+- Vier echte Quaternius-Rümpfe und acht Schiffe in zwei festen, rund 50 km getrennten Formationen. Die Flotten nähern sich im Gefecht nicht an. Torpedos fliegen gelenkt mit sichtbarer Spur, Massentreiber verschießen schnelle Geschosse, Laserkorvetten treffen direkt und Abfangjäger feuern violette Pulse. Geschosse verursachen Schaden erst bei Ankunft; Reichweiten und Flugzeiten gehören zur Übungssimulation.
+- Kameras für eigene Flotte, Feindflotte, gesamte Distanz und ausgewähltes Schiff; freie Touchkamera, gerichtete Geschütze, Triebwerke, Treffereffekte und aufleuchtende Schilde. Eigene Schiffe und Gegner lassen sich antippen; Feuerbündelung verändert die tatsächliche Zielwahl. Nur ein befohlener Rückzug bewegt die eigene Flotte aus dem Gefecht.
+- Stabile Bedienfelder behalten ihre DOM-Knoten auch während laufender HUD-Updates; ein laufender Tastendruck geht nicht durch Austausch des Buttons verloren. Der Renderer verwendet gebündelte Anbauteile, feste Effektpuffer, einmal vorberechnete Hintergrundtexturen, maximal native Pixelauflösung und etwa 30 Bilder pro Sekunde. In Pause zeichnet er nur bei einer Änderung, etwa Kamerabewegung oder Auswahl.
 - Pause, 1×/2×/4× und Neustart. Ein Übungstag dauert bei 1× drei Sekunden. Der Hintergrund pausiert die Übung; es gibt keine Kalender- oder Offline-Fortschreibung.
 - Vier lokal mitgelieferte GLB-Modelle mit 1024px-Texturen benötigen zusammen etwa 1,5 MB. Quaternius veröffentlicht die Originale unter CC0; Quelle, Änderungen und Prüfsummen stehen in `web/models/quaternius/`. Three.js wird als lokales Modul gebündelt, einschließlich MIT-Lizenz. Zur Laufzeit werden keine externen Modelle oder Bibliotheken geladen.
 - Dies ist die erste Grafik- und Bedienungsprobe. Dauerhafte strategische Gefechte über Wochen oder Monate **Spielzeit** und ihre spätere Verbindung mit der 3D-Ansicht sind noch nicht umgesetzt. Die bestehenden strategischen Kampfregeln bleiben erhalten.
@@ -172,9 +174,10 @@ Alle wichtigen Verwaltungsaktionen liegen im unteren Bildschirmbereich. Das Deta
 
 ## Entwicklung
 
-Node 22 oder neuer. Keine Paketinstallation nötig.
+Node 22 oder neuer. Die Grafikbibliothek und der Bundler sind im Lockfile festgelegt.
 
 ```sh
+npm ci
 npm run dev
 ```
 
