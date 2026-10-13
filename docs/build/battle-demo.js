@@ -17,22 +17,23 @@ export const DEMO_CLASSES = {
 
 export function createDemoBattle() {
   const lineup = [
-    ['aurora', 'Aurora', 'friendly', 'cruiser', 0, 0, 1045],
-    ['pioneer', 'Pioneer', 'friendly', 'destroyer', -92, 10, 1005],
-    ['kestrel', 'Kestrel', 'friendly', 'corvette', 92, -8, 970],
-    ['echo', 'Echo', 'friendly', 'interceptor', -35, 20, 915],
-    ['nemesis', 'Nemesis', 'enemy', 'cruiser', 0, 0, -1045],
-    ['revenant', 'Revenant', 'enemy', 'destroyer', -92, -10, -1005],
-    ['viper', 'Viper', 'enemy', 'corvette', 92, 8, -970],
-    ['wraith', 'Wraith', 'enemy', 'interceptor', -35, -20, -915],
+    ['aurora', 'Aurora', 'friendly', 'cruiser', 0, 0, 1035],
+    ['pioneer', 'Pioneer', 'friendly', 'destroyer', -40, 8, 1008],
+    ['kestrel', 'Kestrel', 'friendly', 'corvette', 40, -6, 984],
+    ['echo', 'Echo', 'friendly', 'interceptor', -17, 13, 965],
+    ['nemesis', 'Nemesis', 'enemy', 'cruiser', 0, 0, -1035],
+    ['revenant', 'Revenant', 'enemy', 'destroyer', -40, -8, -1008],
+    ['viper', 'Viper', 'enemy', 'corvette', 40, 6, -984],
+    ['wraith', 'Wraith', 'enemy', 'interceptor', -17, -13, -965],
   ];
   return {
-    day: 0, remainder: 0, tick: 0, phase: 'engaged', selected: 'aurora', target: 'nemesis', focus: false, priority: null,
+    day: 0, remainder: 0, tick: 0, phase: 'engaged', selected: 'aurora', target: 'nemesis', scope: 'ship',
     projectileId: 0, projectiles: [],
     ships: lineup.map(([id, name, side, type, x, y, z], i) => {
       const def = DEMO_CLASSES[type];
       return { id, name, side, type, position: [x, y, z], velocity: [0, 0, 0], hull: def.hull, shield: def.shield,
-        nextFire: .12 + i * .08, lastHit: -10, order: 'engage', escaped: false, target: null, salvos: 0 };
+        nextFire: .12 + i * .08, lastHit: -10, order: 'engage', targeting: 'auto', commandTarget: null, priority: null,
+        escaped: false, target: null, salvos: 0 };
     }),
   };
 }
@@ -52,37 +53,66 @@ export function selectDemoShip(battle, id) {
   const ship = battle.ships.find(s => s.id === id && activeShip(s));
   if (!ship) return false;
   if (ship.side === 'friendly') battle.selected = id;
-  else { battle.target = id; battle.priority = null; }
+  else battle.target = id;
   return true;
 }
 export function commandDemo(battle, command, value = null) {
-  if (battle.phase !== 'engaged') return false;
-  if (command === 'focus') battle.focus = !battle.focus;
-  else if (command === 'priority') {
-    if (!Object.hasOwn(DEMO_CLASSES, value) || !battle.ships.some(ship => ship.side === 'enemy' && ship.type === value && activeShip(ship))) return false;
-    battle.priority = value; battle.focus = true;
-    battle.target = battle.ships.find(ship => ship.side === 'enemy' && ship.type === value && activeShip(ship)).id;
+  if (command === 'scope') {
+    if (!['ship', 'fleet'].includes(value)) return false;
+    battle.scope = value; return true;
   }
-  else if (command === 'retreat') {
-    for (const ship of battle.ships) if (ship.side === 'friendly' && activeShip(ship)) ship.order = 'retreat';
-    battle.focus = false; battle.priority = null;
+  if (battle.phase !== 'engaged') return false;
+  const recipients = commandedShips(battle).filter(ship => ship.order !== 'retreat');
+  if (!recipients.length) return false;
+  if (command === 'attack') {
+    const target = battle.ships.find(ship => ship.id === (value ?? battle.target) && ship.side === 'enemy' && activeShip(ship));
+    if (!target) return false;
+    for (const ship of recipients) { ship.targeting = 'target'; ship.commandTarget = target.id; ship.priority = null; ship.target = null; }
+  } else if (command === 'auto') {
+    for (const ship of recipients) { ship.targeting = 'auto'; ship.commandTarget = null; ship.priority = null; ship.target = null; }
+  } else if (command === 'priority') {
+    if (!Object.hasOwn(DEMO_CLASSES, value) || !battle.ships.some(ship => ship.side === 'enemy' && ship.type === value && activeShip(ship))) return false;
+    for (const ship of recipients) { ship.targeting = 'class'; ship.priority = value; ship.commandTarget = null; ship.target = null; }
+  } else if (command === 'retreat') {
+    for (const ship of recipients) { ship.order = 'retreat'; ship.targeting = 'auto'; ship.commandTarget = null; ship.priority = null; }
   } else return false;
   return true;
 }
 
+export function commandedShips(battle) {
+  return battle.ships.filter(ship => ship.side === 'friendly' && activeShip(ship) && (battle.scope === 'fleet' || ship.id === battle.selected));
+}
+
+export function commandStatus(battle, ship) {
+  if (ship.escaped) return { mode: 'escaped', label: 'Entkommen' };
+  if (!ship.hull) return { mode: 'lost', label: 'Verloren' };
+  if (ship.order === 'retreat') return { mode: 'retreat', label: 'Rückzug · erwidert das Feuer' };
+  const target = ship.targeting === 'target' ? battle.ships.find(s => s.id === ship.commandTarget && activeShip(s)) : demoTarget(battle, ship);
+  const inRange = target && distance(target.position, ship.position) <= WEAPONS[DEMO_CLASSES[ship.type].weapon].range;
+  if (ship.targeting === 'target' && target) return { mode: 'target', target: target.id, label: `${inRange ? 'Angriff auf' : 'Wartet auf Reichweite:'} ${target.name}` };
+  if (ship.targeting === 'class') return { mode: 'class', target: target?.id, label: `Klassenangriff: ${DEMO_CLASSES[ship.priority]?.name ?? 'Kontakt'}` };
+  return { mode: 'auto', target: target?.id, label: target ? `Automatisch → ${target.name}` : 'Automatisch · sucht ein erreichbares Ziel' };
+}
+
 function targetFor(battle, attacker) {
   const range = WEAPONS[DEMO_CLASSES[attacker.type].weapon].range;
-  let best, preferred, score = Infinity, preferredScore = Infinity;
+  const manual = attacker.side === 'friendly' && attacker.order !== 'retreat';
+  // Inspecting another contact never changes an existing order. A manual order
+  // outside range waits rather than silently shooting a different opponent.
+  if (manual && attacker.targeting === 'target') {
+    const target = battle.ships.find(ship => ship.id === attacker.commandTarget && activeShip(ship));
+    return target && distance(target.position, attacker.position) <= range ? target : null;
+  }
+  let best, score = Infinity;
   for (const ship of battle.ships) {
     if (ship.side === attacker.side || !activeShip(ship)) continue;
+    if (manual && attacker.targeting === 'class' && ship.type !== attacker.priority) continue;
     const separation = distance(ship.position, attacker.position);
     if (separation > range) continue;
-    if (attacker.side === 'friendly' && battle.focus && !battle.priority && ship.id === battle.target) return ship;
     const candidate = separation - (ship.type === attacker.type ? 300 : 0);
     if (candidate < score) { score = candidate; best = ship; }
-    if (attacker.side === 'friendly' && battle.focus && ship.type === battle.priority && candidate < preferredScore) { preferredScore = candidate; preferred = ship; }
   }
-  return preferred ?? best;
+  return best;
 }
 export function demoTarget(battle, ship) {
   return battle.ships.find(target => target.id === ship.target && activeShip(target));
@@ -94,7 +124,9 @@ function hit(battle, source, target, weapon, damage, events) {
   target.shield -= shieldDamage;
   target.hull = Math.max(0, target.hull - (damage - shieldDamage));
   target.lastHit = battle.day;
-  events.push({ kind: 'impact', weapon, ship: source, target: target.id, shield: shieldDamage > 0, position: [...target.position], day: battle.day });
+  const attacker = battle.ships.find(ship => ship.id === source);
+  events.push({ kind: 'impact', weapon, ship: source, target: target.id, shield: shieldDamage > 0,
+    from: attacker ? [...attacker.position] : [...target.position], position: [...target.position], day: battle.day });
   if (!target.hull) events.push({ kind: 'destroy', ship: target.id, position: [...target.position], day: battle.day });
 }
 
@@ -170,6 +202,14 @@ export function advanceDemoBattle(battle, days) {
     moveProjectiles(battle, events);
     for (const ship of battle.ships) {
       if (!activeShip(ship)) continue;
+      if (ship.side === 'friendly' && ship.targeting !== 'auto') {
+        const remains = battle.ships.some(target => target.side === 'enemy' && activeShip(target)
+          && (ship.targeting === 'target' ? target.id === ship.commandTarget : target.type === ship.priority));
+        if (!remains) {
+          events.push({ kind: 'order-complete', ship: ship.id, target: ship.commandTarget, priority: ship.priority, day: battle.day });
+          ship.targeting = 'auto'; ship.commandTarget = null; ship.priority = null;
+        }
+      }
       const def = WEAPONS[DEMO_CLASSES[ship.type].weapon], target = targetFor(battle, ship);
       ship.target = target?.id ?? null;
       if (battle.day + 1e-10 < ship.nextFire) continue;
@@ -181,8 +221,8 @@ export function advanceDemoBattle(battle, days) {
     if (!enemy.length) battle.phase = 'victory';
     else if (!friendly.length) battle.phase = battle.ships.some(s => s.side === 'friendly' && s.escaped) ? 'withdrawn' : 'defeat';
     if (!friendly.some(s => s.id === battle.selected) && friendly.length) battle.selected = friendly[0].id;
-    if (battle.priority && !enemy.some(s => s.type === battle.priority)) { battle.priority = null; battle.focus = false; events.push({ kind: 'priority-end', day: battle.day }); }
-    if (!enemy.some(s => s.id === battle.target) && enemy.length) battle.target = (enemy.find(s => s.type === battle.priority) ?? enemy[0]).id;
+    // The inspected contact remains selected while it becomes a wreck. The UI
+    // shows its loss explicitly; a later order needs a deliberate new target.
   }
   if (battle.phase !== 'engaged') { battle.remainder = 0; battle.projectiles.length = 0; }
   return events;

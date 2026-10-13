@@ -95,7 +95,8 @@ export class TargetPanel {
     }
     const prioritizable = this.query.type !== 'all' && counts[this.query.type] > 0 && battle.phase === 'engaged';
     this.dialog.querySelector('#contact-priority').disabled = !prioritizable;
-    setText(this.dialog.querySelector('#contact-priority'), this.query.type === 'all' ? 'Klasse für Schwerpunkt wählen' : `${CONTACT_GROUPS[this.query.type]} priorisieren`);
+    const recipient = battle.scope === 'fleet' ? 'eigene Flotte' : observer?.name ?? 'dieses Schiff';
+    setText(this.dialog.querySelector('#contact-priority'), this.query.type === 'all' ? 'Klasse zum Angriff wählen' : `${CONTACT_GROUPS[this.query.type]} angreifen · ${recipient}`);
     this.dialog.querySelector('#contact-inspect').disabled = !byId.get(battle.target) || !activeShip(byId.get(battle.target));
   }
 }

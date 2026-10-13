@@ -55,9 +55,9 @@ test('four weapon types retain range restrictions during withdrawal', () => {
   assert.ok(battle.ships.every(ship => ship.hull === DEMO_CLASSES[ship.type].hull));
 });
 
-test('a selected target and focus order change actual incoming damage', () => {
+test('an explicit fleet attack changes real damage without changing inspection', () => {
   const focused = createDemoBattle(), normal = createDemoBattle();
-  selectDemoShip(focused, 'wraith'); commandDemo(focused, 'focus');
+  selectDemoShip(focused, 'wraith'); commandDemo(focused, 'scope', 'fleet'); commandDemo(focused, 'attack');
   advanceDemoBattle(focused, 1); advanceDemoBattle(normal, 1);
   const shield = b => b.ships.find(s => s.id === 'wraith').shield;
   assert.ok(shield(focused) < shield(normal));
@@ -65,11 +65,12 @@ test('a selected target and focus order change actual incoming damage', () => {
   assert.equal(focused.target, 'wraith');
   advanceDemoBattle(focused, 4);
   assert.equal(focused.ships.find(s => s.id === 'wraith').hull, 0);
-  assert.notEqual(focused.target, 'wraith');
+  assert.equal(focused.target, 'wraith');
+  assert.ok(focused.ships.filter(s => s.side === 'friendly' && activeShip(s)).every(s => s.targeting === 'auto'));
 });
 
 test('retreat moves real preview ships out of firing range and ends in withdrawal', () => {
-  const battle = createDemoBattle(); commandDemo(battle, 'retreat');
+  const battle = createDemoBattle(); commandDemo(battle, 'scope', 'fleet'); commandDemo(battle, 'retreat');
   advanceDemoBattle(battle, 30);
   assert.equal(battle.phase, 'withdrawn');
   assert.ok(battle.ships.filter(s => s.side === 'friendly').every(s => s.escaped || !s.hull));

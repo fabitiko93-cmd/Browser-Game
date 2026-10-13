@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { DEMO_CLASSES, activeShip, demoTarget, fleetCenter } from './battle-demo.js';
 import { BattleEffects } from './battle-effects.js';
+import { BattlePresentation, environment, panelNormalMap } from './battle-presentation.js';
+import { BattleQuality } from './battle-quality.js';
 
 const COLORS = { friendly: 0x71bfff, enemy: 0xff8499 };
 const FORWARD = new THREE.Vector3(0, 0, -1);
@@ -12,13 +14,16 @@ export class BattleScene {
   constructor(canvas, { onSelect, onUnavailable, onProgress } = {}) {
     this.canvas = canvas; this.onSelect = onSelect; this.onUnavailable = onUnavailable; this.onProgress = onProgress;
     this.models = new Map(); this.ships = new Map(); this.disposed = false; this.mode = 'ship'; this.dirty = true;
+    this.loadingManager = new THREE.LoadingManager();
     this.a = new THREE.Vector3(); this.b = new THREE.Vector3(); this.quaternion = new THREE.Quaternion(); this.color = new THREE.Color();
     this.followed = new THREE.Vector3(); this.raycaster = new THREE.Raycaster();
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-    this.pixelRatio = Math.min(devicePixelRatio || 1, 1);
+    this.quality = new BattleQuality(devicePixelRatio || 1); this.pixelRatio = this.quality.ratio;
     this.renderer.setPixelRatio(this.pixelRatio); this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.5;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
+    this.presentation = new BattlePresentation(this.renderer); this.environmentTarget = environment(this.renderer); this.panelMap = panelNormalMap();
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x050813);
+    this.scene.environment = this.environmentTarget.texture; this.scene.environmentIntensity = .55;
     this.camera = new THREE.PerspectiveCamera(42, 1, 1, 35000);
     this.camera.position.set(65, 65, 1610);
     this.controls = new OrbitControls(this.camera, canvas);
@@ -27,10 +32,10 @@ export class BattleScene {
     this.controls.rotateSpeed = .55; this.controls.zoomSpeed = .75; this.controls.maxPolarAngle = Math.PI * .88;
     this.controls.target.set(0, 0, 1000); this.followed.copy(this.controls.target);
     this.controls.touches.ONE = THREE.TOUCH.ROTATE; this.controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-    this.controls.addEventListener('change', () => { this.dirty = true; }); this.controls.update();
-    this.scene.add(new THREE.HemisphereLight(0xb9d4ff, 0x27273d, 2));
-    const key = new THREE.DirectionalLight(0xecf2ff, 3.2); key.position.set(-400, 750, 700); this.scene.add(key);
-    const rim = new THREE.DirectionalLight(0x6487ff, 2.6); rim.position.set(200, -150, -600); this.scene.add(rim);
+    this.controls.addEventListener('change', () => { this.dirty = true; }); this.controls.addEventListener('start', () => { this.transition = null; }); this.controls.update();
+    this.scene.add(new THREE.HemisphereLight(0xb9d4ff, 0x0a101c, .65));
+    const key = new THREE.DirectionalLight(0xffedcd, 3.1); key.position.set(-400, 750, 900); this.scene.add(key);
+    const rim = new THREE.DirectionalLight(0x81b7ff, 2.2); rim.position.set(400, 200, -900); this.scene.add(rim);
     this.makeSpace(); this.makePlanet(); this.makeAttachments(); this.effects = new BattleEffects(this.scene, this.camera);
     this.bindInput();
     this.contextLost = event => { event.preventDefault(); if (!this.disposed) this.onUnavailable?.('Die 3D-Ansicht wurde vom Browser unterbrochen. Du kannst die Probeschlacht erneut starten.'); };
@@ -72,11 +77,16 @@ export class BattleScene {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(coordinates, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     this.scene.add(new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1, vertexColors: true, sizeAttenuation: false, transparent: true, opacity: .85, depthWrite: false })));
     // Bake the soft background once, instead of running a full-screen shader every frame.
-    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 256;
-    const ctx = canvas.getContext('2d'); ctx.fillStyle = '#050813'; ctx.fillRect(0, 0, 512, 256);
-    for (const [x, y, radius, color] of [[110, 120, 200, '#1b2d513b'], [390, 180, 120, '#30335b32']]) {
+    const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 512;
+    const ctx = canvas.getContext('2d'); ctx.fillStyle = '#030610'; ctx.fillRect(0, 0, 1024, 512);
+    for (const [x, y, radius, color] of [[220, 240, 320, '#16395685'], [760, 180, 240, '#40395d50'], [370, 305, 150, '#5b728f32']]) {
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius); gradient.addColorStop(0, color); gradient.addColorStop(1, '#05081300');
-      ctx.fillStyle = gradient; ctx.fillRect(0, 0, 512, 256);
+      ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1024, 512);
+    }
+    for (let i = 0; i < 32; i++) {
+      const x = 160 + random() * 430, y = 230 + Math.sin(i * .22) * 50, radius = 35 + random() * 75;
+      const cloud = ctx.createRadialGradient(x, y, 0, x, y, radius); cloud.addColorStop(0, '#00030b36'); cloud.addColorStop(1, '#00030b00');
+      ctx.fillStyle = cloud; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     }
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
     this.scene.add(new THREE.Mesh(new THREE.SphereGeometry(27000, 24, 16), new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, depthWrite: false, toneMapped: false })));
@@ -109,12 +119,12 @@ export class BattleScene {
     }
     ctx.putImageData(image, 0, 0);
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(520, 40, 24), new THREE.MeshPhongMaterial({ map: texture, shininess: 8, specular: 0x142a3e }));
-    planet.position.set(-3300, -1300, -8300); planet.rotation.z = -.3; this.scene.add(planet);
-    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(531, 32, 20), new THREE.ShaderMaterial({
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(1250, 64, 40), new THREE.MeshStandardMaterial({ map: texture, color: 0x60758b, metalness: .05, roughness: .9, envMapIntensity: .04 }));
+    planet.position.set(-2700, -1450, -4400); planet.rotation.z = -.3; this.scene.add(planet);
+    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1275, 48, 28), new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.BackSide,
       vertexShader: 'varying vec3 vNormal;void main(){vNormal=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader: 'varying vec3 vNormal;void main(){float rim=pow(1.-abs(vNormal.z),3.);gl_FragColor=vec4(.15,.38,.8,rim*.2);}',
+      fragmentShader: 'varying vec3 vNormal;void main(){float rim=pow(1.-abs(vNormal.z),3.);gl_FragColor=vec4(.18,.48,1.,rim*.42);}',
     }));
     atmosphere.position.copy(planet.position); this.scene.add(atmosphere);
   }
@@ -123,8 +133,8 @@ export class BattleScene {
     const base = new THREE.CylinderGeometry(.45, .6, .45, 8), barrel = new THREE.CylinderGeometry(.12, .17, 1.55, 6);
     barrel.rotateX(Math.PI / 2); barrel.translate(0, 0, -.8);
     const geometry = mergeGeometries([base, barrel]); base.dispose(); barrel.dispose();
-    this.gunBatch = new THREE.InstancedMesh(geometry, new THREE.MeshPhongMaterial({ color: 0x637b91, shininess: 45 }), 16);
-    this.coreBatch = new THREE.InstancedMesh(new THREE.SphereGeometry(.23, 6, 4), new THREE.MeshBasicMaterial({ color: 0xc9ebff, toneMapped: false }), 16);
+    this.gunBatch = new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial({ color: 0x586b81, metalness: .85, roughness: .3, envMapIntensity: 1.1 }), 16);
+    this.coreBatch = new THREE.InstancedMesh(new THREE.SphereGeometry(.23, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xc9ebff).multiplyScalar(4), toneMapped: false }), 16);
     const plume = new THREE.ConeGeometry(.34, 2.9, 8, 1, true);
     const uv = plume.attributes.uv, colors = new Float32Array(uv.count * 3);
     for (let i = 0; i < uv.count; i++) { const fade = (1 - uv.getY(i)) ** 2; colors.set([fade, fade, fade], i * 3); }
@@ -134,7 +144,7 @@ export class BattleScene {
   }
 
   async load(battle) {
-    const loader = new GLTFLoader(), names = [...new Set(Object.values(DEMO_CLASSES).map(s => s.model))]; let loaded = 0;
+    const loader = new GLTFLoader(this.loadingManager), names = [...new Set(Object.values(DEMO_CLASSES).map(s => s.model))]; let loaded = 0;
     for (let i = 0; i < names.length; i += 2) {
       const results = await Promise.allSettled(names.slice(i, i + 2).map(async name => {
         const model = await loader.loadAsync(new URL(`../models/quaternius/${name}.glb`, import.meta.url).href);
@@ -145,7 +155,8 @@ export class BattleScene {
       if (this.disposed) return;
     }
     for (const ship of battle.ships) this.makeShip(ship);
-    this.resize(); this.setMode('ship', battle);
+    this.resize(); this.setMode('ship', battle, false);
+    await this.renderer.compileAsync(this.scene, this.camera);
   }
 
   makeShip(ship) {
@@ -157,8 +168,13 @@ export class BattleScene {
     body.traverse(object => {
       if (!object.isMesh) return;
       object.userData.shipId = ship.id;
-      object.material = new THREE.MeshPhongMaterial({ map: object.material.map, color: ship.side === 'friendly' ? 0xd5e8ff : 0xffd3d9, shininess: 48, specular: 0x77899c, emissive: 0x142039, emissiveIntensity: .16 });
-      if (object.material.map) object.material.map.anisotropy = Math.min(2, this.renderer.capabilities.getMaxAnisotropy());
+      object.material = object.material.clone();
+      object.material.color.multiply(new THREE.Color(ship.side === 'friendly' ? 0xaec4d8 : 0xcfb5b9));
+      object.material.metalness = .55; object.material.roughness = .46; object.material.envMapIntensity = .85;
+      object.material.normalMap = this.panelMap; object.material.normalScale.set(.22, .22);
+      object.material.emissive.set(0x0a1424); object.material.emissiveIntensity = .12;
+      object.userData.baseColor = object.material.color.clone();
+      if (object.material.map) object.material.map.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
     });
     const group = new THREE.Group(); group.add(bodyRoot); group.updateWorldMatrix(true, true);
     const attachmentRay = new THREE.Raycaster();
@@ -173,31 +189,36 @@ export class BattleScene {
       }
       mount = null;
       for (const fraction of [.14, .26, .36, .04]) { mount = surface(this.a.set(sign * size.x * fraction, size.y + 2, -size.z * .05), this.b.set(0, -1, 0)); if (mount) break; }
-      if (mount) { const gun = new THREE.Object3D(); gun.position.copy(mount); gun.position.y += .2; group.add(gun); guns.push(gun); }
+      if (mount) { const gun = new THREE.Object3D(); gun.position.copy(mount); gun.position.y += .2; gun.userData.baseZ = gun.position.z; group.add(gun); guns.push(gun); }
     }
     const shield = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), new THREE.ShaderMaterial({
-      uniforms: { color: { value: new THREE.Color(color) }, strength: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: 'varying vec3 vNormal;varying vec3 vView;void main(){vec4 p=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=normalize(-p.xyz);gl_Position=projectionMatrix*p;}',
-      fragmentShader: 'uniform vec3 color;uniform float strength;varying vec3 vNormal;varying vec3 vView;void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),2.);gl_FragColor=vec4(color,(.12+rim*.7)*strength);}',
+      uniforms: { color: { value: new THREE.Color(color).multiplyScalar(2) }, strength: { value: 0 }, hit: { value: new THREE.Vector3(0, 0, -1) }, age: { value: 0 } },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec3 vNormal;varying vec3 vView;varying vec3 vLocal;void main(){vec4 p=modelViewMatrix*vec4(position,1.);vLocal=normalize(position);vNormal=normalize(normalMatrix*normal);vView=normalize(-p.xyz);gl_Position=projectionMatrix*p;}',
+      fragmentShader: `uniform vec3 color;uniform float strength;uniform vec3 hit;uniform float age;varying vec3 vNormal;varying vec3 vView;varying vec3 vLocal;
+      void main(){float d=acos(clamp(dot(normalize(vLocal),normalize(hit)),-1.,1.));float wave=exp(-pow((d-age*4.)*11.,2.));float spot=exp(-d*d*7.)*exp(-age*3.);float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.);
+      gl_FragColor=vec4(color,(wave*.48+spot*.6+rim*.08)*strength);}`,
     }));
     shield.scale.set(size.x * .6 + .6, size.y * .65 + 1.1, size.z * .6 + .6); shield.visible = false; group.add(shield);
     group.position.fromArray(ship.position); if (ship.side === 'enemy') group.rotation.y = Math.PI;
-    this.scene.add(group); this.ships.set(ship.id, { group, body: bodyRoot, engines, guns, shield, size, pulse: 0 });
+    this.scene.add(group); this.ships.set(ship.id, { group, body: bodyRoot, engines, guns, shield, size, pulse: 0, hit: new THREE.Vector3(0, 0, -1), hitAge: 2, death: null, recoil: 0 });
   }
 
   resize() {
     if (this.disposed) return;
     const width = Math.max(1, this.canvas.clientWidth), height = Math.max(1, this.canvas.clientHeight);
     this.renderer.setSize(width, height, false); this.camera.aspect = width / height;
+    this.presentation.resize(width, height, this.pixelRatio);
     const toolbar = document.querySelector('.battle-toolbar')?.getBoundingClientRect().bottom ?? 0;
-    const notice = document.querySelector('.battle-notice')?.getBoundingClientRect().bottom ?? 0;
-    this.viewportTop = Math.max(toolbar + 42, notice + 7);
+    const targetHud = document.querySelector('.target-hud')?.getBoundingClientRect().bottom ?? 0;
+    this.viewportTop = Math.max(toolbar + 18, targetHud + 10);
     this.viewportBottom = document.querySelector('.battle-bottom')?.getBoundingClientRect().top ?? height;
     this.camera.setViewOffset(width, height, 0, height / 2 - (this.viewportTop + this.viewportBottom) / 2, width, height);
     this.camera.updateProjectionMatrix(); this.dirty = true;
   }
 
-  setMode(mode, battle) {
+  setMode(mode, battle, animated = true) {
+    const startPosition = this.camera.position.clone(), startTarget = this.controls.target.clone();
     this.mode = mode;
     const focusId = mode === 'target' ? battle.target : battle.selected, focus = this.ships.get(focusId);
     const enemy = mode === 'target'; this.focusId = focusId;
@@ -205,7 +226,7 @@ export class BattleScene {
     if ((mode === 'ship' || mode === 'target') && focus) {
       this.controls.target.copy(focus.group.position);
       const sign = enemy ? -1 : 1;
-      this.camera.position.copy(focus.group.position).add(this.a.set(sign * .6, .7 * elevation, sign * 4.2).multiplyScalar(DEMO_CLASSES[battle.ships.find(s => s.id === focusId).type].size));
+      this.camera.position.copy(focus.group.position).add(this.a.set(sign * 2.65, 1.45 * elevation, sign * 3.65).multiplyScalar(DEMO_CLASSES[battle.ships.find(s => s.id === focusId).type].size));
     } else if (mode === 'overview') {
       const friendly = this.a.fromArray(fleetCenter(battle, 'friendly')), hostile = this.b.fromArray(fleetCenter(battle, 'enemy'));
       const separation = friendly.distanceTo(hostile);
@@ -215,20 +236,25 @@ export class BattleScene {
       this.camera.position.copy(this.controls.target).add(this.a.set(.16, .84, .52).normalize().multiplyScalar(distance));
     } else {
       this.controls.target.fromArray(fleetCenter(battle, enemy ? 'enemy' : 'friendly'));
-      this.camera.position.copy(this.controls.target).add(this.a.set(enemy ? -65 : 65, 65 * elevation, enemy ? -610 : 610));
+      this.camera.position.copy(this.controls.target).add(this.a.set(enemy ? -60 : 60, 65 * elevation, enemy ? -295 : 295));
     }
-    this.followed.copy(this.controls.target); this.controls.update(); this.dirty = true;
+    this.followed.copy(this.controls.target);
+    if (animated && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.transition = { position: startPosition, target: startTarget, endPosition: this.camera.position.clone(), endTarget: this.controls.target.clone(), elapsed: 0 };
+      this.camera.position.copy(startPosition); this.controls.target.copy(startTarget);
+    } else this.transition = null;
+    this.controls.update(); this.dirty = true;
   }
 
   updateAttachments(battle, time) {
     let guns = 0, engines = 0;
     for (const ship of battle.ships) {
-      const view = this.ships.get(ship.id); if (!view?.group.visible) continue;
+      const view = this.ships.get(ship.id); if (!view?.group.visible || !activeShip(ship)) continue;
       for (const gun of view.guns) this.gunBatch.setMatrixAt(guns++, gun.matrixWorld);
       for (const { engine, plume } of view.engines) {
         this.coreBatch.setMatrixAt(engines, engine.matrixWorld);
         plume.scale.z = (ship.order === 'retreat' ? 1.8 : .65) * (1 + Math.sin(time * 19 + ship.position[0]) * .08);
-        plume.updateWorldMatrix(true, false); this.plumeBatch.setMatrixAt(engines, plume.matrixWorld); this.plumeBatch.setColorAt(engines++, this.color.set(COLORS[ship.side]));
+        plume.updateWorldMatrix(true, false); this.plumeBatch.setMatrixAt(engines, plume.matrixWorld); this.plumeBatch.setColorAt(engines++, this.color.set(COLORS[ship.side]).multiplyScalar(2));
       }
     }
     this.gunBatch.count = guns; this.coreBatch.count = this.plumeBatch.count = engines;
@@ -239,9 +265,22 @@ export class BattleScene {
   render(battle, time, events = [], frameSeconds = 0) {
     if (this.disposed) return;
     const delta = Math.min(.1, Math.max(0, frameSeconds));
+    const now = performance.now(), cameraDelta = Math.min(.06, Math.max(0, (now - (this.lastCameraFrame ?? now)) / 1000)); this.lastCameraFrame = now;
+    for (const event of events) if (event.kind === 'destroy') { const view = this.ships.get(event.ship); if (view) view.death = time; }
     for (const ship of battle.ships) {
       const view = this.ships.get(ship.id); if (!view) continue;
-      view.group.visible = activeShip(ship); view.group.position.fromArray(ship.position);
+      const living = activeShip(ship), wreckAge = view.death === null ? 100 : time - view.death;
+      view.living = living;
+      view.group.visible = living || wreckAge < 4; view.group.position.fromArray(ship.position);
+      if (!living) {
+        view.body.rotation.z = wreckAge * .2; view.body.rotation.x = wreckAge * .08;
+        view.body.scale.setScalar(Math.max(.15, 1 - Math.max(0, wreckAge - 2) * .4));
+      } else view.body.rotation.z = Math.sin(time * .32 + ship.position[0]) * .012;
+      const health = ship.hull / DEMO_CLASSES[ship.type].hull;
+      view.body.traverse(object => { if (!object.isMesh) return;
+        object.material.color.copy(object.userData.baseColor).multiplyScalar(living ? .6 + .4 * health : .22);
+        object.material.emissive.set(health < .5 ? 0x45140a : 0x0a1424); object.material.emissiveIntensity = health < .5 ? .35 : .12;
+      });
       const target = demoTarget(battle, ship);
       this.a.copy(ship.order === 'retreat' ? this.b.set(0, 0, 1) : target ? this.b.fromArray(target.position).sub(view.group.position).normalize() : ship.side === 'friendly' ? FORWARD : this.b.set(0, 0, 1));
       this.quaternion.setFromUnitVectors(FORWARD, this.a); view.group.quaternion.slerp(this.quaternion, delta ? 1 - Math.exp(-5 * delta) : 0);
@@ -251,20 +290,30 @@ export class BattleScene {
         for (const gun of view.guns) gun.rotation.y = Math.atan2(-aim.x, -aim.z);
       }
       view.pulse = Math.max(0, view.pulse - delta * 3);
+      view.hitAge += delta; view.recoil = Math.max(0, view.recoil - delta * 7);
+      for (const gun of view.guns) gun.position.z = gun.userData.baseZ + view.recoil * .22;
       view.group.updateWorldMatrix(true, true);
     }
-    for (const event of events) if (event.kind === 'impact' && event.shield) { const target = this.ships.get(event.target); if (target) target.pulse = .85; }
-    for (const view of this.ships.values()) { view.shield.visible = view.pulse > .01 && view.group.visible; view.shield.material.uniforms.strength.value = view.pulse; }
+    this.effects.update(battle, time, events, this.ships);
+    for (const view of this.ships.values()) {
+      view.shield.visible = view.pulse > .01 && view.group.visible && view.living;
+      view.shield.material.uniforms.strength.value = view.pulse; view.shield.material.uniforms.age.value = view.hitAge; view.shield.material.uniforms.hit.value.copy(view.hit);
+    }
     const focusId = this.mode === 'target' ? battle.target : battle.selected;
     if ((this.mode === 'ship' || this.mode === 'target') && focusId !== this.focusId) this.setMode(this.mode, battle);
-    if (this.mode !== 'overview') {
+    if (this.transition) {
+      const transition = this.transition; transition.elapsed += cameraDelta;
+      const progress = Math.min(1, transition.elapsed / .65), eased = progress * progress * (3 - 2 * progress);
+      this.camera.position.lerpVectors(transition.position, transition.endPosition, eased); this.controls.target.lerpVectors(transition.target, transition.endTarget, eased);
+      if (progress === 1) this.transition = null;
+    } else if (this.mode !== 'overview') {
       if (this.mode === 'ship' || this.mode === 'target') this.a.copy(this.ships.get(focusId)?.group.position ?? this.controls.target);
       else this.a.fromArray(fleetCenter(battle, 'friendly'));
       this.b.subVectors(this.a, this.followed); this.camera.position.add(this.b); this.controls.target.add(this.b); this.followed.copy(this.a);
     }
-    this.updateAttachments(battle, time); this.effects.update(battle, time, events, this.ships);
-    this.animating = this.effects.beams.length > 0 || this.effects.particles.length > 0 || [...this.ships.values()].some(view => view.pulse > .01);
-    this.dirty = false; this.controls.update(); this.renderer.render(this.scene, this.camera);
+    this.updateAttachments(battle, time);
+    this.animating = this.effects.animating || Boolean(this.transition) || [...this.ships.values()].some(view => view.pulse > .01 || view.death !== null && time - view.death < 4);
+    this.dirty = false; this.controls.update(); this.presentation.render(this.scene, this.camera);
   }
 
   labelPosition(id, battle) {
@@ -315,9 +364,10 @@ export class BattleScene {
 
   dispose() {
     if (this.disposed) return;
-    this.disposed = true; this.controls.dispose(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
+    this.disposed = true; this.loadingManager.abort(); this.controls.dispose(); this.canvas.removeEventListener('webglcontextlost', this.contextLost);
     for (const [name, handler] of [['pointerdown', this.pointerStart], ['pointermove', this.pointerMove], ['pointerup', this.pointerEnd], ['pointercancel', this.pointerCancel]]) this.canvas.removeEventListener(name, handler);
     this.releaseObjects([this.scene, ...this.models.values()]); this.models.clear(); this.ships.clear();
+    this.presentation.dispose(); this.environmentTarget.dispose();
     this.renderer.dispose(); this.renderer.forceContextLoss();
   }
 }
