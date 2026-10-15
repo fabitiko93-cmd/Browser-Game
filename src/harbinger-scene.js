@@ -195,5 +195,6 @@ export class HarbingerScene extends BattleScene {
     if(time-this.lastShadow>.18||this.transition||this.dirty){this.renderer.shadowMap.needsUpdate=true;this.lastShadow=time;}
   }
   setGraphics(value) {this.graphics=value;this.pixelRatio=value==='detail'?Math.min(1.75,devicePixelRatio||1):value==='fluid'?1:this.quality.ratio;this.renderer.setPixelRatio(this.pixelRatio);this.resize();}
+  observeQuality(seconds,running) {if(this.graphics!=='auto'||!this.quality.observe(seconds,running))return false;this.pixelRatio=this.quality.ratio;this.renderer.setPixelRatio(this.pixelRatio);this.resize();return true;}
   dispose() {if(this.disposed)return;this.abort?.abort();this.ktx?.dispose();this.sun?.shadow.dispose();super.dispose();}
 }

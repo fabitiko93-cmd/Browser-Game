@@ -1,0 +1,289 @@
+{
+  "base": "http://127.0.0.1:40095",
+  "inspection": {
+    "viewport": [
+      134,
+      607
+    ],
+    "fraction": 0.5604265402843602,
+    "materials": [
+      {
+        "name": "panels",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.6297637195121951,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "panelsDark",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.5687881097560976,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "techDark",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.7395198170731707,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "tech",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.6053734756097561,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "techLight",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.5931783536585366,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "windows",
+        "normal": false,
+        "authored": true,
+        "roughness": 1,
+        "emissive": [
+          0.039630139368268036,
+          0.48642157945258085,
+          1
+        ]
+      },
+      {
+        "name": "whiteLight",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.8370807926829268,
+        "emissive": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "name": "redLight",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.8431783536585366,
+        "emissive": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "greenLight",
+        "normal": false,
+        "authored": true,
+        "roughness": 1,
+        "emissive": [
+          0.0024852178032760443,
+          1,
+          0
+        ]
+      },
+      {
+        "name": "engineDark",
+        "normal": true,
+        "authored": true,
+        "roughness": 1,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "yellowDecal",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.7273246951219513,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "whiteDecal",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.709032012195122,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "redDecal",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.7639100609756098,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "nameDecal",
+        "normal": false,
+        "authored": true,
+        "roughness": 0.5017149390243902,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "engine",
+        "normal": true,
+        "authored": true,
+        "roughness": 0.6480564024390245,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "MainEngineGlow",
+        "normal": false,
+        "authored": true,
+        "roughness": 1,
+        "emissive": [
+          1,
+          0.41881300819016476,
+          0
+        ]
+      },
+      {
+        "name": "RevEngineGlow",
+        "normal": false,
+        "authored": true,
+        "roughness": 1,
+        "emissive": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "compressed": 19,
+    "textureBytes": 72701776,
+    "engines": 5,
+    "drawCalls": 25,
+    "triangles": 76303,
+    "textures": 25,
+    "geometries": 23,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "range": "49,9 km",
+  "small": {
+    "fraction": 0.426056338028169,
+    "width": 320,
+    "scroll": 320,
+    "actions": [
+      {
+        "id": "attack-target",
+        "x": 11,
+        "y": 517,
+        "height": 44,
+        "bottom": 561
+      },
+      {
+        "id": "auto-target",
+        "x": 134.9375,
+        "y": 517,
+        "height": 44,
+        "bottom": 561
+      },
+      {
+        "id": "retreat",
+        "x": 234.75,
+        "y": 517,
+        "height": 44,
+        "bottom": 561
+      }
+    ],
+    "state": 12.59375
+  },
+  "restarts": [
+    {
+      "geometries": 23,
+      "textures": 25
+    },
+    {
+      "geometries": 23,
+      "textures": 25
+    }
+  ],
+  "offline": {
+    "status": 206,
+    "range": "bytes 0-11/600000",
+    "bytes": [
+      103,
+      108,
+      84,
+      70,
+      2,
+      0,
+      0,
+      0,
+      128,
+      74,
+      166,
+      1
+    ]
+  },
+  "events": {
+    "fire": 38,
+    "impact": 34
+  },
+  "previous": {
+    "viewport": [
+      246,
+      567
+    ],
+    "fraction": 0.3803317535545024
+  },
+  "checks": [
+    "Native materials, seven authored normal maps, compressed textures and engine anchors",
+    "Contact inspection, single/fleet attack and automatic targeting keep correct recipients",
+    "All camera modes use the same 3D battle at 50 km",
+    "Native touch drag and ship selector work while paused",
+    "Graphics modes and honest paused performance status",
+    "320 × 568 layout keeps contact status and 44 px actions visible",
+    "Retreat prevents incompatible attack",
+    "Two full restarts retain stable WebGL resource counts",
+    "Optional model parts avoid initial game cache and support offline byte ranges",
+    "Real simulation fire and impact events render"
+  ],
+  "errors": []
+}

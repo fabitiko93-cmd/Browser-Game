@@ -4,9 +4,15 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Harbinger-Grafikprobe · 0.13.0
+
+[Spielbare Probe](https://fabitiko93-cmd.github.io/Browser-Game/harbinger.html) oder Flotte → Probeschlacht öffnen. Detaillierter Harbinger mit Originalmaterialien, Touchkamera, tatsächlicher 3D-Raumübersicht und getrennten Auto-/Angriffsaufträgen. Rund 27,7 MB Modell werden beim ersten Aufruf geladen. Dein Reich wird vor dem Wechsel gespeichert und pausiert.
+
+[Vergleich mit EVE/Homeworld, echte Browseraufnahmen und Prüfgrenzen](HARBINGER_REVIEW.md). Der vorherige Stand bleibt unter `battle.html` erreichbar. Kein behaupteter AAA-Abschluss; Begleitschiffe, Waffenanimation und Leistung auf dem tatsächlichen iPhone bleiben Ausbaupunkte.
+
 ## 3D-Probeschlacht · 0.12.0
 
-- Unter **Flotte → Probeschlacht öffnen** oder direkt über [battle.html](https://fabitiko93-cmd.github.io/Browser-Game/battle.html) starten. Das Reich wird vor dem Wechsel gespeichert und pausiert. Die Übung verwendet eigene Schiffe und einen eigenen Spielzeit-Takt; sie verändert keine Ressourcen, Forschungen oder Flotten des Spielstands.
+- Der vorherige Stand lässt sich direkt über [battle.html](https://fabitiko93-cmd.github.io/Browser-Game/battle.html) starten. Das Reich wird vor dem Wechsel gespeichert und pausiert. Die Übung verwendet eigene Schiffe und einen eigenen Spielzeit-Takt; sie verändert keine Ressourcen, Forschungen oder Flotten des Spielstands.
 - Vier echte Quaternius-Rümpfe und acht Schiffe in zwei festen, rund 50 km getrennten Formationen. Die Flotten nähern sich im Gefecht nicht an. Torpedos fliegen gelenkt mit sichtbarer Spur, Massentreiber verschießen schnelle Geschosse, Laserkorvetten treffen direkt und Abfangjäger feuern violette Pulse. Geschosse verursachen Schaden erst bei Ankunft; Reichweiten und Flugzeiten gehören zur Übungssimulation.
 - **Schiff**, **Flotte** und **Taktik** sind direkte Kameraaktionen. „Ansehen“ im Zielfeld öffnet die nahe Gegnerkamera. Weiche Übergänge erhalten Auswahl und Befehle; bei reduzierter Bewegung erfolgen sie sofort. Die taktische Ansicht stellt die Formationen ausdrücklich schematisch dar und zeigt das tatsächliche Angriffsziel des ausgewählten Schiffs. Die reale Gefechtsdistanz bleibt erhalten; nur ein befohlener Rückzug bewegt Schiffe aus der Formation.
 - **Ziele** öffnet die bestehende Kontaktliste mit Klassenfiltern, Suche, Sortierung und zwölf Kontakten je Seite. Die Auswahl dient dem Ansehen und der Vorbereitung eines Auftrags: Sie verändert einen laufenden Angriff nicht. **Dieses Schiff / Eigene Flotte** legt die Empfänger fest. **Angreifen** erteilt einen verbindlichen Auftrag auf den gewählten Gegner; **Automatisch** hebt die manuellen Aufträge dieser Empfänger auf; **Rückzug** gilt ebenfalls für die gewählte Gruppe. Die Befehlszeile zeigt den tatsächlich geltenden Auftrag. Ein unerreichbares manuelles Ziel wird abgewartet; nach dessen Vernichtung wählen die betroffenen Schiffe wieder automatisch. Der zerstörte betrachtete Kontakt bleibt als solcher beschriftet. Eine gefilterte Klasse kann ausdrücklich angegriffen werden. Die Kontaktkomponente ist mit 1.000 Einträgen geprüft; das 3D-Übungsgefecht enthält weiterhin acht Schiffe.

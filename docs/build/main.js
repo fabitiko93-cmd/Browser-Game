@@ -164,7 +164,7 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
-  else if (action === 'battle-preview') { ui.speed = 0; persist(); location.href = new URL('./battle.html', location.href).href; return; }
+  else if (action === 'battle-preview') { ui.speed = 0; persist(); location.href = new URL('./harbinger.html', location.href).href; return; }
   else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
   else if (action === 'local-sale') return act(localSale(state,p,el.dataset.resource,25),'Waren an örtliche Privatkäufer verkauft.');
   else if (action === 'austerity') return act(austerity(state),'Sparbetrieb aktiviert.');
