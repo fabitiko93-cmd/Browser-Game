@@ -11,7 +11,7 @@ vec2 size=vec2(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz));p.xy
 export class BattleEffects {
   constructor(scene, camera) {
     this.scene = scene; this.camera = camera; this.beams = []; this.particles = []; this.debris = []; this.explosions = [];
-    this.tracks = new Map(); this.lastDamage = new Map();
+    this.tracks = new Map(); this.lastDamage = new Map(); this.pings = [];
     this.object = new THREE.Object3D(); this.a = new THREE.Vector3(); this.b = new THREE.Vector3(); this.direction = new THREE.Vector3(); this.color = new THREE.Color();
     const material = opacity => new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, opacity, depthWrite: false, toneMapped: false });
     this.glows = this.batch(new THREE.CylinderGeometry(1, 1, 1, 6, 1, true), material(.18), MAX_BEAMS);
@@ -96,7 +96,7 @@ export class BattleEffects {
     for (const event of events) {
       if (event.kind === 'fire') {
         const view = ships.get(event.ship), gun = view?.guns[Math.floor(event.day * 60) % 2] ?? view?.guns[0];
-        const from = gun ? gun.localToWorld(this.a.set(0, .2, -1.65)).toArray() : event.from;
+        const from = view?.fixedWeapons ? event.from : gun ? gun.localToWorld(this.a.set(0, .2, -1.65)).toArray() : event.from;
         if (view) { view.recoil = 1; view.muzzleTime = time; view.muzzle = [...from]; }
         if (event.weapon === 'laser') {
           if (this.beams.length === MAX_BEAMS) this.beams.shift();
@@ -104,16 +104,19 @@ export class BattleEffects {
         }
         this.flash(from, WEAPONS[event.weapon].color, time, event.weapon === 'torpedo' ? .7 : .35);
         this.light(from, WEAPONS[event.weapon].color, time, event.weapon === 'torpedo' ? 240 : 120);
+        if (this.overview) this.pings.push({position:[...from],time,color:WEAPONS[event.weapon].color,impact:false});
       } else if (event.kind === 'impact') {
         const position = this.impact(event, ships), radius = event.weapon === 'torpedo' ? 2 : .7;
         this.flash(position, event.shield ? 0x8fcaff : 0xffac63, time, radius); this.light(position, event.shield ? 0x6ccaff : 0xff9b50, time, 180 * radius);
+        if (this.overview) this.pings.push({position:[...position],time,color:event.shield?0x8fcaff:0xffac63,impact:true});
       } else if (event.kind === 'destroy') this.destroy(event, time, ships);
     }
     this.beams = this.beams.filter(beam => time - beam.time < .23);
     for (let i = 0; i < this.beams.length; i++) {
       const beam = this.beams[i], fade = 1 - (time - beam.time) / .23;
-      this.cylinder(this.cores, i, beam.from, beam.to, .11, WEAPONS.laser.color, fade * 4);
-      this.cylinder(this.glows, i, beam.from, beam.to, .6, WEAPONS.laser.color, fade * 2);
+      const pixel=this.overview?this.camera.position.distanceTo(this.a.fromArray(beam.from))*2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))/(this.camera.userData.viewportHeight||844):0;
+      this.cylinder(this.cores, i, beam.from, beam.to, Math.max(.11,pixel*.3), WEAPONS.laser.color, fade * 4);
+      this.cylinder(this.glows, i, beam.from, beam.to, Math.max(.6,pixel), WEAPONS.laser.color, fade * 1.3);
     }
     this.cores.count = this.glows.count = this.beams.length;
     let heads = 0, bolts = 0, segments = 0;
@@ -144,6 +147,11 @@ export class BattleEffects {
       const age = time - explosion.time;
       if (flashes < 48) this.sprite(this.flashes, flashes++, explosion.position, explosion.size * (.12 + age * .32), 0xff973f, Math.max(0, 2.5 - age));
       if (rings < 24) this.sprite(this.rings, rings++, explosion.position, explosion.size * (.15 + age * .9), 0xffbf72, Math.max(0, 1 - age / 2));
+    }
+    this.pings=this.pings.filter(p=>time-p.time<.32).slice(-24);
+    if(this.overview)for(const ping of this.pings){if(flashes>=48)break;const age=(time-ping.time)/.32;
+      const pixel=this.camera.position.distanceTo(this.a.fromArray(ping.position))*2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))/(this.camera.userData.viewportHeight||844);
+      this.sprite(this.flashes,flashes++,ping.position,pixel*(ping.impact?3.2:1.9)*(1+age*.4),ping.color,(1-age)*(ping.impact?1.6:1.1));
     }
     for (const ship of battle.ships) {
       const view = ships.get(ship.id); if (!view || !activeShip(ship)) continue;

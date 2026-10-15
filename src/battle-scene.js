@@ -53,6 +53,8 @@ export class BattleScene {
       if (!pointer || pointer.id !== event.pointerId) return;
       this.pointer = null;
       if (pointer.moved || pointer.multiple || this.disposed) return;
+      const picked = this.pickContact?.(event.clientX, event.clientY);
+      if (picked !== undefined) { if (picked) this.onSelect?.(picked); return; }
       const rect = this.canvas.getBoundingClientRect();
       const position = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
       this.raycaster.setFromCamera(position, this.camera);
@@ -162,7 +164,7 @@ export class BattleScene {
   makeShip(ship) {
     const def = DEMO_CLASSES[ship.type], color = COLORS[ship.side], body = this.models.get(this.modelName(ship)).clone(true);
     const bounds = new THREE.Box3().setFromObject(body), size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
-    const scale = def.size / Math.max(size.x, size.y, size.z); size.multiplyScalar(scale);
+    const scale = (ship.length ?? def.size) / Math.max(size.x, size.y, size.z); size.multiplyScalar(scale);
     body.position.copy(center).multiplyScalar(-scale); body.scale.setScalar(scale);
     const bodyRoot = new THREE.Group(); bodyRoot.add(body); this.orientBody(bodyRoot, ship);
     bodyRoot.updateWorldMatrix(true, true); new THREE.Box3().setFromObject(bodyRoot).getSize(size);
@@ -293,9 +295,11 @@ export class BattleScene {
       const health = ship.hull / DEMO_CLASSES[ship.type].hull;
       view.body.traverse(object => { if (object.isMesh) this.updateMaterial(object, health, living); });
       const target = demoTarget(battle, ship);
-      this.a.copy(ship.order === 'retreat' ? this.b.set(0, 0, 1) : target ? this.b.fromArray(target.position).sub(view.group.position).normalize() : ship.side === 'friendly' ? FORWARD : this.b.set(0, 0, 1));
-      this.quaternion.setFromUnitVectors(FORWARD, this.a); view.group.quaternion.slerp(this.quaternion, delta ? 1 - Math.exp(-5 * delta) : 0);
-      if (target) {
+      this.a.copy(ship.facing ? this.b.fromArray(ship.facing) : ship.order === 'retreat' ? this.b.set(0, 0, 1) : target ? this.b.fromArray(target.position).sub(view.group.position).normalize() : ship.side === 'friendly' ? FORWARD : this.b.set(0, 0, 1));
+      this.quaternion.setFromUnitVectors(FORWARD, this.a);
+      if (ship.facing) view.group.quaternion.copy(this.quaternion);
+      else view.group.quaternion.slerp(this.quaternion, delta ? 1 - Math.exp(-5 * delta) : 0);
+      if (target && !view.fixedWeapons) {
         view.group.updateWorldMatrix(true, false);
         const aim = view.group.worldToLocal(this.a.fromArray(target.position));
         for (const gun of view.guns) gun.rotation.y = Math.atan2(-aim.x, -aim.z);

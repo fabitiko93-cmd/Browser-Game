@@ -1,3 +1,4 @@
+import { weaponPosition, turnToward } from './battle-geometry.js';
 // The preview owns its own clock and ships. It never imports or changes a saved empire.
 export const DEMO_STEP = 1 / 60;
 export const KM_PER_UNIT = .025;
@@ -148,12 +149,13 @@ function fire(battle, ship, target, events) {
   const weapon = DEMO_CLASSES[ship.type].weapon, def = WEAPONS[weapon];
   const damage = def.damage * (ship.order === 'retreat' ? .55 : 1);
   ship.salvos++;
-  events.push({ kind: 'fire', weapon, ship: ship.id, target: target.id, from: [...ship.position], to: [...target.position], day: battle.day });
+  const origin = weaponPosition(ship, ship.length ?? DEMO_CLASSES[ship.type].size);
+  events.push({ kind: 'fire', weapon, ship: ship.id, target: target.id, from: origin, to: [...target.position], day: battle.day });
   if (weapon === 'laser') { hit(battle, ship.id, target, weapon, damage, events); return; }
-  const velocity = interceptDirection(ship, target, def.speed).map(v => v * def.speed);
-  if (weapon === 'torpedo') { velocity[0] += ship.salvos % 2 ? 220 : -220; velocity[1] += 90; }
+  const velocity = (ship.facing ?? interceptDirection(ship, target, def.speed)).map(v => v * def.speed);
+  if (weapon === 'torpedo' && !ship.facing) { velocity[0] += ship.salvos % 2 ? 220 : -220; velocity[1] += 90; }
   battle.projectiles.push({ id: ++battle.projectileId, source: ship.id, target: target.id, side: ship.side, weapon,
-    position: [...ship.position], velocity, damage, age: 0 });
+    position: [...origin], velocity, damage, age: 0 });
 }
 
 function moveProjectiles(battle, events) {
@@ -172,7 +174,8 @@ function moveProjectiles(battle, events) {
     const lengthSq = delta.reduce((sum, value) => sum + value * value, 0);
     const along = Math.max(0, Math.min(1, delta.reduce((sum, value, axis) => sum + value * (target.position[axis] - before[axis]), 0) / (lengthSq || 1)));
     const closest = before.map((value, axis) => value + delta[axis] * along);
-    if (distance(closest, target.position) <= Math.max(3, DEMO_CLASSES[target.type].size * .35)) {
+    const radius = target.length != null ? Math.max(.4, target.length * .35) : Math.max(3, DEMO_CLASSES[target.type].size * .35);
+    if (distance(closest, target.position) <= radius) {
       hit(battle, projectile.source, target, projectile.weapon, projectile.damage, events);
       battle.projectiles.splice(i, 1);
     }
@@ -194,7 +197,7 @@ export function advanceDemoBattle(battle, days) {
       const def = DEMO_CLASSES[ship.type];
       if (battle.day - ship.lastHit > 1.3) ship.shield = Math.min(def.shield, ship.shield + DEMO_STEP * 2.5);
       if (ship.order === 'retreat') {
-        ship.velocity[2] = def.retreatSpeed;
+        ship.velocity = [0, 0, def.retreatSpeed];
         ship.position[2] += DEMO_STEP * def.retreatSpeed;
         if (ship.position[2] > 2800) { ship.escaped = true; events.push({ kind: 'escape', ship: ship.id, day: battle.day }); }
       }
@@ -212,8 +215,27 @@ export function advanceDemoBattle(battle, days) {
       }
       const def = WEAPONS[DEMO_CLASSES[ship.type].weapon], target = targetFor(battle, ship);
       ship.target = target?.id ?? null;
+      let aligned = true;
+      if (ship.facing) {
+        const origin = weaponPosition(ship, ship.length ?? DEMO_CLASSES[ship.type].size);
+        let aim = ship.velocity;
+        if (ship.order === 'retreat') aim = [0, 0, 1];
+        else if (target) aim = def.speed && DEMO_CLASSES[ship.type].weapon !== 'torpedo'
+          ? interceptDirection({position:origin}, target, def.speed) : target.position.map((p, i) => p - origin[i]);
+        const length = Math.hypot(...aim);
+        if (length > 1e-8) {
+          const direction = aim.map(v => v / length);
+          const movingFlight = ship.flightDelay != null && Math.hypot(...ship.velocity) > 1;
+          const travel = movingFlight ? ship.velocity.map(v => v / Math.hypot(...ship.velocity)) : direction;
+          ship.facing = turnToward(ship.facing, travel, DEMO_STEP * (ship.type === 'interceptor' ? 3 : .65));
+          const tolerance = target ? Math.min(.015, (target.length ?? DEMO_CLASSES[target.type].size) * .2 / Math.max(1, distance(ship.position, target.position))) : .015;
+          aligned = ship.facing.reduce((n, v, i) => n + v * direction[i], 0) > Math.cos(tolerance);
+        }
+        // Fixed bow weapons never fire sideways while the hull is still turning.
+        if (!aligned || ship.order === 'retreat') continue;
+      }
       if (battle.day + 1e-10 < ship.nextFire) continue;
-      ship.nextFire += def.interval;
+      ship.nextFire = ship.facing ? Math.max(ship.nextFire, battle.day) + def.interval : ship.nextFire + def.interval;
       if (target) fire(battle, ship, target, events);
     }
     const friendly = battle.ships.filter(s => s.side === 'friendly' && activeShip(s));

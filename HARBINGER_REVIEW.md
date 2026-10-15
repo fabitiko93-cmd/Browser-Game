@@ -1,5 +1,7 @@
 # Harbinger-Grafikprobe · 0.13.0
 
+Dieser Bericht dokumentiert die ursprüngliche Acht-Schiff-Probe. Die aktuelle, skalierbare Gesamtansicht und ihre Bedienung sind in [BATTLE_OVERVIEW.md](BATTLE_OVERVIEW.md) beschrieben; [aktuelle Probeschlacht](https://fabitiko93-cmd.github.io/Browser-Game/battle-overview.html). Die folgenden Aufnahmen und Messwerte sind historische Vergleichswerte.
+
 [Probe öffnen](https://fabitiko93-cmd.github.io/Browser-Game/harbinger.html) · [Vorherige Übung](https://fabitiko93-cmd.github.io/Browser-Game/battle.html)
 
 Die Probe verwendet das bereitgestellte D.S.S. Harbinger-Modell von [Comrade1280](https://sketchfab.com/3d-models/dss-harbinger-battle-cruiser-474f62d00ed54212b37f93ce91569c53), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Geometrie, UVs, Normalen und Materialfaktoren bleiben erhalten. Texturen wurden für mobile Browser aufbereitet: 2K für Farbe/Normalen, 1K für ORM, UASTC/KTX2 mit Mipmaps. 27.675.264 Bytes statt 127.506.300 Bytes, in kleinen Teilen bei Bedarf geladen.

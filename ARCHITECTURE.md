@@ -33,6 +33,7 @@
 | `src/battle-targets.js` / `src/battle-targets-ui.js` | Aktive Gegner, Klassenfilter, Suche, stabile Kontaktseiten, Statuswerte und wirksame Feuerschwerpunkte in der Übung |
 | `src/battle-presentation.js` / `src/battle-quality.js` | Lineare Renderziele, begrenzter Leuchtpuffer, finale ACES-/sRGB-Ausgabe, vorberechnete Umgebungsreflexionen und Auflösung mit Hysterese |
 | `src/harbinger-scene.js` / `src/harbinger-page.js` / `src/harbinger-display.js` | Separate Harbinger-Probe, KTX2-Materialien, echte 3D-Taktik und eindeutige Auftragsanzeige |
+| `src/battle-overview-page.js` / `src/battle-overview.js` / `src/battle-geometry.js` / `src/battle-lod.js` | Neue Schlachtübersicht, 5:35/35:5/20:20/50:50-Fixtures, deterministische Flugbahnen, feste Bugwaffen und entfernte Instanzen |
 | `src/battle-tactical.js` / `src/battle-audio.js` | Schematische Formation und echte Auftragsverbindung, Waffenklänge mit vorhandener Effektlautstärke und Nutzerfreigabe |
 | `src/surface.js` / `src/surface-ui.js` | Seedbasierte Geologie, Standortboni, Bauphasen, automatische Verbindungen und Standortvorschau |
 | `src/surface-renderer.js` / `src/surface-buildings.js` | Ursprüngliche Kachel- und Gebäudeoptik mit zwischengespeicherter Grafik und Bauplatzmarkierung |
