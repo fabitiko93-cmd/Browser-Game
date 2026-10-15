@@ -1,14 +1,14 @@
-import { activeShip } from './battle-demo.js';
+import { activeShip, shipClass, armedShip, commandedShips } from './battle-demo.js';
 import { enemyContacts, contactInfo, CONTACT_GROUPS } from './battle-targets.js';
 
 const format = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 const setText = (element, value) => { if (element.textContent !== value) element.textContent = value; };
 
 export class TargetPanel {
-  constructor(dialog, { getBattle, onSelect, onPriority, onInspect }) {
-    this.dialog = dialog; this.getBattle = getBattle; this.onSelect = onSelect; this.onPriority = onPriority; this.onInspect = onInspect;
+  constructor(dialog, { getBattle, onSelect, onPriority, onInspect, groups = CONTACT_GROUPS }) {
+    this.dialog = dialog; this.getBattle = getBattle; this.onSelect = onSelect; this.onPriority = onPriority; this.onInspect = onInspect; this.groups = groups;
     this.query = { type: 'all', search: '', sort: 'class', page: 0 }; this.rows = new Map(); this.filters = new Map();
-    for (const [type, name] of Object.entries(CONTACT_GROUPS)) {
+    for (const [type, name] of Object.entries(this.groups)) {
       const button = document.createElement('button'); button.type = 'button'; button.dataset.contactFilter = type;
       const label = document.createElement('span'), count = document.createElement('b'); label.textContent = name; button.append(label, count);
       dialog.querySelector('#contact-filters').append(button); this.filters.set(type, { button, count });
@@ -56,7 +56,7 @@ export class TargetPanel {
     const list = this.dialog.querySelector('#contact-list'); list.replaceChildren();
     for (const contact of result.contacts) {
       const button = document.createElement('button'); button.type = 'button'; button.dataset.contactId = contact.id; button.className = 'contact-row';
-      const symbol = document.createElement('span'); symbol.className = `contact-symbol ${contact.type}`; symbol.setAttribute('aria-hidden', 'true');
+      const symbol = document.createElement('span'); symbol.className = `contact-symbol ${contact.modelType}`; symbol.setAttribute('aria-hidden', 'true');
       const body = document.createElement('span'); body.className = 'contact-body';
       const name = document.createElement('b'), info = document.createElement('small'); body.append(name, info);
       const health = document.createElement('span'); health.className = 'contact-health';
@@ -76,10 +76,10 @@ export class TargetPanel {
   // Live changes update the same buttons. Sorting/rebuilding occurs only on a user action.
   paint() {
     const battle = this.getBattle(), byId = new Map(battle.ships.map(ship => [ship.id, ship])), observer = byId.get(battle.selected);
-    const counts = Object.fromEntries(Object.keys(CONTACT_GROUPS).map(type => [type, 0]));
-    for (const ship of battle.ships) if (ship.side === 'enemy' && activeShip(ship)) { counts.all++; counts[ship.type]++; }
+    const counts = Object.fromEntries(Object.keys(this.groups).map(type => [type, 0]));
+    for (const ship of battle.ships) if (ship.side === 'enemy' && activeShip(ship)) { counts.all++; counts[shipClass(ship)]++; }
     for (const [type, { button, count }] of this.filters) {
-      setText(count, String(counts[type])); button.setAttribute('aria-pressed', String(type === this.query.type));
+      setText(count, String(counts[type])); if(this.groups!==CONTACT_GROUPS)button.hidden=type!=='all'&&!counts[type]&&this.query.type!==type; button.setAttribute('aria-pressed', String(type === this.query.type));
     }
     setText(this.dialog.querySelector('#contact-count'), String(counts.all));
     for (const [id, row] of this.rows) {
@@ -88,15 +88,15 @@ export class TargetPanel {
       row.button.setAttribute('aria-pressed', String(id === battle.target));
       setText(row.name, info?.name ?? 'Verlorener Kontakt');
       setText(row.info, available ? `${info.className} · ${format.format(info.distance)} km` : 'Zerstört / außer Gefecht');
-      setText(row.hull, `Hülle ${info?.hull ?? 0} %`); setText(row.shield, `Schild ${info?.shield ?? 0} %`);
+      setText(row.hull, `Hülle ${info?.hull ?? 0} %`); setText(row.shield, info?.hasShield === false ? 'Kein Schiffsschild' : `Schild ${info?.shield ?? 0} %`);
       row.hull.classList.toggle('damaged', (info?.hull ?? 0) < 30);
       row.button.classList.toggle('out-of-range', available && !info.inRange);
       row.button.title = available && !info.inRange ? 'Außerhalb der Waffenreichweite des ausgewählten eigenen Schiffs' : '';
     }
-    const prioritizable = this.query.type !== 'all' && counts[this.query.type] > 0 && battle.phase === 'engaged';
+    const prioritizable = this.query.type !== 'all' && counts[this.query.type] > 0 && battle.phase === 'engaged' && commandedShips(battle).some(s => s.order !== 'retreat' && armedShip(s));
     this.dialog.querySelector('#contact-priority').disabled = !prioritizable;
     const recipient = battle.scope === 'fleet' ? 'eigene Flotte' : observer?.name ?? 'dieses Schiff';
-    setText(this.dialog.querySelector('#contact-priority'), this.query.type === 'all' ? 'Klasse zum Angriff wählen' : `${CONTACT_GROUPS[this.query.type]} angreifen · ${recipient}`);
+    setText(this.dialog.querySelector('#contact-priority'), this.query.type === 'all' ? 'Klasse zum Angriff wählen' : `${this.groups[this.query.type]} angreifen · ${recipient}`);
     this.dialog.querySelector('#contact-inspect').disabled = !byId.get(battle.target) || !activeShip(byId.get(battle.target));
   }
 }

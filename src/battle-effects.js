@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WEAPONS, DEMO_CLASSES, activeShip } from './battle-demo.js';
+import { WEAPONS, DEMO_CLASSES, activeShip, shipWeapon } from './battle-demo.js';
 
 const MAX_PROJECTILES = 64, MAX_BEAMS = 24, MAX_PARTICLES = 192, MAX_DEBRIS = 96;
 const UP = new THREE.Vector3(0, 1, 0);
@@ -155,7 +155,7 @@ export class BattleEffects {
     }
     for (const ship of battle.ships) {
       const view = ships.get(ship.id); if (!view || !activeShip(ship)) continue;
-      if (time - (view.muzzleTime ?? -10) < .18 && flashes < 48) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[DEMO_CLASSES[ship.type].weapon].color, 4);
+      if (time - (view.muzzleTime ?? -10) < .18 && flashes < 48) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[shipWeapon(ship)].color, 4);
       const health = ship.hull / DEMO_CLASSES[ship.type].hull;
       if (health < .65 && time - (this.lastDamage.get(ship.id) ?? -10) > .25) {
         this.lastDamage.set(ship.id, time);

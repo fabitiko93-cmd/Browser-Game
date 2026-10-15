@@ -31,3 +31,14 @@ Flotte → Gefechte enthält jetzt die letzten sechs echten Spielergefechte. Nac
 `battle-replay.html?battle=<id>` liest ausschließlich den lokalen Bericht. Tatsächliche Teilnehmer, Anfangs-/Endhülle, Verluste, Rückzüge, Garnisonen und Besitzwechsel stammen aus der bestehenden strategischen Abrechnung. Die 36 Sekunden lange Darstellung inszeniert die Flugbahnen und Treffer zwischen diesen Zuständen. Sie ist als Aufzeichnung gekennzeichnet, verändert das Ergebnis nicht und bietet daher keine taktischen Befehle. Pausieren, Kamera und Teilnehmerauswahl funktionieren weiterhin.
 
 Alle zwölf Spielklassen sind mit ihren echten Bezeichnungen angebunden; verfügbare Schiffsmodelle bleiben visuelle Platzhalter. Planetare Verteidigung erscheint als schematische Orbitalanlage, getrennt von der Schiffszahl. Bewegliche Türme und neue Jäger-KI sind weiterhin ausgenommen. `scripts/qa-battle-replay.mjs` prüft Spielnavigation, echte Ankunft, Speicherung, 3D-Wiedergabe, Hochformat, Skalierung und Rückkehr ohne doppelte Kampfabrechnung.
+
+
+## Interaktive Probeschlacht mit Spielwerten
+
+[Interaktive Probeschlacht öffnen](https://fabitiko93-cmd.github.io/Browser-Game/battle-trial.html). Im Reich: Flotte → Gefechte → Ansicht ausprobieren. Die bisherige Grafikprobe und die Gefechtsaufzeichnungen bleiben verfügbar.
+
+Die Probe startet pausiert. Unter ⋯ können Testverbände, eigene Forschungs-/Politikboni oder Kopien der freien stationierten Schiffe eines Standorts gewählt werden. Hülle, Panzerung, Versorgung und Kampfstärke folgen den vorhandenen Regeln. Alle zwölf Klassen haben ihre tatsächlichen Namen; Waffenlose schießen nicht. Die Modelle bleiben vorläufige Zuordnungen. Standardverbände testen Kreuzer, Zerstörer und Korvetten; keine zusätzlichen Jäger werden erfunden.
+
+Zielwahl, Klassenpriorität und Rückzug beeinflussen den laufenden Kampf. Betrachten eines Kontakts erteilt keinen Angriff. Treffer erzeugen unmittelbar den gespeicherten Schaden; Torpedos erst bei der Ankunft. Gleichzeitige Laserangriffe sind symmetrisch, letzte Torpedos wirken auch nach Verlust des Abschussschiffs. Rückzug benötigt Bordversorgung und kann unter Beschuss scheitern.
+
+Reichweite (90 km), Feuerrhythmus, zeitliche Schadensverteilung und Rückzugskosten sind Probewerte für das neue Gefecht. Die bestehende strategische Kampfabrechnung bleibt maßgeblich für dein Reich. Die Probe speichert ihren Fortschritt getrennt und lässt sich pausiert fortsetzen; sie verändert keine echten Schiffe, Waren oder Gefechtsberichte. Bewegliche Türme und neue Jäger-KI sind weiterhin ausgenommen.

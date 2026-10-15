@@ -5,13 +5,8 @@ import { turnToward, weaponPosition } from './battle-geometry.js';
 
 export const REPLAY_DURATION = 36;
 const STEP = 1 / 60;
-// Temporary visual assets, not new strategic classes or statistics.
-export const REPLAY_MODELS = {
-  cruiser: ['cruiser', 72], destroyer: ['destroyer', 36], corvette: ['corvette', 14],
-  lander: ['corvette', 20], support: ['destroyer', 32], freighter: ['destroyer', 30],
-  heavyFreighter: ['destroyer', 50], bulkFreighter: ['destroyer', 60], superFreighter: ['destroyer', 80], colony: ['destroyer', 42],
-  scout: ['interceptor', 8], probe: ['interceptor', 2.4],
-};
+import { STRATEGIC_MODELS as REPLAY_MODELS } from './battle-models.js';
+export { REPLAY_MODELS };
 const lerp = (a, b, t) => a + (b - a) * Math.min(1, Math.max(0, t));
 const direction = (from, to) => { const d = to.map((v, i) => v - from[i]), n = Math.hypot(...d) || 1; return d.map(v => v / n); };
 const sideOf = owner => owner === 'player' ? 'friendly' : 'enemy';

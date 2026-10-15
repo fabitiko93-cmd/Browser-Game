@@ -17,7 +17,7 @@ const contents = new Map();
 for (const path of await files(resolve(root, 'src'))) contents.set('build/' + relative(resolve(root, 'src'), path), await readFile(path));
 for (const path of await files(resolve(root, 'web'))) contents.set(relative(resolve(root, 'web'), path), await readFile(path));
 // Bundle rendering locally; the strategic game keeps its existing ES modules.
-for (const entry of ['battle-scene', 'harbinger-scene', 'battle-overview-page', 'battle-replay-page']) {
+for (const entry of ['battle-scene', 'harbinger-scene', 'battle-overview-page', 'battle-replay-page', 'battle-trial-page']) {
   const result = await build({entryPoints:[resolve(root,`src/${entry}.js`)],bundle:true,write:false,format:'esm',platform:'browser',minify:true,target:['safari15'],legalComments:'inline'});
   contents.set(`build/${entry}.js`,Buffer.from(result.outputFiles[0].contents));
 }

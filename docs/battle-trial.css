@@ -1,0 +1,2 @@
+@import url('./battle-overview.css');
+.trial-supplies{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trial-supplies .lab-field{margin-top:9px}.lab-dialog .lab-restart+button{margin-top:8px}#selected-stats{font-size:10px;color:#9bb3c4;line-height:1.5}#commands-label{font:inherit;font-size:inherit;margin:0;color:inherit}.lab-title h1{font-size:14px}
