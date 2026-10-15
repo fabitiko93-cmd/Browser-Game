@@ -1,0 +1,7 @@
+@import url('./battle-overview.css');
+.battle-replay .lab-title h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.battle-replay .lab-title small{font-size:6px;letter-spacing:.08em}
+.battle-replay .lab-counts{font-size:16px;gap:5px;white-space:nowrap}
+.replay-camera{margin-top:10px}.replay-pages{display:flex;align-items:center;justify-content:center;gap:14px;color:#90adbf}.replay-pages button{width:44px;border:1px solid #698ba34d;font-size:21px}
+.replay-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #6b8b9f30;gap:10px}.replay-stat strong{font-weight:500;text-align:right}.replay-return{flex:1;display:grid;place-items:center;border:1px solid #698ba34d;border-radius:5px;text-decoration:none;min-height:44px;padding:7px;font-size:11px}
+.battle-replay .lab-own-list button>span:first-child{min-width:0;overflow-wrap:anywhere}.battle-replay .lab-own-list button>span:last-child{max-width:42%;text-align:right;flex-shrink:0}

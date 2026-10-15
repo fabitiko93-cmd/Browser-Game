@@ -88,7 +88,7 @@ test('v10 migration preserves the original world, money, stocks, paid strikes an
   s.relations.ilyri.war=true;assert.equal(launchStrike(s,'nereid','thalassa','missile'),null);
   s.factions.khepri.research={id:'grid',remaining:2};s.factions.khepri.tech=s.factions.khepri.tech.filter(k=>k!=='grid');
   s.version=10;delete s.dayProgress;const snapshot=structuredClone(s),loaded=validateSave(s);
-  assert.equal(loaded.version,11);assert.equal(loaded.dayProgress,0);assert.deepEqual(s,snapshot);
+  assert.equal(loaded.version,12);assert.equal(loaded.dayProgress,0);assert.deepEqual(s,snapshot);
   for(const key of ['credits','factions','planets','world','fleets','strikes','research','science'])assert.deepEqual(loaded[key],snapshot[key]);
   stepDay(loaded);assert.equal(loaded.research.remaining,2);
 });

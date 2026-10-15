@@ -22,3 +22,12 @@ Die eigenständige Probe startet mit 20 gegen 20 Schiffen. Unter **⋯ → Probe
 ## Prüfung
 
 Vor Veröffentlichung: `npm run build`, `npm test`, `npm run build:check` und `ORBIT_BROWSER_EXECUTABLE=/pfad/zu/chrome node scripts/qa-harbinger.mjs`. Die Browserprüfung erfasst originale Materialien, Waffenausrichtung, Kontextbefehle, vier Kameras, Touch, schmale Hochformate, alle vier Szenarien, begrenzte Renderaufrufe, Neustarts, echte Salven/Treffer und Offline-Modellteile. Sie ersetzt die Beurteilung und Leistungsmessung auf dem tatsächlichen iPhone nicht.
+
+
+## Im Spiel
+
+Flotte → Gefechte enthält jetzt die letzten sechs echten Spielergefechte. Nach einer Schlacht pausiert das Reich und bietet die 3D-Aufzeichnung an. Bereits vor diesem Update abgeschlossene Gefechte haben keine Teilnehmeraufzeichnung.
+
+`battle-replay.html?battle=<id>` liest ausschließlich den lokalen Bericht. Tatsächliche Teilnehmer, Anfangs-/Endhülle, Verluste, Rückzüge, Garnisonen und Besitzwechsel stammen aus der bestehenden strategischen Abrechnung. Die 36 Sekunden lange Darstellung inszeniert die Flugbahnen und Treffer zwischen diesen Zuständen. Sie ist als Aufzeichnung gekennzeichnet, verändert das Ergebnis nicht und bietet daher keine taktischen Befehle. Pausieren, Kamera und Teilnehmerauswahl funktionieren weiterhin.
+
+Alle zwölf Spielklassen sind mit ihren echten Bezeichnungen angebunden; verfügbare Schiffsmodelle bleiben visuelle Platzhalter. Planetare Verteidigung erscheint als schematische Orbitalanlage, getrennt von der Schiffszahl. Bewegliche Türme und neue Jäger-KI sind weiterhin ausgenommen. `scripts/qa-battle-replay.mjs` prüft Spielnavigation, echte Ankunft, Speicherung, 3D-Wiedergabe, Hochformat, Skalierung und Rückkehr ohne doppelte Kampfabrechnung.

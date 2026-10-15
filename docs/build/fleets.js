@@ -1,3 +1,4 @@
+import { beginBattleReport, finishBattleReport } from './battle-records.js';
 import { blocPartners, arriveBlocSupply } from './power.js';
 import { systemsOf } from './world.js';
 import { arriveRelic, workRelic } from './ruins.js';
@@ -142,6 +143,7 @@ export function resolveBattle(state, fleets, target) {
   const attack=fleets.reduce((n,f)=>n+fleetStrength(state,f),0);if(attack<=0)return;
   const guards=state.fleets.filter(f=>f.owner===previous&&f.planetId===target.id&&!f.mission&&fleetStrength(state,f)>0);
   const base=baseStats(state,target),navy=guards.reduce((n,f)=>n+fleetStrength(state,f),0),defense=target.defense+base.orbital+navy;
+  const report=beginBattleReport(state,fleets,guards,target,base);
   observePlanet(state,owner,target,'combat');
   const power=absorbShield(target,attack),victory=power>=defense&&power>0;
   target.defense=Math.max(0,target.defense-power*(victory?1:.55));
@@ -149,6 +151,7 @@ export function resolveBattle(state, fleets, target) {
   for(const f of fleets){f.hp=Math.max(0,f.hp-damage*(1-shipArmor(state,f)));f.supply=Math.max(0,f.supply-25);}
   const guardDamage=Math.min(100,power/Math.max(1,defense)*100);
   for(const f of guards){f.hp=Math.max(0,f.hp-guardDamage*(1-shipArmor(state,f)));f.supply=Math.max(0,f.supply-20);}
+  if(report){const hp=new Map([...fleets,...guards].map(f=>[f.id,f.hp]));for(const ship of report.ships)ship.combatHp=hp.get(ship.id);}
   const survivors=fleets.filter(f=>f.hp>0),survivingGuards=guards.filter(f=>f.hp>0);
   let captured=false;
   if(victory) {
@@ -172,6 +175,7 @@ export function resolveBattle(state, fleets, target) {
   }else if(involved)log(state,`${target.name}: Angriff von ${realmName(state,owner)} abgewehrt. Überlebende ziehen sich zurück.`,'war','attack');
   if(!victory||owner!=='player'&&!captured)retreat(state,survivors,target);
   observePlanet(state,owner,target,'combat');
+  finishBattleReport(state,report,[...fleets,...guards],target,victory,captured);
   state.fleets=state.fleets.filter(f=>f.hp>0);
   if(previous==='player'&&!state.planets.some(p=>p.owner==='player'))state.galaxy.defeat={day:state.day,conqueror:owner};
 }

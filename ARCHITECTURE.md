@@ -27,6 +27,8 @@
 | `src/intelligence.js` / `src/intelligence-ui.js` | Getrennte Wissensarchive, gemeinsame Fremddatenansicht und Planetendossiers |
 | `src/exploration-data.js` / `src/exploration.js` / `src/exploration-save.js` | Neue Systeme, Erkundung, manuelle Sonden, KI-Aufträge und Validierung |
 | `src/communications.js` / `src/communications-ui.js` | Reichsweiter Posteingang, Vertragsangebote, Antwortfristen und Gebäudesignale |
+| `src/battle-records.js` / `src/battle-report-ui.js` | Begrenztes Archiv echter Spielergefechte, Ergebnis- und Teilnehmerdaten, v12-Validierung |
+| `src/battle-replay.js` / `src/battle-replay-page.js` / `src/battle-replay-scene.js` | Schreibgeschützte 3D-Aufzeichnung tatsächlicher Gefechte, Orbitaldarstellung, Kameras und Ergebnisbericht |
 | `src/save.js` | Lokaler Spielstand, Validierung, Import und Export |
 | `src/map.js` | Canvas-Karten, Oberflächen, Planeten, Sterne, Auswahl, Verschieben und Zoom |
 | `src/battle-demo.js` / `src/battle-page.js` / `src/battle-scene.js` / `src/battle-effects.js` | Separate 3D-Übung, eigener Spielzeit-Takt, Flugzeiten, Befehle, Touchkamera, Modelle, gebündelte Effekte und Grafikressourcen |
@@ -141,3 +143,10 @@ Vorherrschaft nutzt feste Gewichte aller ursprünglichen Welten, einschließlich
 Regressionsschutz: Die bisherigen Weltfixtures verwenden explizit `createGame({legacy:true})`. Neue Regeltests prüfen generierte Starts, reale Leerraumreisen, endliche Ruinenbergung, bezahlte Orbitalversorgung, Importescrow, beidseitige KI-Transaktionen, Mitgliedschaft mit Einwilligung, physische Blockhilfe, Gebührenabrechnung, begrenzte Kriegsziele, Siegkontinuität und unveränderte Altspielstände.
 
 Grafikprobe 0.13.0: `scripts/prepare-harbinger.py` bewahrt Geometrie und Materialfaktoren, komprimiert Texturen und erzeugt kleine `.part`-Dateien. Der Loader setzt das GLB vor dem Laden zusammen. Der generierte Worker lädt optionale Modellteile nur auf Abruf und unterstützt danach Bytebereiche. `scripts/qa-harbinger.mjs` prüft tatsächliche WebGL-Aufnahmen, Aufträge, Touch, Neustarts und Cacheverhalten. Strategische Regeln und Spielstandschema bleiben unverändert. Bewertung: `HARBINGER_REVIEW.md`.
+
+
+Gefechtsanbindung: `fleets.resolveBattle` speichert vor und nach der vorhandenen Abrechnung eine Momentaufnahme, ausschließlich bei Spielerbeteiligung. `combatHp` trennt Kampfschaden von Verlusten beim Rückzug; gelandete Landungsschiffe werden als Garnison ausgewiesen. Kampfstärke, Panzerung, Schilde, Rückzugskosten, Eroberung und KI verwenden weiter dieselben Regeln. v11→v12 ergänzt nur ein leeres `battleReports`-Archiv; alte Gefechte werden nicht nachträglich erfunden. Höchstens sechs Berichte, insgesamt 3.000 Teilnehmer und ein zusätzlicher Größenrahmen halten das Archiv begrenzt.
+
+`main.syncClock` pausiert nach einem neuen Spielergefecht und öffnet Flotte → Gefechte. Der letzte Bericht bleibt auch nach dem Verlust der letzten Kolonie erreichbar. Vor dem Wechsel nach `battle-replay.html?battle=<id>` muss das Speichern gelingen. Die Aufzeichnung liest den validierten Spielstand, schreibt ihn nie zurück und startet keine zweite Kampfabrechnung. Neu laden, erneut ansehen und mehrere Tabs können daher keine Verluste oder Eroberungen erneut anwenden.
+
+Die 36-Sekunden-Wiedergabe interpoliert die tatsächlichen Anfangs-/Endwerte; Flugbahnen und einzelne Treffer sind inszeniert und keine gespeicherte Trefferchronik. Zwölf strategische Klassen werden auf die verfügbaren Modelle abgebildet, mit ihren echten Namen, ihrer Zahl und ohne erfundene persönliche Schilde oder zusätzliche Jäger. Eine eigene schematische Orbitalanlage steht für die tatsächlichen planetaren Verteidigungswerte und zählt nie als Schiff. Grafikpuffer wachsen mit der Teilnehmerzahl. Browserprüfung: `scripts/qa-battle-replay.mjs`; strategische, Migrations- und Wiederholungsprüfung: `tests/battle-integration.test.js`.

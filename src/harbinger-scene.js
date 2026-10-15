@@ -79,6 +79,7 @@ export class HarbingerScene extends BattleScene {
   }
   makePlanet() {}
   async load(battle) {
+    this.ensureCapacity(battle.ships.length);
     const signal = this.abort.signal, base = new URL('../models/harbinger/', import.meta.url);
     const response = await fetch(new URL('manifest.json', base), { signal });
     if (!response.ok) throw new Error('Model manifest unavailable');
@@ -172,12 +173,23 @@ export class HarbingerScene extends BattleScene {
     }
     this.engineTemplate=view.engines.map(({engine})=>({position:engine.position.toArray(),quaternion:engine.quaternion.toArray()}));
   }
+  ensureCapacity(count) {
+    const points=this.contactPoints.geometry;
+    if(points.attributes.side.count<count){
+      for(const [name,size]of [['position',3],['side',1],['opacity',1]])points.setAttribute(name,new THREE.BufferAttribute(new Float32Array(count*size),size).setUsage(THREE.DynamicDrawUsage));
+    }
+    for(const key of ['coreBatch','plumeBatch']){
+      const old=this[key];if(old.instanceMatrix.count>=count*5)continue;
+      const next=new THREE.InstancedMesh(old.geometry,old.material,count*5);next.count=0;next.frustumCulled=false;
+      next.instanceMatrix.setUsage(THREE.DynamicDrawUsage);next.setColorAt(0,new THREE.Color(0xffffff));old.removeFromParent();old.dispose();this.scene.add(next);this[key]=next;
+    }
+  }
   makeHullBatches(battle) {
-    for(const type of Object.keys(OVERVIEW_MODELS)){
-      const members=battle.ships.filter(s=>s.type===type).map(s=>this.ships.get(s.id));if(!members.length)continue;
+    for(const model of new Set(battle.ships.map(s=>this.modelName(s)))){
+      const members=battle.ships.filter(s=>this.modelName(s)===model).map(s=>this.ships.get(s.id));if(!members.length)continue;
       const prototype=members[0];
       for(let i=0;i<prototype.meshes.length;i++){
-        const source=prototype.meshes[i],material=source.material.clone(),mesh=new THREE.InstancedMesh(distantGeometry(source.geometry),material,members.length);
+        const source=prototype.meshes[i],material=source.material.clone(),mesh=new THREE.InstancedMesh(distantGeometry(source.geometry,members.length>16?12:24),material,members.length);
         mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.setColorAt(0,new THREE.Color(0xffffff));this.scene.add(mesh);
         this.hullBatches.push({mesh,members,index:i});
       }

@@ -106,3 +106,5 @@
 
 /* A separate asset preview leaves the strategic battle rules unchanged. */
 .battle-preview-card{padding:12px 14px;margin-bottom:16px;border:1px solid #8fa9e535;border-radius:12px;background:linear-gradient(120deg,#1a2943,#151931)}.battle-preview-card>strong{font-size:13px;color:#cee0ff}.battle-preview-card>p{font-size:11px;line-height:1.6;color:#a7b8d9;margin:6px 0 10px}.battle-preview-card>.button{width:100%}
+
+.battle-preview-card>small{display:block;color:#91a9c7;font-size:9px;letter-spacing:.04em;margin-bottom:5px}.battle-preview-card>strong{display:block}

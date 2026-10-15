@@ -2,11 +2,11 @@ import * as THREE from 'three';
 
 // Distant silhouettes retain the source model's shape and material groups. Close views
 // always use the untouched authored geometry; clustering runs only once per asset.
-export function distantGeometry(source) {
+export function distantGeometry(source, divisions = 24) {
   const p = source.attributes.position;
   if (p.count < 250) return source;
   source.computeBoundingBox();
-  const span = source.boundingBox.getSize(new THREE.Vector3()), cell = Math.max(span.x, span.y, span.z) / 24;
+  const span = source.boundingBox.getSize(new THREE.Vector3()), cell = Math.max(span.x, span.y, span.z) / divisions;
   if (!cell) return source;
   const clusters = [], keys = new Map(), remap = new Uint32Array(p.count), uv = source.attributes.uv;
   for (let i = 0; i < p.count; i++) {

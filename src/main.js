@@ -1,3 +1,4 @@
+import { battleReportCard } from './battle-report-ui.js';
 import { moneyText, moneyMarkup } from './money.js';
 import { setTradeBoard } from './trade-board.js';
 import { createBloc, leaveBloc, blocOf, orderBlocSupply } from './power.js';
@@ -49,6 +50,7 @@ const ui = {
   researchBranch: 'energy', economyMode: 'production', politicsMode: 'government', fleetMode: 'orders', government: state.player.ideology,
   hints: true, demolishConfirm: null, warConfirm: null, resetConfirm: false
 };
+if(new URLSearchParams(location.search).get('view')==='battles'){ui.panel='fleet';ui.fleetMode='battles';}
 const $ = id => document.getElementById(id);
 const map = new MapRenderer($('map'), state, ui, hit => {
   if (!state.started) return;
@@ -104,7 +106,7 @@ function render() {
   if(state.galaxy.defeat) {
     ui.speed=0;ui.panel=null;$('sheet').hidden=true;$('sheet').innerHTML='';
     const el=$('welcome');el.hidden=false;el.dataset.mode='defeat';
-    el.innerHTML=`<div class="welcome-header"><div class="brand-name">ORBIT 3077</div></div><div><h1 class="welcome-title">Reich <em>gefallen</em></h1><p>Die letzte eigene Welt wurde an Tag ${state.galaxy.defeat.day} durch ${esc(realmName(state,state.galaxy.defeat.conqueror))} verloren. Die Simulation ist beendet. Dein Spielstand bleibt gespeichert.</p></div><div class="welcome-footer"><button class="button secondary" data-action="export">Spielstand sichern</button><button class="button secondary" data-action="import">Spielstand laden</button><input class="file-input" id="import-file" type="file" accept=".json,application/json"><button class="button danger" data-action="reset">${ui.resetConfirm?'Neues Spiel bestätigen':'Neues Spiel'}</button></div>`;
+    el.innerHTML=`<div class="welcome-header"><div class="brand-name">ORBIT 3077</div></div><div><h1 class="welcome-title">Reich <em>gefallen</em></h1><p>Die letzte eigene Welt wurde an Tag ${state.galaxy.defeat.day} durch ${esc(realmName(state,state.galaxy.defeat.conqueror))} verloren. Die Simulation ist beendet. Dein Spielstand bleibt gespeichert.</p></div>${state.battleReports[0]?battleReportCard(state.battleReports[0]):''}<div class="welcome-footer"><button class="button secondary" data-action="export">Spielstand sichern</button><button class="button secondary" data-action="import">Spielstand laden</button><input class="file-input" id="import-file" type="file" accept=".json,application/json"><button class="button danger" data-action="reset">${ui.resetConfirm?'Neues Spiel bestätigen':'Neues Spiel'}</button></div>`;
     return;
   }
   const victory=state.galaxy.hegemony.winner;
@@ -164,6 +166,12 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-action]'); if (!el || el.disabled) return;
   const action = el.dataset.action, p = currentPlanet();
   if (action === 'start') { state.started = true; ui.speed = 1; persist(); }
+  else if (action === 'battle-open') {
+    const report=state.battleReports.find(r=>r.id===el.dataset.id);if(!report)return;
+    ui.speed=0;
+    try{saveGame(state);}catch{toast('Die Schlacht konnte nicht gespeichert werden. Bitte Spielstand sichern und den Browserspeicher prüfen.',true);render();return;}
+    const url=new URL('./battle-replay.html',location.href);url.searchParams.set('battle',report.id);location.href=url.href;return;
+  }
   else if (action === 'battle-preview') { ui.speed = 0; persist(); location.href = new URL('./battle-overview.html', location.href).href; return; }
   else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
   else if (action === 'local-sale') return act(localSale(state,p,el.dataset.resource,25),'Waren an örtliche Privatkäufer verkauft.');
@@ -323,7 +331,8 @@ let previousTime = performance.now(), lastResearchPaint = 0;
 function syncClock(now,{allowHidden=false}={}) {
   const delta = Math.max(0,Math.min(500,now-previousTime)); previousTime=now;
   if(state.started&&!state.galaxy.defeat&&!(state.galaxy.hegemony.winner&&!state.galaxy.hegemony.continued)&&ui.speed&&(!document.hidden||allowHidden)){
-    const day=state.day,previous=new Set(state.logs);advanceTime(state,delta*ui.speed/3000);
+    const day=state.day,previous=new Set(state.logs),battleId=state.battleReports[0]?.id;advanceTime(state,delta*ui.speed/3000);
+    if(state.battleReports[0]?.id!==battleId){ui.speed=0;panel('fleet');ui.fleetMode='battles';ui.expanded=true;toast(`Gefecht bei ${state.battleReports[0].planetName} · 3D-Aufzeichnung bereit.`);}
     const added=state.logs.filter(e=>!previous.has(e));audio.notify(added);
     if(added.some(e=>e.type==='communication')&&centers(state).length)toast(added.find(e=>e.type==='communication').text);
     if(state.day!==day||added.length){if(ui.panel==='communications')readInbox(state,ui.inboxMode);persist();render();}

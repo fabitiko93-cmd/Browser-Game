@@ -8,7 +8,7 @@ test('every implemented management view renders complete controls from a real ga
   const state = createGame({ legacy: true }); const ui = makeUI();
   for (const [panel, mode, value] of [
     ['build'], ['build-detail'], ['economy', 'economyMode', 'production'], ['economy', 'economyMode', 'research'], ['economy', 'economyMode', 'routes'],
-    ['politics', 'politicsMode', 'government'], ['politics', 'politicsMode', 'diplomacy'], ['fleet', 'fleetMode', 'orders'], ['fleet', 'fleetMode', 'shipyard'], ['planet-info'], ['settings']
+    ['politics', 'politicsMode', 'government'], ['politics', 'politicsMode', 'diplomacy'], ['fleet', 'fleetMode', 'orders'], ['fleet', 'fleetMode', 'battles'], ['fleet', 'fleetMode', 'shipyard'], ['planet-info'], ['settings']
   ]) {
     ui.panel = panel; if (mode) ui[mode] = value;
     const html = renderSheet(state, ui);

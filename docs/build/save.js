@@ -1,3 +1,4 @@
+import { validateBattleReports } from './battle-records.js';
 import { initializePower } from './power.js';
 import { emptyTradeBoard } from './trade-board.js';
 import { validatePower, validateTradeBoards } from './power-save.js';
@@ -104,6 +105,7 @@ export function validateSave(value) {
     value.version=10;
   }
   if(value?.version===10){value=structuredClone(value);value.dayProgress=0;value.version=11;}
+  if(value?.version===11){value=structuredClone(value);value.battleReports=[];value.version=12;}
   const finite = (v, min = 0, max = 1e12) => Number.isFinite(v) && v >= min && v <= max;
   const text = (v, max = 100) => typeof v === 'string' && v.length > 0 && v.length <= max;
   const known = (dict, key) => typeof key === 'string' && Object.hasOwn(dict, key);
@@ -176,6 +178,7 @@ export function validateSave(value) {
     const b = value.lastDayReport;
     if (!finite(b.day, 0, value.day) || !['income', 'buildings', 'fleets', 'science', 'unfunded'].every(k => finite(b[k])) || !['net', 'actual', 'oneOff'].every(k => finite(b[k], -1e12, 1e12)) || !b.resources || Object.entries(b.resources).some(([id, rates]) => !ids.has(id) || RESOURCE_KEYS.some(k => !finite(rates[k]?.recurring, -1e12, 1e12) || !finite(rates[k]?.oneOff, -1e12, 1e12)))) throw new Error('Ungültige Haushaltsabrechnung.');
   }
+  validateBattleReports(value);
   return value;
 }
 export function loadGame(storage = globalThis.localStorage) { const raw = storage.getItem(KEY); return raw ? validateSave(JSON.parse(raw)) : null; }
