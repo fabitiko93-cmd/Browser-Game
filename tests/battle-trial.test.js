@@ -5,7 +5,7 @@ import { exportGame } from '../src/save.js';
 import { fleetStrength, shipArmor } from '../src/fleets.js';
 import { SHIPS } from '../src/data.js';
 import { createBattleTrial, advanceBattleTrial, trialSummary, trialPorts, serializeTrial, parseTrial, TRIAL_LIMIT } from '../src/battle-trial.js';
-import { activeShip, commandDemo, shipStrength, DEMO_CLASSES, DEMO_STEP } from '../src/battle-demo.js';
+import { activeShip, commandDemo, shipStrength, DEMO_CLASSES, DEMO_STEP, WEAPONS } from '../src/battle-demo.js';
 import { contactInfo, enemyContacts } from '../src/battle-targets.js';
 import { commandDisplay } from '../src/harbinger-display.js';
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
@@ -18,6 +18,37 @@ test('each preset uses actual strategic classes, equal dimensions, no personal s
  for(const s of b.ships){assert.ok(Object.hasOwn(SHIPS,s.strategicType));assert.equal(s.className,SHIPS[s.strategicType].name);assert.equal(s.shield,0);near(shipStrength(s),SHIPS[s.strategicType].strength);near(s.combat.armor,SHIPS[s.strategicType].armor??0);}
  const sizes=new Map();for(const s of b.ships){if(sizes.has(s.strategicType))assert.equal(s.length,sizes.get(s.strategicType));sizes.set(s.strategicType,s.length);}parseTrial(serializeTrial(b));
  }
+});
+test('every ready ship on both sides opens in the same tick, even with an unequal or reordered fleet',()=>{
+ for(const scenario of['20v20','5v35','35v5','50v50'])for(const reverse of[false,true]){
+  const b=createBattleTrial({scenario});if(reverse)b.ships.reverse();
+  const events=advanceBattleTrial(b,DEMO_STEP),shots=events.filter(e=>e.kind==='fire');
+  assert.deepEqual(shots.map(e=>e.ship).sort(),b.ships.map(s=>s.id).sort());
+  assert.ok(shots.every(e=>e.day===DEMO_STEP));assert.ok(b.ships.every(s=>s.salvos===1));
+  for(const shot of shots){const s=b.ships.find(s=>s.id===shot.ship),delta=shot.to.map((p,i)=>p-shot.from[i]),length=Math.hypot(...delta);assert.ok(s.facing.reduce((n,v,i)=>n+v*delta[i]/length,0)>.999999);}
+ }
+});
+test('the opening includes all armed copied classes and excludes civilians and a preordered retreat',()=>{
+ const state=fleetState(),prototype=state.fleets[0];state.fleets=Object.keys(SHIPS).map((type,i)=>({...structuredClone(prototype),id:`opening-${i}`,type}));
+ const b=createBattleTrial({mode:'fleet',state,planetId:'nereid'}),ready=b.ships.filter(s=>s.combat.power>0).map(s=>s.id).sort();
+ const shots=advanceBattleTrial(b,DEMO_STEP).filter(e=>e.kind==='fire');assert.deepEqual(shots.map(e=>e.ship).sort(),ready);assert.ok(shots.every(e=>e.day===DEMO_STEP));
+ const retreat=createBattleTrial();commandDemo(retreat,'scope','fleet');assert.equal(commandDemo(retreat,'retreat'),true);
+ const opening=advanceBattleTrial(retreat,DEMO_STEP).filter(e=>e.kind==='fire');assert.ok(opening.length>0);assert.ok(opening.every(e=>retreat.ships.find(s=>s.id===e.ship).side==='enemy'));
+});
+test('a different opening target still requires the fixed bow to turn before firing',()=>{
+ const b=createBattleTrial({scenario:'50v50'}),own=b.ships[0],target=b.ships.filter(s=>s.side==='enemy').sort((a,c)=>c.position[0]-a.position[0])[0];
+ target.combat.power=0;b.ships=[own,target];b.target=target.id;
+ assert.equal(commandDemo(b,'attack'),true);assert.ok(!advanceBattleTrial(b,DEMO_STEP).some(e=>e.kind==='fire'&&e.ship===own.id));
+ const shots=advanceBattleTrial(b,1).filter(e=>e.kind==='fire'&&e.ship===own.id);assert.equal(shots.length,1);assert.equal(shots[0].target,target.id);assert.ok(shots[0].day>DEMO_STEP);
+});
+test('a shared first salvo preserves the different laser and torpedo reload intervals',()=>{
+ const b=createBattleTrial(),own=b.ships.filter(s=>s.side==='friendly').slice(0,2),enemy=b.ships.find(s=>s.side==='enemy');enemy.combat.power=0;enemy.combat.armor=.65;
+ b.ships=[...own,enemy];b.target=enemy.id;
+ // Deploy the reduced fixture on the same initial targets as the full fleet.
+ for(const s of own){const delta=enemy.position.map((p,i)=>p-s.position[i]),length=Math.hypot(...delta);s.facing=delta.map(v=>v/length);}
+ const shots=advanceBattleTrial(b,3).filter(e=>e.kind==='fire');
+ for(const s of own){const fired=shots.filter(e=>e.ship===s.id),interval=WEAPONS[s.combat.weapon].interval;assert.equal(fired[0].day,DEMO_STEP);assert.ok(fired.length>=2);for(let i=1;i<fired.length;i++){const elapsed=fired[i].day-fired[i-1].day;assert.ok(elapsed>=interval-1e-8&&elapsed<=interval+DEMO_STEP+1e-8);}}
+ assert.ok(shots.filter(e=>e.weapon==='laser').length>shots.filter(e=>e.weapon==='torpedo').length);
 });
 test('copied fleets retain real names, hull, supply, technology and policy effects without touching the empire',()=>{
  const s=fleetState(),before=exportGame(s),ports=trialPorts(s),b=createBattleTrial({mode:'fleet',state:s,planetId:'nereid'});assert.equal(ports[0].count,2);

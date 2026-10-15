@@ -4,7 +4,7 @@ import { technologyEffects } from './technology.js';
 import { initialGovernance } from './governance.js';
 import { STRATEGIC_MODELS } from './battle-models.js';
 import { OVERVIEW_MODELS, OVERVIEW_SCENARIOS } from './battle-overview.js';
-import { createDemoBattle, advanceDemoBattle, DEMO_CLASSES, DEMO_STEP, activeShip, shipStrength } from './battle-demo.js';
+import { createDemoBattle, advanceDemoBattle, DEMO_CLASSES, DEMO_STEP, activeShip, shipStrength, targetFor } from './battle-demo.js';
 
 export const TRIAL_SAVE_KEY = 'orbit3077-trial';
 export const TRIAL_LIMIT = 50;
@@ -52,9 +52,17 @@ export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state
         combat: { power: fleetStrength(profile, { ...f, hp: 100, supply: 100 }), armor: shipArmor(profile, f),
           weapon: f.type === 'cruiser' ? 'torpedo' : 'laser', damageRate: TRIAL_DAMAGE_RATE, range: 3600,
           retreatSpeed: 260 * (SHIPS[f.type].speed ?? 1), retreatFuel: 8 * technologyEffects(profile).fuel },
-        nextFire: .15 + i * .08, lastHit: -10, order: 'engage', targeting: 'auto',
+        nextFire: 0, lastHit: -10, order: 'engage', targeting: 'auto',
         commandTarget: null, priority: null, target: null, salvos: 0, escaped: false });
     }
+  }
+  // Deployment happens before combat: fixed bow weapons already face their
+  // automatic opening targets. The first salvo never depends on list position.
+  for (const ship of battle.ships) {
+    const target = targetFor(battle, ship);
+    if (!target) continue;
+    const direction = target.position.map((p, i) => p - ship.position[i]), length = Math.hypot(...direction);
+    ship.facing = direction.map(v => v / length); ship.target = target.id;
   }
   battle.selected = battle.ships.find(s => s.side === 'friendly').id;
   battle.target = battle.ships.find(s => s.side === 'enemy').id;

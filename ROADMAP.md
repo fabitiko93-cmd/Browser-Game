@@ -9,6 +9,12 @@
 
 Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt. Abnahme und gemessene Grenzen stehen in [BALANCE.md](BALANCE.md). Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte, noch nicht implementierte Erweiterungen.
 
+## Flottenorganisation und Formationen · vorgemerkt
+
+- Nutzerwunsch: intuitivere Gefechtssteuerung und tatsächlich gruppierte Verbände. Die derzeitige Einzel-/Gesamtflottensteuerung ist noch kein ausgearbeitetes taktisches Gameplay.
+- Nutzerentscheidung: Ein künftiger Formationsplaner gehört bereits in die Flottenplanung. Die geplante Aufstellung soll anschließend in die Schlacht übernommen werden.
+- Verbandsregeln, Bedienung und taktisches Verhalten werden vor der Umsetzung ausgearbeitet; dieser Feuerstart-Patch implementiert den Planer noch nicht.
+
 ## Abschluss der bestehenden Balance · erledigt mit 0.10.5
 
 ### Abnahmekriterien

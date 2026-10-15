@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { WEAPONS, DEMO_CLASSES, activeShip, shipWeapon } from './battle-demo.js';
 
-const MAX_PROJECTILES = 64, MAX_BEAMS = 24, MAX_PARTICLES = 192, MAX_DEBRIS = 96;
+// Room for a complete 50:50 opening, still using the same fixed GPU batches.
+const MAX_PROJECTILES = 64, MAX_BEAMS = 128, MAX_FLASHES = 384, MAX_PINGS = 200, MAX_PARTICLES = 192, MAX_DEBRIS = 96;
 const UP = new THREE.Vector3(0, 1, 0);
 const billboardVertex = `varying vec2 vUv;varying vec3 vTint;
 void main(){vUv=uv;vTint=instanceColor;vec4 p=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);
@@ -19,7 +20,7 @@ export class BattleEffects {
     this.heads = this.batch(new THREE.ConeGeometry(1, 3, 6), material(.95), MAX_PROJECTILES);
     this.bolts = this.batch(new THREE.CylinderGeometry(1, 1, 1, 5, 1, true), material(.85), MAX_PROJECTILES);
     this.wrecks = this.batch(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x96a3b1, metalness: .8, roughness: .55 }), MAX_DEBRIS);
-    this.flashes = this.sprites(48); this.sparks = this.sprites(MAX_PARTICLES); this.smoke = this.sprites(48, true);
+    this.flashes = this.sprites(MAX_FLASHES); this.sparks = this.sprites(MAX_PARTICLES); this.smoke = this.sprites(48, true);
     this.rings = this.batch(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexShader: billboardVertex,
       fragmentShader: `varying vec2 vUv;varying vec3 vTint;void main(){float r=length(vUv-.5)*2.;float a=exp(-pow((r-.72)*24.,2.))*(1.-smoothstep(.95,1.,r));gl_FragColor=vec4(vTint,a*.65);}`,
@@ -128,7 +129,7 @@ export class BattleEffects {
       this.object.position.copy(this.a); this.object.quaternion.setFromUnitVectors(UP, this.direction.fromArray(velocity).normalize());
       this.object.scale.set(radius, radius * (weapon === 'torpedo' ? 1.7 : 1), radius); this.object.updateMatrix();
       this.heads.setMatrixAt(heads, this.object.matrix); this.heads.setColorAt(heads++, this.color.set(color).multiplyScalar(2.5));
-      if (flashes < 48) this.sprite(this.flashes, flashes++, position, radius * 3, color, 2);
+      if (flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, position, radius * 3, color, 2);
       if (weapon === 'torpedo') {
         let track = this.tracks.get(projectile.id);
         if (!track) { track = { points: [], age: -1 }; this.tracks.set(projectile.id, track); }
@@ -145,17 +146,17 @@ export class BattleEffects {
     this.explosions = this.explosions.filter(explosion => time - explosion.time < 3.2);
     for (const explosion of this.explosions) {
       const age = time - explosion.time;
-      if (flashes < 48) this.sprite(this.flashes, flashes++, explosion.position, explosion.size * (.12 + age * .32), 0xff973f, Math.max(0, 2.5 - age));
+      if (flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, explosion.position, explosion.size * (.12 + age * .32), 0xff973f, Math.max(0, 2.5 - age));
       if (rings < 24) this.sprite(this.rings, rings++, explosion.position, explosion.size * (.15 + age * .9), 0xffbf72, Math.max(0, 1 - age / 2));
     }
-    this.pings=this.pings.filter(p=>time-p.time<.32).slice(-24);
-    if(this.overview)for(const ping of this.pings){if(flashes>=48)break;const age=(time-ping.time)/.32;
+    this.pings=this.pings.filter(p=>time-p.time<.32).slice(-MAX_PINGS);
+    if(this.overview)for(const ping of this.pings){if(flashes>=MAX_FLASHES)break;const age=(time-ping.time)/.32;
       const pixel=this.camera.position.distanceTo(this.a.fromArray(ping.position))*2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))/(this.camera.userData.viewportHeight||844);
       this.sprite(this.flashes,flashes++,ping.position,pixel*(ping.impact?3.2:1.9)*(1+age*.4),ping.color,(1-age)*(ping.impact?1.6:1.1));
     }
     for (const ship of battle.ships) {
       const view = ships.get(ship.id); if (!view || !activeShip(ship)) continue;
-      if (time - (view.muzzleTime ?? -10) < .18 && flashes < 48) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[shipWeapon(ship)].color, 4);
+      if (time - (view.muzzleTime ?? -10) < .18 && flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[shipWeapon(ship)].color, 4);
       const health = ship.hull / DEMO_CLASSES[ship.type].hull;
       if (health < .65 && time - (this.lastDamage.get(ship.id) ?? -10) > .25) {
         this.lastDamage.set(ship.id, time);

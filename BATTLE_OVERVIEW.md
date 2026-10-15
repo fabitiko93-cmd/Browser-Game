@@ -41,4 +41,8 @@ Die Probe startet pausiert. Unter ⋯ können Testverbände, eigene Forschungs-/
 
 Zielwahl, Klassenpriorität und Rückzug beeinflussen den laufenden Kampf. Betrachten eines Kontakts erteilt keinen Angriff. Treffer erzeugen unmittelbar den gespeicherten Schaden; Torpedos erst bei der Ankunft. Gleichzeitige Laserangriffe sind symmetrisch, letzte Torpedos wirken auch nach Verlust des Abschussschiffs. Rückzug benötigt Bordversorgung und kann unter Beschuss scheitern.
 
+Neue Proben stellen bewaffnete Schiffe bereits auf ihre anfänglichen automatischen Ziele ausgerichtet auf. Alle kampfbereiten Schiffe beider Seiten eröffnen im selben ersten Simulationstakt; es gibt keine Startverzögerung nach Listenposition. Danach gelten die jeweiligen Waffenintervalle. Abweichende Zielbefehle erfordern weiterhin das physische Ausrichten der festen Bugwaffen; Rückzug und waffenlose Schiffe nehmen nicht an der Eröffnung teil.
+
+Die bestehenden GPU-Batches bieten Platz für die gesamte erste Salve bis 50:50: höchstens 128 Laser, 384 Lichtimpulse und 200 Übersichtsimpulse. Gleichzeitiges Feuer wird dadurch nicht mehr auf die letzten 24 Laser einer Seite beschnitten; Partikel-, Trümmer- und Projektilgrenzen bleiben bestehen.
+
 Reichweite (90 km), Feuerrhythmus, zeitliche Schadensverteilung und Rückzugskosten sind Probewerte für das neue Gefecht. Die bestehende strategische Kampfabrechnung bleibt maßgeblich für dein Reich. Die Probe speichert ihren Fortschritt getrennt und lässt sich pausiert fortsetzen; sie verändert keine echten Schiffe, Waren oder Gefechtsberichte. Bewegliche Türme und neue Jäger-KI sind weiterhin ausgenommen.

@@ -104,7 +104,7 @@ export function commandStatus(battle, ship) {
   return { mode: 'auto', target: target?.id, label: target ? `Automatisch → ${target.name}` : 'Automatisch · sucht ein erreichbares Ziel' };
 }
 
-function targetFor(battle, attacker) {
+export function targetFor(battle, attacker) {
   if (!armedShip(attacker)) return null;
   const range = shipRange(attacker);
   const manual = attacker.side === 'friendly' && attacker.order !== 'retreat';
