@@ -5,6 +5,7 @@ import { BattleScene } from './battle-scene.js';
 import { DEMO_CLASSES, activeShip, commandedShips, demoTarget, fleetCenter } from './battle-demo.js';
 import { OVERVIEW_MODELS, formationCenter } from './battle-overview.js';
 import { distantGeometry } from './battle-lod.js';
+import { BattleSelectionOverlay } from './battle-selection-scene.js';
 
 export class HarbingerScene extends BattleScene {
   constructor(canvas, callbacks = {}) {
@@ -58,7 +59,7 @@ export class HarbingerScene extends BattleScene {
     this.scene.add(this.grid);
     this.orders = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(new Float32Array(48),3)),new THREE.LineBasicMaterial({color:0x6a9ab8,transparent:true,opacity:.3,depthWrite:false}));
     this.orders.geometry.setDrawRange(0,0); this.orders.frustumCulled=false; this.scene.add(this.orders);
-    this.hullBatches = [];
+    this.hullBatches = []; this.selectionOverlay = new BattleSelectionOverlay(this.scene);
     const points = new THREE.BufferGeometry();
     points.setAttribute('position', new THREE.BufferAttribute(new Float32Array(100 * 3), 3).setUsage(THREE.DynamicDrawUsage));
     points.setAttribute('side', new THREE.BufferAttribute(new Float32Array(100), 1).setUsage(THREE.DynamicDrawUsage));
@@ -223,14 +224,16 @@ export class HarbingerScene extends BattleScene {
     if(this.selectionPoint)this.selectionPoint.material.uniforms.pixelRatio.value=this.pixelRatio;
     this.camera.setViewOffset(width,height,0,height/2-(this.viewportTop+this.viewportBottom)/2,width,height);this.camera.updateProjectionMatrix();this.dirty=true;
   }
-  setMode(mode,battle,animated=true) {
+  setMode(mode,battle,animated=true,inspectionId=null) {
     const startPosition=this.camera.position.clone(),startTarget=this.controls.target.clone();this.mode=mode;
     this.effects.overview=mode==='overview';this.camera.userData.viewportHeight=this.canvas.clientHeight;
     this.camera.fov=mode==='overview'?30:38;this.camera.updateProjectionMatrix();
-    this.focusId=mode==='target'?battle.target:battle.selected;
+    this.inspectionId=['ship','target'].includes(mode)?inspectionId:null;
+    this.focusId=this.inspectionId??(mode==='target'?battle.target:battle.selected);
     const focus=this.ships.get(this.focusId);
-    this.controls.touches.ONE=mode==='overview'?THREE.TOUCH.PAN:THREE.TOUCH.ROTATE;
-    this.controls.mouseButtons.LEFT=mode==='overview'?THREE.MOUSE.PAN:THREE.MOUSE.ROTATE;
+    this.controls.touches.ONE=THREE.TOUCH.ROTATE;
+    this.controls.mouseButtons.LEFT=THREE.MOUSE.ROTATE;
+    this.controls.maxDistance=mode==='overview'?22000:12000;
     this.controls.screenSpacePanning=true;
     if((mode==='ship'||mode==='target')&&focus){
       const sign=mode==='target'?-1:1;this.controls.target.copy(focus.group.position);
@@ -275,6 +278,7 @@ export class HarbingerScene extends BattleScene {
     this.battle=battle;
     this.farField.position.copy(this.camera.position);this.plumeBatch.material.uniforms.time.value=time;
     this.grid.visible=false;this.orders.visible=false;
+    this.selectionOverlay.update(battle,this.tacticalSelection,['overview','fleet'].includes(this.mode),this.pixelRatio,this.showSelectionLinks!==false);
     let count=0;const points=this.orders.geometry.attributes.position.array;
     for(const ship of commandedShips(battle)){const target=demoTarget(battle,ship);if(target&&count<8){points.set(ship.position,count*6);points.set(target.position,count*6+3);count++;}}
     this.orders.geometry.setDrawRange(0,count*2);this.orders.geometry.attributes.position.needsUpdate=true;

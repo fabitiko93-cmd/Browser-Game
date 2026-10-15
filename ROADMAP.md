@@ -11,7 +11,7 @@ Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt
 
 ## Flottenorganisation und Formationen · vorgemerkt
 
-- Nutzerwunsch: intuitivere Gefechtssteuerung und tatsächlich gruppierte Verbände. Die derzeitige Einzel-/Gesamtflottensteuerung ist noch kein ausgearbeitetes taktisches Gameplay.
+- Bedienbasis umgesetzt: Auswahl und Planung in Menüs mit Taktikpause, eindeutige Befehlsempfänger, unabhängige Nahkamera, dezente Ziellinien und Zielmarkierungen. Echte Verbandsorganisation und ausgearbeitetes taktisches Gameplay bleiben vorgemerkt.
 - Nutzerentscheidung: Ein künftiger Formationsplaner gehört bereits in die Flottenplanung. Die geplante Aufstellung soll anschließend in die Schlacht übernommen werden.
 - Verbandsregeln, Bedienung und taktisches Verhalten werden vor der Umsetzung ausgearbeitet; dieser Feuerstart-Patch implementiert den Planer noch nicht.
 

@@ -19,7 +19,7 @@ async function loaded(){await page.waitForFunction(()=>globalThis.ORBIT_TRIAL_DE
 try{
  await page.goto(base+'/battle-trial.html?debug=1',{waitUntil:'domcontentloaded'});await loaded();
  for(const[scenario,width,height]of[['20v20',390,844],['5v35',390,844],['35v5',320,568],['50v50',390,844]]){
-  await page.setViewportSize({width,height});await page.locator('#graphics-open').click();await page.locator('#scenario-select').selectOption(scenario);await page.locator('#restart').click();await loaded();
+  await page.setViewportSize({width,height});await page.locator('#graphics-open').click();await page.locator('#setup-open').click();await page.locator('#scenario-select').selectOption(scenario);await page.locator('#restart').click();await loaded();
   idleMemory=await page.evaluate(()=>({...ORBIT_TRIAL_DEBUG.view.renderer.info.memory}));
   const shots=await page.evaluate(()=>ORBIT_TRIAL_DEBUG.advance(1/60).filter(e=>e.kind==='fire'));
   await page.waitForFunction(n=>ORBIT_TRIAL_DEBUG.view.effects.beams.length===n,shots.filter(e=>e.weapon==='laser').length);
@@ -28,7 +28,7 @@ try{
   if(scenario==='50v50'||scenario==='35v5')await page.screenshot({path:resolve(output,`opening-${scenario}.png`),timeout:60000});
   checks.push(info);console.log('PASS',JSON.stringify(info));
  }
- await page.locator('#graphics-open').click();await page.locator('#restart').click();await loaded();assert.deepEqual(await page.evaluate(()=>({...ORBIT_TRIAL_DEBUG.view.renderer.info.memory})),idleMemory);
+ await page.locator('#graphics-open').click();await page.locator('#setup-open').click();await page.locator('#restart').click();await loaded();assert.deepEqual(await page.evaluate(()=>({...ORBIT_TRIAL_DEBUG.view.renderer.info.memory})),idleMemory);
  await page.locator('#battle-pause').click();await page.waitForFunction(()=>ORBIT_TRIAL_DEBUG.battle.tick>1);await page.locator('#battle-pause').click();assert.ok(await page.evaluate(()=>ORBIT_TRIAL_DEBUG.battle.ships.every(s=>s.salvos>=1)));assert.equal(await page.evaluate(()=>localStorage.getItem('orbit3077-save')),null);assert.deepEqual(errors,[]);
  await writeFile(resolve(output,'browser-inspection.json'),JSON.stringify({base,checks,errors,success:true},null,2));console.log('PASS normal play starts the whole fleet; restart keeps GPU resources stable and leaves the empire untouched');
 }finally{await browser.close();server.close();}

@@ -24,7 +24,7 @@ function setCamera(mode, animated = true) {
   closeDialogs(); view.setMode(mode, battle, animated); view.highlightId = null; $('selection-card').hidden = true;
   for (const node of document.querySelectorAll('[data-camera]')) node.setAttribute('aria-pressed', String(node.dataset.camera === mode));
   text('camera-caption', ({ overview: 'GESAMTANSICHT', fleet: 'EIGENE FORMATION', ship: 'SCHIFFSANSICHT', target: 'GEGNERANSICHT' })[mode]);
-  $('battle-canvas').setAttribute('aria-label', mode === 'overview' ? '3D-Gefechtsübersicht. Ein Finger verschiebt, zwei Finger zoomen. Schiffe antippen zum Auswählen.' : '3D-Nahansicht. Ein Finger dreht, zwei Finger zoomen.');
+  $('battle-canvas').setAttribute('aria-label', mode === 'overview' ? '3D-Gefechtsübersicht. Ein Finger dreht, zwei Finger zoomen und verschieben. Schiffe antippen zum Auswählen.' : '3D-Nahansicht. Ein Finger dreht, zwei Finger zoomen.');
   viewport(); lastRender = 0;
 }
 function selectContact(id) {

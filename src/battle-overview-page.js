@@ -37,7 +37,7 @@ function setCamera(mode, animated = true) {
   for (const node of document.querySelectorAll('[data-camera]')) pressed(node, node.dataset.camera === mode);
   pressed($('target-view'), mode === 'target');
   text('camera-caption', ({ ship: 'SCHIFFSANSICHT', fleet: 'EIGENE FORMATION', overview: 'GESAMTANSICHT', target: 'GEGNERANSICHT' })[mode]);
-  $('battle-canvas').setAttribute('aria-label', mode === 'overview' ? '3D-Schlachtübersicht. Ein Finger verschiebt, zwei Finger zoomen. Schiffe antippen zum Auswählen.' : '3D-Schiffsansicht. Ein Finger dreht, zwei Finger zoomen und verschieben.');
+  $('battle-canvas').setAttribute('aria-label', mode === 'overview' ? '3D-Schlachtübersicht. Ein Finger dreht, zwei Finger zoomen und verschieben. Schiffe antippen zum Auswählen.' : '3D-Schiffsansicht. Ein Finger dreht, zwei Finger zoomen und verschieben.');
   $('selection-card').hidden = true; view.highlightId = null; viewport(); lastRender = 0;
 }
 function selectContact(id) {

@@ -314,7 +314,7 @@ export class BattleScene {
       view.shield.visible = view.pulse > .01 && view.group.visible && view.living;
       view.shield.material.uniforms.strength.value = view.pulse; view.shield.material.uniforms.age.value = view.hitAge; view.shield.material.uniforms.hit.value.copy(view.hit);
     }
-    const focusId = this.mode === 'target' ? battle.target : battle.selected;
+    const focusId = this.inspectionId ?? (this.mode === 'target' ? battle.target : battle.selected);
     if ((this.mode === 'ship' || this.mode === 'target') && focusId !== this.focusId) this.setMode(this.mode, battle);
     if (this.transition) {
       const transition = this.transition; transition.elapsed += cameraDelta;

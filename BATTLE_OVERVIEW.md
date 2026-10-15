@@ -2,7 +2,7 @@
 
 [Probeschlacht öffnen](https://fabitiko93-cmd.github.io/Browser-Game/battle-overview.html)
 
-Die eigenständige Probe startet mit 20 gegen 20 Schiffen. Unter **⋯ → Probeschlacht** stehen außerdem 5:35, 35:5 und 50:50 zur Verfügung. Ein Finger verschiebt die Gesamtansicht, zwei Finger zoomen. **Gesamtansicht** stellt den Ausschnitt wieder her. Antippen eines Schiffs öffnet eine kurze Kontaktkarte; **Ansehen** öffnet die vorhandene Nahkamera. **Verbände** bietet eigene Schiffe, Gegnerkontakte und die Formationskamera; **Befehle** öffnet die bisherigen Einzel-/Flottenaufträge bei Bedarf.
+Die eigenständige Probe startet mit 20 gegen 20 Schiffen. Unter **⋯ → Probeschlacht** stehen außerdem 5:35, 35:5 und 50:50 zur Verfügung. Ein Finger dreht die Gesamtansicht, zwei Finger zoomen und verschieben. **Gesamtansicht** stellt den Ausschnitt wieder her. Antippen eines Schiffs öffnet eine kurze Kontaktkarte; **Ansehen** öffnet die vorhandene Nahkamera. **Verbände** bietet eigene Schiffe, Gegnerkontakte und die Formationskamera; **Befehle** öffnet die bisherigen Einzel-/Flottenaufträge bei Bedarf.
 
 ## Darstellung und Grenzen
 
@@ -38,6 +38,12 @@ Alle zwölf Spielklassen sind mit ihren echten Bezeichnungen angebunden; verfüg
 [Interaktive Probeschlacht öffnen](https://fabitiko93-cmd.github.io/Browser-Game/battle-trial.html). Im Reich: Flotte → Gefechte → Ansicht ausprobieren. Die bisherige Grafikprobe und die Gefechtsaufzeichnungen bleiben verfügbar.
 
 Die Probe startet pausiert. Unter ⋯ können Testverbände, eigene Forschungs-/Politikboni oder Kopien der freien stationierten Schiffe eines Standorts gewählt werden. Hülle, Panzerung, Versorgung und Kampfstärke folgen den vorhandenen Regeln. Alle zwölf Klassen haben ihre tatsächlichen Namen; Waffenlose schießen nicht. Die Modelle bleiben vorläufige Zuordnungen. Standardverbände testen Kreuzer, Zerstörer und Korvetten; keine zusätzlichen Jäger werden erfunden.
+
+Bedienung: In der Übersicht und Nahkamera dreht ein Finger die Ansicht. Zwei Finger zoomen und verschieben; die linke Maustaste dreht, die rechte verschiebt. **Übersicht** stellt die gemeinsame Schlachtperspektive wieder her. **Flotte** öffnet die Suche und Auswahl eines eigenen Schiffs oder ausdrücklich der gesamten Flotte. Antippen im Raum öffnet ein Schiffsmenü; erst dessen Auswahlaktion legt einen Befehlsempfänger fest. **Nahansicht** betrachtet ein Schiff unabhängig vom aktuellen Auftragsempfänger. Es gibt beim Einstieg keine vorgewählte Befehlseinheit.
+
+Alle Auswahl- und Planungsmenüs aktivieren die Taktikpause. Schließen setzt die Schlacht nicht automatisch fort; dafür dient **▶**. Zuweisungen ändern die Aufträge in der Pause, Bewegung und Schüsse erst nach dem Fortsetzen. Rückzug zeigt Empfänger und tatsächliche Versorgungskosten in einem eigenen Bestätigungsmenü. Deaktivierte Aktionen erklären ihren Grund direkt. **⋯** trennt neue Proben, Grafik und Bedienhilfe.
+
+Ausgewählte eigene Schiffe erhalten blaue Ringe, ihre anvisierten Gegner orange Rauten. Zurückhaltende gestrichelte Linien zeigen die Zielbeziehung für ein Schiff oder bis zu 50 ausgewählte Flottenschiffe. Sie sind keine Waffeneffekte und bleiben auch beim Warten auf Reichweite erkennbar. Auswahl aufheben entfernt sie; Grafikoptionen können die Linien ausblenden. Ein knapper Hinweis nennt Auswahl und Zielzahl, weitere Angaben stehen in den Menüs. Kamera, Auswahl und diese Anzeige verändern keine Kampfregel.
 
 Zielwahl, Klassenpriorität und Rückzug beeinflussen den laufenden Kampf. Betrachten eines Kontakts erteilt keinen Angriff. Treffer erzeugen unmittelbar den gespeicherten Schaden; Torpedos erst bei der Ankunft. Gleichzeitige Laserangriffe sind symmetrisch, letzte Torpedos wirken auch nach Verlust des Abschussschiffs. Rückzug benötigt Bordversorgung und kann unter Beschuss scheitern.
 
