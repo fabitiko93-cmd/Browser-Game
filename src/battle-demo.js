@@ -87,7 +87,7 @@ export function commandedShips(battle) {
 export function commandStatus(battle, ship) {
   if (ship.escaped) return { mode: 'escaped', label: 'Entkommen' };
   if (!ship.hull) return { mode: 'lost', label: 'Verloren' };
-  if (ship.order === 'retreat') return { mode: 'retreat', label: 'Rückzug · erwidert das Feuer' };
+  if (ship.order === 'retreat') return { mode: 'retreat', label: ship.facing ? 'Rückzug · verlässt die Gefechtslinie' : 'Rückzug · erwidert das Feuer' };
   const target = ship.targeting === 'target' ? battle.ships.find(s => s.id === ship.commandTarget && activeShip(s)) : demoTarget(battle, ship);
   const inRange = target && distance(target.position, ship.position) <= WEAPONS[DEMO_CLASSES[ship.type].weapon].range;
   if (ship.targeting === 'target' && target) return { mode: 'target', target: target.id, label: `${inRange ? 'Angriff auf' : 'Wartet auf Reichweite:'} ${target.name}` };
