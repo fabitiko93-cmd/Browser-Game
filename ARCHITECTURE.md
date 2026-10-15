@@ -28,6 +28,7 @@
 | `src/exploration-data.js` / `src/exploration.js` / `src/exploration-save.js` | Neue Systeme, Erkundung, manuelle Sonden, KI-Aufträge und Validierung |
 | `src/communications.js` / `src/communications-ui.js` | Reichsweiter Posteingang, Vertragsangebote, Antwortfristen und Gebäudesignale |
 | `src/battle-trial.js` / `src/battle-trial-page.js` | Interaktive Probe mit Spielwerten, Kopien eigener freier Flotten und getrenntem fortsetzbarem Speicherstand |
+| `src/battle-planner.js` / `src/battle-planner-ui.js` | Unabhängiger Entwurf beider Testflotten, Verbände und verschachtelte Formationen, reproduzierbare Aufstellung und Touchplaner |
 | `src/battle-selection.js` / `src/battle-selection-scene.js` | Explizite Befehlsempfänger, lesbare Kosten-/Verfügbarkeitsangaben und begrenzte 3D-Ziellinien und Auswahlmarkierungen |
 | `src/battle-models.js` | Gemeinsame Modellzuordnung der zwölf strategischen Schiffsklassen für Probe und Aufzeichnung |
 | `src/battle-records.js` / `src/battle-report-ui.js` | Begrenztes Archiv echter Spielergefechte, Ergebnis- und Teilnehmerdaten, v12-Validierung |

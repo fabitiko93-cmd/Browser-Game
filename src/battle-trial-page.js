@@ -10,11 +10,13 @@ import { TargetPanel } from './battle-targets-ui.js';
 import { contactInfo } from './battle-targets.js';
 import { MediaAudio } from './audio-media.js';
 import { BattleAudio } from './battle-audio.js';
+import { BattlePlanner } from './battle-planner-ui.js';
+import { createTrialPlan } from './battle-planner.js';
 
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const audio = new MediaAudio(), sound = new BattleAudio(() => audio.settings);
-const frames = [], markers = new Map(), ownButtons = new Map();
+const frames = [], markers = new Map(), ownButtons = new Map(), groupButtons = new Map();
 let battle, view, ready = false, paused = false, generation = 0, lastFrame = 0, lastRender = 0, lastHud = 0;
 let visualTime = 0, pending = [], noticeTimer, inspectedId = null, returnToOrders = false, ownToOrders = false, graphics = 'auto';
 let hasSelection = false, selectionId = null, pauseReason = 'start', contactPicked = null, ignoredContactClosures = 0;
@@ -72,6 +74,13 @@ function selectContact(id) {
   else inspectContact(id);
   paint(); lastRender = 0; return true;
 }
+function selectGroup(id) {
+  const ship = battle.ships.find(s => s.side === 'friendly' && s.group === id && activeShip(s));
+  if (!ship) return false;
+  battle.selectedGroup = id; battle.selected = ship.id;
+  if (!commandDemo(battle, 'scope', 'group')) return false;
+  hasSelection = true; selectionId = ship.id; openDialog('orders-dialog'); paint(); lastRender = 0; return true;
+}
 function inspectContact(id) {
   const ship = battle.ships.find(s => s.id === id); if (!ship) return;
   inspectedId = id; openDialog('info-dialog'); view.highlightId = id; view.dirty = true; lastRender = 0;
@@ -94,11 +103,20 @@ $('contacts-dialog').addEventListener('close', () => {
 });
 $('info-dialog').addEventListener('close',()=>{if(view&&!$('info-dialog').open){view.highlightId=null;view.dirty=true;}});
 function initializeHud() {
-  ownButtons.clear(); markers.clear(); $('ship-selector').replaceChildren(); $('ship-labels').replaceChildren();
+  ownButtons.clear(); groupButtons.clear(); markers.clear(); $('ship-selector').replaceChildren(); $('ship-labels').replaceChildren(); $('group-selector').replaceChildren();
+  for (const group of battle.formations?.filter(g => g.side === 'friendly') ?? []) {
+    if (!battle.ships.some(s => s.group === group.id)) continue;
+    const button = document.createElement('button'); button.dataset.group = group.id;
+    const name = document.createElement('span'), detail = document.createElement('small'), count = document.createElement('span');
+    name.textContent = group.name; detail.textContent = 'Verband gemeinsam auswählen'; name.append(detail);
+    button.append(name, count); $('group-selector').append(button); groupButtons.set(group.id, button);
+  }
+  $('group-selector-heading').hidden = !groupButtons.size;
+  $('ship-selector').closest('details').open = !groupButtons.size;
   for (const ship of battle.ships.filter(s => s.side === 'friendly')) {
     const button = document.createElement('button'); button.dataset.ship = ship.id;
     const name = document.createElement('span'), detail = document.createElement('small'), hull = document.createElement('span');
-    name.textContent = ship.name; detail.textContent = ship.className;
+    name.textContent = ship.name; detail.textContent = [ship.className, battle.formations?.find(g => g.id === ship.group)?.name].filter(Boolean).join(' · ');
     name.append(detail); button.append(name, hull); $('ship-selector').append(button); ownButtons.set(ship.id, button);
   }
   for (const side of ['friendly', 'enemy']) {
@@ -145,11 +163,18 @@ function failed(error) {
   text('battle-error-text', error.message?.includes('WebGL') ? 'Die 3D-Ansicht konnte nicht starten. Bitte in aktuellem Safari erneut öffnen.' : 'Modelle oder Materialien konnten nicht vollständig geladen werden. Bitte Verbindung prüfen und erneut versuchen.');
   console.error('Harbinger initialization:', error);
 }
-async function start(nextScenario = scenario, resume = false) {
+async function start(nextScenario = scenario, resume = false, preparedPlan = null) {
   let candidate = null, restored = false, invalidCheckpoint = false;
   if (resume) { try { const raw=localStorage.getItem(TRIAL_SAVE_KEY); if(raw){candidate=parseTrial(raw);restored=true;} } catch { invalidCheckpoint=true; } }
   if (!candidate) {
-    try { candidate=createBattleTrial({scenario:nextScenario,mode:$('source-mode').value,state:savedEmpire,planetId:$('source-planet').value||null,friendlySupply:Number($('friendly-supply').value),enemySupply:Number($('enemy-supply').value)}); }
+    try {
+      let plan = preparedPlan;
+      if (!plan && $('source-mode').value === 'baseline') {
+        plan = resume && planner.plan ? structuredClone(planner.plan) : createTrialPlan(nextScenario);
+        if (!resume) { plan.sides.friendly.supply = Number($('friendly-supply').value); plan.sides.enemy.supply = Number($('enemy-supply').value); }
+      }
+      candidate=createBattleTrial({scenario:nextScenario,mode:$('source-mode').value,state:savedEmpire,planetId:$('source-planet').value||null,friendlySupply:Number($('friendly-supply').value),enemySupply:Number($('enemy-supply').value),plan});
+    }
     catch(error){notice(error.message);return false;}
   }
   scenario = candidate.setup.scenario;
@@ -172,36 +197,44 @@ async function start(nextScenario = scenario, resume = false) {
     view = next; await next.load(battle); if (run !== generation) { next.dispose(); return; }
     next.setGraphics(graphics); next.showSelectionLinks = $('show-target-links').checked; ready = true; $('battle-loading').hidden = true;
     setCamera('overview', false); paint(); view.render(battle, visualTime); labels();
-    notice(restored ? 'Gespeicherte Probe geladen · mit ▶ fortsetzen.' : invalidCheckpoint ? 'Ungültige Probe verworfen · neue Probe bereit.' : 'Probe bereit · mit ▶ starten oder unter ⋯ die Aufstellung ändern.'); persistTrial();
+    notice(restored ? 'Gespeicherte Probe geladen · mit ▶ fortsetzen.' : invalidCheckpoint ? 'Ungültige Probe verworfen · neue Probe bereit.' : 'Probe bereit · ▶ starten · unter ⋯ Flotte und Verbände planen.'); persistTrial();
   } catch (error) { if (run !== generation) return; view?.dispose(); view = null; failed(error); }
 }
+const planner = new BattlePlanner($('planner-dialog'), { getBattle: () => battle, openDialog,
+  onApply: plan => start(plan.scenario, false, plan) });
 function paint() {
   if (!battle || !view) return;
   if (hasSelection && battle.scope === 'ship' && !battle.ships.some(s => s.id === selectionId && activeShip(s))) {
     hasSelection = false; selectionId = null; notice('Ausgewähltes Schiff außer Gefecht · Auswahl aufgehoben.');
   }
+  if (hasSelection && battle.scope === 'group') {
+    const members = battle.ships.filter(s => s.side === 'friendly' && s.group === battle.selectedGroup && activeShip(s));
+    if (!members.length) { hasSelection = false; selectionId = null; notice('Ausgewählter Verband außer Gefecht · Auswahl aufgehoben.'); }
+    else if (!members.some(s => s.id === battle.selected)) { battle.selected = members[0].id; selectionId = battle.selected; }
+  }
   if (['ship','target'].includes(view.mode) && !battle.ships.some(s => s.id === view.focusId && activeShip(s))) setCamera('overview');
   const own = battle.ships.filter(s => s.side === 'friendly'), selected = own.find(s => s.id === battle.selected);
   const target = battle.ships.find(s => s.id === battle.target), info = target && contactInfo(target, selected), display = commandDisplay(battle), recipients = recipientInfo(battle);
-  const selection = hasSelection ? { scope: battle.scope, selected: battle.selected } : null, marked = battleSelection(battle, selection);
-  const selectionKey = selection ? `${selection.scope}:${selection.selected}` : '';
+  const selection = hasSelection ? { scope: battle.scope, selected: battle.selected, group: battle.selectedGroup } : null, marked = battleSelection(battle, selection);
+  const selectionKey = selection ? `${selection.scope}:${selection.selected}:${selection.group}` : '';
   if (selectionKey !== view.selectionKey) { view.selectionKey = selectionKey; view.tacticalSelection = selection; view.dirty = true; }
   $('selection-readout').hidden = !hasSelection;
-  text('selection-readout', `${battle.scope === 'fleet' ? 'Flotte' : selected.name} · ${marked.targets.length} ${marked.targets.length === 1 ? 'Ziel' : 'Ziele'}`);
+  const multi = battle.scope !== 'ship', groupName = battle.formations?.find(g => g.id === battle.selectedGroup)?.name;
+  text('selection-readout', `${battle.scope === 'fleet' ? 'Flotte' : battle.scope === 'group' ? groupName : selected.name} · ${marked.targets.length} ${marked.targets.length === 1 ? 'Ziel' : 'Ziele'}`);
   text('friendly-count', own.filter(activeShip).length); text('enemy-count', battle.ships.filter(s => s.side === 'enemy' && activeShip(s)).length);
   const a = formationCenter(battle, 'friendly'), b = formationCenter(battle, 'enemy');
   text('battle-range', `Linienabstand ${number.format(Math.hypot(...a.map((v, i) => v - b[i])) * KM_PER_UNIT)} km`);
   text('battle-day', `Tag ${number.format(battle.day)}`);
-  text('selected-name', battle.scope === 'fleet' ? 'Gesamte eigene Flotte' : selected.name);
-  text('selected-class', battle.scope === 'fleet' ? `BEFEHL AN · ${recipients.ships.length} AKTIVE SCHIFFE` : `BEFEHL AN · ${selected.className.toUpperCase()}`);
+  text('selected-name', battle.scope === 'fleet' ? 'Gesamte eigene Flotte' : battle.scope === 'group' ? groupName : selected.name);
+  text('selected-class', multi ? `BEFEHL AN · ${recipients.ships.length} AKTIVE SCHIFFE` : `BEFEHL AN · ${selected.className.toUpperCase()}`);
   text('selected-order', display.label); text('orders-heading', 'Befehle');
   text('recipient-summary', [`${recipients.armed.length} bewaffnet und verfügbar`, recipients.available.length > recipients.armed.length ? `${recipients.available.length-recipients.armed.length} unbewaffnet` : '', recipients.ships.length > recipients.available.length ? `${recipients.ships.length-recipients.available.length} bereits auf Rückzug` : ''].filter(Boolean).join(' · '));
-  const hull = Math.round(battle.scope === 'fleet' ? recipients.ships.reduce((n,s) => n + s.hull / DEMO_CLASSES[s.type].hull * 100, 0) / Math.max(1,recipients.ships.length) : selected.hull / DEMO_CLASSES[selected.type].hull * 100);
-  text('hull-label', battle.scope === 'fleet' ? 'Ø Hülle' : 'Hülle'); text('hull-value', `${hull} %`); $('hull-bar').style.width = `${hull}%`;
-  text('selected-stats', battle.scope === 'fleet' ? `Kampfstärke ${number.format(recipients.armed.reduce((n,s)=>n+shipStrength(s),0))} · Angaben und Kosten gelten für die ausgewählten Schiffe.` : `Stärke ${number.format(shipStrength(selected))} · Panzerung ${Math.round(selected.combat.armor*100)} % · Versorgung ${Math.round(selected.supply)} % · Reichweite ${number.format(shipRange(selected)*KM_PER_UNIT)} km`);
+  const hull = Math.round(multi ? recipients.ships.reduce((n,s) => n + s.hull / DEMO_CLASSES[s.type].hull * 100, 0) / Math.max(1,recipients.ships.length) : selected.hull / DEMO_CLASSES[selected.type].hull * 100);
+  text('hull-label', multi ? 'Ø Hülle' : 'Hülle'); text('hull-value', `${hull} %`); $('hull-bar').style.width = `${hull}%`;
+  text('selected-stats', multi ? `Kampfstärke ${number.format(recipients.armed.reduce((n,s)=>n+shipStrength(s),0))} · Angaben und Kosten gelten für die ausgewählten Schiffe.` : `Stärke ${number.format(shipStrength(selected))} · Panzerung ${Math.round(selected.combat.armor*100)} % · Versorgung ${Math.round(selected.supply)} % · Reichweite ${number.format(shipRange(selected)*KM_PER_UNIT)} km`);
   const distances = info && recipients.armed.map(s => Math.hypot(...s.position.map((v,i)=>v-target.position[i])) * KM_PER_UNIT);
   text('target-name', target?.name ?? 'Kein Gegner');
-  text('target-distance', distances?.length && battle.scope === 'fleet' ? `${number.format(Math.min(...distances))}–${number.format(Math.max(...distances))} km` : info ? `${number.format(info.distance)} km` : '');
+  text('target-distance', distances?.length && multi ? `${number.format(Math.min(...distances))}–${number.format(Math.max(...distances))} km` : info ? `${number.format(info.distance)} km` : '');
   text('target-state', display.chosenState);
   $('attack-target').disabled = !hasSelection || !display.canAttack; $('auto-target').disabled = !hasSelection || !display.canAuto; $('retreat').disabled = !hasSelection || !display.canRetreat;
   $('target-picker').disabled = !battle.ships.some(s => s.side === 'enemy' && activeShip(s)); $('target-view').disabled = !info?.active;
@@ -212,10 +245,15 @@ function paint() {
   text('retreat-reason', recipients.blocked.length ? `Rückzug blockiert: ${recipients.blocked.map(s=>s.name).join(', ')} haben zu wenig Bordversorgung. Benötigt: ${costs} je Schiff.` : !recipients.available.length ? 'Kein Schiff für einen neuen Rückzug verfügbar.' : `Rückzug: ${costs} Bordversorgung je Schiff · ${recipients.available.length} Empfänger. Vor dem Erteilen bestätigen.`);
   $('retreat-reason').hidden = display.canRetreat;
   text('retreat-recipients', recipients.label); text('retreat-cost', `${recipients.available.length} ${recipients.available.length === 1 ? 'Schiff' : 'Schiffe'} · ${costs} Bordversorgung je Schiff.`); $('confirm-retreat').disabled = !hasSelection || !display.canRetreat;
-  for (const node of document.querySelectorAll('[data-scope]')) pressed(node, node.dataset.scope === battle.scope);
-  text('fleet-recipient', hasSelection ? `Aktuelle Auswahl: ${recipients.label}` : 'Keine Befehlseinheit ausgewählt. Wähle ein Schiff oder die gesamte Flotte.');
+  for (const node of document.querySelectorAll('[data-scope]')) { pressed(node, node.dataset.scope === battle.scope); if (node.dataset.scope === 'group') node.disabled = !selected.group; }
+  text('fleet-recipient', hasSelection ? `Aktuelle Auswahl: ${recipients.label}` : 'Wähle einen Verband, ein einzelnes Schiff oder die gesamte Flotte.');
   $('select-fleet').disabled = !own.some(activeShip);
   if ($('own-dialog').open) {
+    for (const [id, button] of groupButtons) {
+      const members = own.filter(s => s.group === id), active = members.filter(activeShip);
+      button.disabled = !active.length; pressed(button, hasSelection && battle.scope === 'group' && battle.selectedGroup === id);
+      button.lastElementChild.textContent = `${active.length} / ${members.length} aktiv`;
+    }
     const term = $('own-search').value.trim().toLocaleLowerCase('de'); let visible = 0;
     for (const ship of own) {
       const button = ownButtons.get(ship.id); button.disabled = !activeShip(ship); pressed(button, hasSelection && battle.scope === 'ship' && ship.id === selectionId);
@@ -228,6 +266,9 @@ function paint() {
   if (inspected) {
     text('selection-name', inspected.name); text('selection-class', `${inspected.side === 'friendly' ? 'EIGENES SCHIFF' : 'GEGNER'} · ${inspected.className}`);
     text('selection-state', activeShip(inspected) ? `Hülle ${Math.round(inspected.hull / DEMO_CLASSES[inspected.type].hull * 100)} % · Panzerung ${Math.round(inspected.combat.armor*100)} % · Versorgung ${Math.round(inspected.supply)} % · Stärke ${number.format(shipStrength(inspected))}` : 'Außer Gefecht');
+    $('select-own-group').hidden = inspected.side !== 'friendly' || !inspected.group;
+    $('select-own-group').disabled = !activeShip(inspected);
+    text('select-own-group', `${battle.formations?.find(g => g.id === inspected.group)?.name ?? 'Verband'} auswählen`);
     text('selection-order', `Aktueller Auftrag: ${commandStatus(battle, inspected).label}`);
     $('inspect-selected').disabled = !activeShip(inspected); $('select-own').hidden = inspected.side !== 'friendly'; $('select-own').disabled = !activeShip(inspected) || battle.phase !== 'engaged';
     $('use-target').hidden = inspected.side !== 'enemy' || !hasSelection; $('use-target').disabled = !activeShip(inspected) || battle.phase !== 'engaged';
@@ -264,15 +305,20 @@ document.addEventListener('click', event => {
   const button = event.target.closest('button'); if (!button) return;
   if (button.dataset.close) { $(button.dataset.close).close(); if (button.dataset.close === 'info-dialog' && view) {view.highlightId = null;view.dirty = true;} return; }
   if (button.dataset.return) { openDialog(button.dataset.return); return; }
-  if (button.id === 'restart' || button.id === 'retry' || button.id === 'result-restart') { void start($('scenario-select').value,button.id==='retry'); return; }
+  if (button.id === 'restart' || button.id === 'retry' || button.id === 'result-restart') { void start($('scenario-select').value,button.id==='retry',button.id==='result-restart'&&battle?.plan?structuredClone(battle.plan):null); return; }
   if (button.id === 'source-refresh') { loadSource(); notice(savedEmpire?'Aktueller Spielstand für die nächste Probe eingelesen.':'Kein lesbarer Spielstand vorhanden.');return; }
   if (!ready) return;
+  if (button.hasAttribute('data-open-planner')) { planner.open(); return; }
+  if (button.dataset.group) { selectGroup(button.dataset.group); return; }
   if (button.dataset.ship) { selectContact(button.dataset.ship); return; }
   if (button.dataset.marker) { if (button.dataset.marker === 'fleet:friendly') openDialog('own-dialog'); else openContacts(); }
   else if (button.dataset.camera) setCamera(button.dataset.camera);
   else if (button.dataset.scope) {
-    if (button.dataset.scope === 'ship' && battle.scope === 'fleet') { openDialog('own-dialog'); ownToOrders = true; }
-    else { commandDemo(battle, 'scope', button.dataset.scope); hasSelection = true; selectionId = battle.selected; }
+    if (button.dataset.scope === 'ship' && battle.scope !== 'ship') { openDialog('own-dialog'); $('ship-selector').closest('details').open = true; ownToOrders = true; }
+    else {
+      if (button.dataset.scope === 'group') battle.selectedGroup = battle.ships.find(s => s.id === battle.selected).group;
+      if (commandDemo(battle, 'scope', button.dataset.scope)) { hasSelection = true; selectionId = battle.selected; }
+    }
   }
   else if (button.dataset.graphics) { graphics = button.dataset.graphics; view.setGraphics(graphics); }
   else if (button.id === 'battle-pause') { if(document.querySelector('dialog[open]'))return; paused = !paused; pauseReason = paused ? 'manual' : null; lastFrame = 0; persistTrial(); }
@@ -289,6 +335,7 @@ document.addEventListener('click', event => {
   else if (button.id === 'enemy-picker') openContacts();
   else if (button.id === 'target-view') setCamera('target', true, battle.target);
   else if (button.id === 'select-own') selectContact(inspectedId);
+  else if (button.id === 'select-own-group') selectGroup(battle.ships.find(s => s.id === inspectedId)?.group);
   else if (button.id === 'use-target' && hasSelection) { battle.target = inspectedId; openDialog('orders-dialog'); }
   else if (button.id === 'inspect-selected') { const ship = battle.ships.find(s => s.id === inspectedId); setCamera(ship?.side === 'enemy'?'target':'ship', true, inspectedId); }
   else if (button.id === 'attack-target' && hasSelection && commandDemo(battle, 'attack')) { closeDialogs(); notice(`${recipientInfo(battle).label}: Angriff auf ${battle.ships.find(s=>s.id===battle.target).name} zugewiesen · mit ▶ fortsetzen.`); }
@@ -334,7 +381,8 @@ loadSource(); void start(scenario,true); requestAnimationFrame(frame);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 if (new URLSearchParams(location.search).has('debug')) globalThis.ORBIT_TRIAL_DEBUG = {
   get battle() { return battle; }, get view() { return view; }, get ready() { return ready; }, get paused() { return paused; },
-  get selection() { return hasSelection ? {scope:battle.scope,selected:battle.selected} : null; }, get pauseReason() { return pauseReason; }, inspectContact,
+  get selection() { return hasSelection ? {scope:battle.scope,selected:battle.selected,group:battle.selectedGroup} : null; }, get pauseReason() { return pauseReason; }, inspectContact,
+  get planner() { return planner; }, selectGroup,
   get frameDurations() { return [...frames]; }, setCamera, selectContact, paint, start, pause:()=>{paused=true;lastFrame=0;},
   advance:days=>{const events=advanceBattleTrial(battle,days);pending.push(...events);persistTrial();paint();return events;},
 };

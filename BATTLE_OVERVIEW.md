@@ -1,5 +1,19 @@
 # Schlachtübersicht – erste 3D-Umsetzung
 
+## Flotten- und Verbandsplaner in der interaktiven Probe
+
+Unter **⋯ → Flotten- und Verbandsplaner** oder **Flotte → Flotten- und Verbandsplaner öffnen** werden beide Testseiten vollständig vorbereitet. Ein Reichsspielstand oder eigene Schiffe sind nicht nötig. Bis zu 50 Schiffe je Seite können aus allen zwölf vorhandenen Klassen hinzugefügt, benannt, entfernt und zwischen benannten Verbänden umgegliedert werden. Waffenlose Klassen bleiben waffenlos.
+
+Der **Verbandsplaner** ordnet einzelne Schiffe relativ zum Verband; der **Flottenplaner** ordnet ganze Verbände mit ihren Mitgliedern relativ zur Flotte. Gestaffelte Aufstellung, Keil, Linie und Kolonne sind Ausgangsformen. Positionen lassen sich mit dem Finger ziehen, mit Richtungstasten korrigieren und in der Höhe staffeln. Drehung betrifft die Aufstellung; die tatsächlichen Bugwaffen richten sich zum Gegner aus. Rückgängig stellt die letzte Bearbeitung wieder her. Ein leerer Verband erlaubt das anschließende Hinzufügen oder Umgliedern; beim Auflösen bleiben seine Schiffe in einem anderen Verband erhalten.
+
+Natürliche Abweichungen sind begrenzt und aus einem gespeicherten Seed abgeleitet. Sie bleiben beim Rendern, Pausieren, Laden und erneuten Aufstellen identisch, bis ausdrücklich neu verteilt wird. Mindestabstände werden anhand der Rumpflängen gesichert. Vorschau und Schlacht verwenden dieselbe Aufstellungsfunktion, einschließlich dieser Korrekturen; Modell, Waffenanker und Trefferposition liegen am tatsächlichen Schiff. Seiten mit sehr tiefen Aufstellungen werden weit genug getrennt aufgestellt, damit sie sich nicht überschneiden. Sehr weite Positionen können außerhalb der Waffenreichweite liegen.
+
+Der Entwurf liegt unter `orbit3077-trial-plan`, der laufende Kampf weiter unter `orbit3077-trial`. Neue Reichsspielstände verändern beide nicht. Änderungen im Planer werden separat gespeichert; erst **Mit Planung neu aufstellen** ersetzt die laufende Probe und beginnt pausiert. **Flotte** bietet benannte Verbände als gemeinsame Befehlsempfänger. Angriff, Klassenpriorität, automatische Ziele und bestätigter Rückzug wirken auf die tatsächlichen aktiven Verbandsmitglieder. Auswahlmarkierungen und Ziellinien verwenden denselben Empfängerkreis. Einzelne Schiffe bleiben über das aufklappbare Schiffsmenü erreichbar.
+
+Die Gesamtansicht verwendet den Mittelpunkt der eigenen aktiven Flotte als Drehpunkt. **Übersicht** stellt diesen nach einer freien Verschiebung wieder her. Die Kamera verändert keine Aufstellung oder Kampfentscheidung. Großschiffe halten in diesem Umsetzungsschritt weiterhin ihre Position; autonome Flugmanöver, Flankieren und Formationsbindung folgen separat. Die strategische Kampfabrechnung bleibt unverändert.
+
+Prüfung: `tests/battle-planner.test.js` und `scripts/qa-battle-planner.mjs` erfassen unabhängige Speicherung, Gruppenzuordnung, deterministische Geometrie, Mindestabstände, tatsächliche Befehle, Touchbearbeitung und schmale Hochformate bis 50:50.
+
 [Probeschlacht öffnen](https://fabitiko93-cmd.github.io/Browser-Game/battle-overview.html)
 
 Die eigenständige Probe startet mit 20 gegen 20 Schiffen. Unter **⋯ → Probeschlacht** stehen außerdem 5:35, 35:5 und 50:50 zur Verfügung. Ein Finger dreht die Gesamtansicht, zwei Finger zoomen und verschieben. **Gesamtansicht** stellt den Ausschnitt wieder her. Antippen eines Schiffs öffnet eine kurze Kontaktkarte; **Ansehen** öffnet die vorhandene Nahkamera. **Verbände** bietet eigene Schiffe, Gegnerkontakte und die Formationskamera; **Befehle** öffnet die bisherigen Einzel-/Flottenaufträge bei Bedarf.

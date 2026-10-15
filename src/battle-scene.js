@@ -321,7 +321,7 @@ export class BattleScene {
       const progress = Math.min(1, transition.elapsed / .65), eased = progress * progress * (3 - 2 * progress);
       this.camera.position.lerpVectors(transition.position, transition.endPosition, eased); this.controls.target.lerpVectors(transition.target, transition.endTarget, eased);
       if (progress === 1) this.transition = null;
-    } else if (this.mode !== 'overview') {
+    } else if (this.mode !== 'overview' || this.overviewFollowsFleet) {
       if (this.mode === 'ship' || this.mode === 'target') this.a.copy(this.ships.get(focusId)?.group.position ?? this.controls.target);
       else this.a.fromArray(fleetCenter(battle, 'friendly'));
       this.b.subVectors(this.a, this.followed); this.camera.position.add(this.b); this.controls.target.add(this.b); this.followed.copy(this.a);

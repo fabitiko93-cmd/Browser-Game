@@ -9,11 +9,13 @@
 
 Der vereinbarte Balanceabschluss des vorhandenen Spiels ist mit 0.10.5 umgesetzt. Abnahme und gemessene Grenzen stehen in [BALANCE.md](BALANCE.md). Sozialmodell, freiwilliger Spieleinstieg und weitere Entwürfe bleiben gesonderte, noch nicht implementierte Erweiterungen.
 
-## Flottenorganisation und Formationen · vorgemerkt
+## Flottenorganisation und Formationen · Grundlage in der Probeschlacht
 
-- Bedienbasis umgesetzt: Auswahl und Planung in Menüs mit Taktikpause, eindeutige Befehlsempfänger, unabhängige Nahkamera, dezente Ziellinien und Zielmarkierungen. Echte Verbandsorganisation und ausgearbeitetes taktisches Gameplay bleiben vorgemerkt.
-- Nutzerentscheidung: Ein künftiger Formationsplaner gehört bereits in die Flottenplanung. Die geplante Aufstellung soll anschließend in die Schlacht übernommen werden.
-- Verbandsregeln, Bedienung und taktisches Verhalten werden vor der Umsetzung ausgearbeitet; dieser Feuerstart-Patch implementiert den Planer noch nicht.
+- Nutzerentscheidung: Verbands- und Flottenplaner entstehen zunächst vollständig in der Probeschlacht. Eigene Spielschiffe sind nicht erforderlich. Vorbereitungen und Schlachtfortschritt werden unabhängig vom Reich gespeichert; neue Reichsspielstände setzen die Planung nicht zurück.
+- Umgesetzt: Beide Seiten mit vorhandenen Klassen zusammenstellen, benannte Verbände, innere und gemeinsame Flottenformation, relative Positionen und Höhen, Ausrichtung der Aufstellung, feste natürliche Abweichungen und gesicherte Mindestabstände. Die Vorschau und der Kampf verwenden dieselben tatsächlichen Positionen.
+- Umgesetzt: Einzel-, Verbands- und Flottenauswahl mit tatsächlichen gemeinsamen Ziel-/Klassenbefehlen und Rückzug; Ziellinien zeigen ausschließlich die ausgewählten Empfänger. Die Gesamtansicht rotiert um den Mittelpunkt der eigenen aktiven Flotte.
+- Nächster besprochener Schritt: Formationsbindung und autonome Verbandsmanöver (halten, angreifen, flankieren, sammeln), Geschwindigkeit/Wendigkeit und waffenabhängige Feuerwinkel gemeinsam in der Probe erproben. Dieser Patch fügt diese Flugmanöver noch nicht hinzu.
+- Später dieselben Planungsdaten und das vervollständigte Gefechtssystem an reguläre Spielschlachten anbinden. Bestehende strategische Kampfabrechnung bleibt bis dahin maßgeblich.
 
 ## Abschluss der bestehenden Balance · erledigt mit 0.10.5
 

@@ -10,6 +10,7 @@ import { BattleSelectionOverlay } from './battle-selection-scene.js';
 export class HarbingerScene extends BattleScene {
   constructor(canvas, callbacks = {}) {
     super(canvas, callbacks);
+    this.overviewFollowsFleet = true;
     this.abort = new AbortController(); this.graphics = 'auto'; this.onAssetProgress = callbacks.onAssetProgress;
     this.renderer.toneMappingExposure = 1.18; this.scene.environmentIntensity = 1.6;
     this.camera.fov = 38; this.camera.near = .15;
@@ -222,12 +223,20 @@ export class HarbingerScene extends BattleScene {
     this.viewportBottom=(document.querySelector('.lab-bottom')?.getBoundingClientRect().top??height-60)-gutter;
     if(this.contactPoints){this.contactPoints.material.uniforms.pixelRatio.value=this.pixelRatio;this.contactPoints.material.uniforms.height.value=height;}
     if(this.selectionPoint)this.selectionPoint.material.uniforms.pixelRatio.value=this.pixelRatio;
-    this.camera.setViewOffset(width,height,0,height/2-(this.viewportTop+this.viewportBottom)/2,width,height);this.camera.updateProjectionMatrix();this.dirty=true;
+    this.frameProjection();this.dirty=true;
+  }
+  frameProjection() {
+    const width=this.canvas.clientWidth,height=this.canvas.clientHeight;
+    // Keep the own-fleet pivot below the visual center so the opponent still
+    // uses the upper part of the portrait, without changing the orbit point.
+    this.viewportFocusY=this.mode==='overview'?this.viewportTop+(this.viewportBottom-this.viewportTop)*.70:(this.viewportTop+this.viewportBottom)/2;
+    this.camera.setViewOffset(width,height,0,height/2-this.viewportFocusY,width,height);this.camera.updateProjectionMatrix();
   }
   setMode(mode,battle,animated=true,inspectionId=null) {
     const startPosition=this.camera.position.clone(),startTarget=this.controls.target.clone();this.mode=mode;
     this.effects.overview=mode==='overview';this.camera.userData.viewportHeight=this.canvas.clientHeight;
     this.camera.fov=mode==='overview'?30:38;this.camera.updateProjectionMatrix();
+    this.frameProjection();
     this.inspectionId=['ship','target'].includes(mode)?inspectionId:null;
     this.focusId=this.inspectionId??(mode==='target'?battle.target:battle.selected);
     const focus=this.ships.get(this.focusId);
@@ -240,13 +249,11 @@ export class HarbingerScene extends BattleScene {
       this.camera.position.copy(this.controls.target).add(new THREE.Vector3(sign*1.1,1.9,sign*1.8));
       this.controls.minDistance=Math.max(focus.size.x,focus.size.y,focus.size.z)*.75;this.fit([focus]);
     }else if(mode==='overview'){
-      const box=new THREE.Box3();
-      for(const ship of battle.ships){if(!activeShip(ship))continue;const p=new THREE.Vector3().fromArray(ship.position);box.expandByPoint(p.clone().addScalar(ship.length??DEMO_CLASSES[ship.type].size));box.expandByPoint(p.clone().addScalar(-(ship.length??DEMO_CLASSES[ship.type].size)));}
-      if(box.isEmpty())box.set(new THREE.Vector3(-100,-30,-1100),new THREE.Vector3(100,30,1100));
-      box.getCenter(this.controls.target);
+      this.controls.target.fromArray(fleetCenter(battle,'friendly'));
       // About 40 degrees elevation, with the battle axis running up the portrait screen.
       this.camera.position.copy(this.controls.target).add(new THREE.Vector3(.12,.643,.756));this.controls.minDistance=18;
       this.fit(battle.ships.filter(activeShip).map(s=>this.ships.get(s.id)));
+      this.controls.maxDistance=Math.max(this.controls.maxDistance,this.camera.position.distanceTo(this.controls.target)*2);
     }else{
       this.controls.target.fromArray(fleetCenter(battle,'friendly'));this.camera.position.copy(this.controls.target).add(new THREE.Vector3(90,82,180));this.controls.minDistance=35;
       this.fit(battle.ships.filter(s=>s.side==='friendly'&&activeShip(s)).map(s=>this.ships.get(s.id)));
@@ -259,7 +266,7 @@ export class HarbingerScene extends BattleScene {
   fit(views) {
     this.camera.lookAt(this.controls.target);this.camera.updateMatrixWorld();
     const right=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,0),up=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,1),back=new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld,2);
-    const height=this.canvas.clientHeight,center=(this.viewportTop+this.viewportBottom)/2,sy=this.camera.projectionMatrix.elements[5],sx=this.camera.projectionMatrix.elements[0];
+    const height=this.canvas.clientHeight,center=this.viewportFocusY,sy=this.camera.projectionMatrix.elements[5],sx=this.camera.projectionMatrix.elements[0];
     const upper=Math.max(40,center-this.viewportTop-28)*2/height,lower=Math.max(40,this.viewportBottom-center-24)*2/height;
     let distance=this.controls.minDistance*1.2;const p=new THREE.Vector3(),r=new THREE.Vector3();
     const include=world=>{r.copy(world).sub(this.controls.target);const x=r.dot(right),y=r.dot(up),z=r.dot(back);distance=Math.max(distance,z+Math.abs(x)*sx/.9,z+y*sy/(y>=0?upper:-lower));};
@@ -267,6 +274,7 @@ export class HarbingerScene extends BattleScene {
       for(const {engine}of view.engines)include(engine.localToWorld(p.set(0,0,4)));
     }
     this.camera.position.copy(this.controls.target).addScaledVector(back,distance*(this.mode==='overview'?1.07:1.04));
+    this.camera.far=Math.max(35000,distance*3);this.camera.updateProjectionMatrix();
   }
   labelPosition(id,battle) {
     if(!id.startsWith('fleet:'))return super.labelPosition(id,battle);

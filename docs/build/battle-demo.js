@@ -65,7 +65,8 @@ export function selectDemoShip(battle, id) {
 }
 export function commandDemo(battle, command, value = null) {
   if (command === 'scope') {
-    if (!['ship', 'fleet'].includes(value)) return false;
+    if (!['ship', 'fleet', 'group'].includes(value)) return false;
+    if (value === 'group' && !battle.formations?.some(g => g.id === battle.selectedGroup && g.side === 'friendly')) return false;
     battle.scope = value; return true;
   }
   if (battle.phase !== 'engaged') return false;
@@ -89,7 +90,14 @@ export function commandDemo(battle, command, value = null) {
 }
 
 export function commandedShips(battle) {
-  return battle.ships.filter(ship => ship.side === 'friendly' && activeShip(ship) && (battle.scope === 'fleet' || ship.id === battle.selected));
+  return selectionShips(battle, { scope: battle.scope, selected: battle.selected, group: battle.selectedGroup });
+}
+
+export function selectionShips(battle, selection) {
+  if (!selection) return [];
+  return battle.ships.filter(s => s.side === 'friendly' && activeShip(s) && (selection.scope === 'fleet'
+    || selection.scope === 'group' && selection.group && s.group === selection.group
+    || selection.scope === 'ship' && s.id === selection.selected));
 }
 
 export function commandStatus(battle, ship) {

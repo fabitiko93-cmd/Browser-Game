@@ -1,9 +1,8 @@
-import { activeShip, armedShip, targetFor, shipRange } from './battle-demo.js';
+import { activeShip, armedShip, targetFor, shipRange, commandedShips, selectionShips } from './battle-demo.js';
 
 // UI selection is independent of camera focus and never assigns a combat order.
 export function battleSelection(battle, selection) {
-  const sources = selection ? battle.ships.filter(s => s.side === 'friendly' && activeShip(s)
-    && (selection.scope === 'fleet' || s.id === selection.selected)) : [];
+  const sources = selectionShips(battle, selection);
   const links = [], targets = new Set();
   for (const source of sources) {
     if (source.order === 'retreat' || !armedShip(source)) continue;
@@ -17,9 +16,10 @@ export function battleSelection(battle, selection) {
 }
 
 export function recipientInfo(battle) {
-  const ships = battle.ships.filter(s => s.side === 'friendly' && activeShip(s) && (battle.scope === 'fleet' || s.id === battle.selected));
+  const ships = commandedShips(battle);
   const available = ships.filter(s => s.order !== 'retreat'), armed = available.filter(armedShip);
   const blocked = available.filter(s => s.supply < s.combat.retreatFuel);
   const costs = [...new Set(available.map(s => s.combat.retreatFuel))];
-  return { ships, available, armed, blocked, costs, label: battle.scope === 'fleet' ? `Gesamte Flotte · ${ships.length} ${ships.length === 1 ? 'Schiff' : 'Schiffe'}` : ships[0]?.name ?? 'Kein aktives Schiff' };
+  const group = battle.formations?.find(g => g.id === battle.selectedGroup && g.side === 'friendly');
+  return { ships, available, armed, blocked, costs, label: battle.scope === 'fleet' ? `Gesamte Flotte · ${ships.length} ${ships.length === 1 ? 'Schiff' : 'Schiffe'}` : battle.scope === 'group' ? `${group?.name ?? 'Verband'} · ${ships.length} ${ships.length === 1 ? 'Schiff' : 'Schiffe'}` : ships[0]?.name ?? 'Kein aktives Schiff' };
 }

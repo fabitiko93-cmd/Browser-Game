@@ -9,12 +9,13 @@ export function commandDisplay(battle) {
   const actual=selected&&demoTarget(battle,selected);
   let label=selected?commandStatus(battle,selected).label:'Kein aktives Schiff';
   if(battle.scope==='ship'&&selected&&armedShip(selected)&&selected?.targeting==='auto'&&!selected.priority&&selected.order!=='retreat') label=actual?`Auto → ${actual.name}`:'Auto · sucht erreichbares Ziel';
-  if(battle.scope==='fleet') {
+  if(battle.scope==='fleet'||battle.scope==='group') {
+    const unit=battle.scope==='group'?'Verband':'Flotte';
     const modes=new Set(recipients.map(s=>`${s.order}:${s.targeting}:${s.commandTarget}:${s.priority}`));
-    label=modes.size>1?'Flotte · unterschiedliche Aufträge':recipients.length?recipients[0].targeting==='auto'&&recipients[0].order!=='retreat'?'Flotte · individuelle Auto-Ziele':`Flotte · ${commandStatus(battle,recipients[0]).label}`:'Flotte außer Gefecht';
+    label=modes.size>1?`${unit} · unterschiedliche Aufträge`:recipients.length?recipients[0].targeting==='auto'&&recipients[0].order!=='retreat'?`${unit} · individuelle Auto-Ziele`:`${unit} · ${commandStatus(battle,recipients[0]).label}`:`${unit} außer Gefecht`;
   }
   return {label,canAttack:battle.phase==='engaged'&&armed.length>0&&Boolean(chosen&&activeShip(chosen)),canCommand:battle.phase==='engaged'&&available.length>0,
     canAuto:battle.phase==='engaged'&&armed.length>0,canRetreat:battle.phase==='engaged'&&available.length>0&&available.every(s=>!s.combat||s.supply>=s.combat.retreatFuel),
     auto:armed.length>0&&armed.every(s=>s.targeting==='auto'),
-    chosenState:chosen&&!activeShip(chosen)?'Zerstört':manual.length?battle.scope==='fleet'?`${manual.length} Schiffe greifen an`:'Angriff befohlen':automatic.length?battle.scope==='fleet'?`Auto · ${automatic.length} ${automatic.length===1?'Schiff':'Schiffe'}`:'Auto greift an':'Kein manueller Auftrag'};
+    chosenState:chosen&&!activeShip(chosen)?'Zerstört':manual.length?battle.scope!=='ship'?`${manual.length} Schiffe greifen an`:'Angriff befohlen':automatic.length?battle.scope!=='ship'?`Auto · ${automatic.length} ${automatic.length===1?'Schiff':'Schiffe'}`:'Auto greift an':'Kein manueller Auftrag'};
 }
