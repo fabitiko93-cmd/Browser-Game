@@ -1,5 +1,7 @@
 import { SHIPS } from './data.js';
 import { createRoster, filterRoster } from './battle-roster-ui.js';
+import { trialPlan } from './battle-trial.js';
+import { validatePreparation } from './battle-preparation.js';
 import { KM_PER_UNIT } from './battle-demo.js';
 import { PLANNER_SAVE_KEY, FORMATIONS, PLAN_SIDES, AUTO_FORMATIONS, createTrialPlan, planFromRosters, validateTrialPlan, fleetLayout, groupLayout, deployTrialPlan, addPlanGroup, addPlanShips, removePlanGroup } from './battle-planner.js';
 
@@ -15,10 +17,17 @@ export class BattlePlanner {
   constructor(dialog, { getBattle, openDialog, onApply }) {
     this.dialog = dialog; this.getBattle = getBattle; this.openDialog = openDialog; this.onApply = onApply;
     this.side = 'friendly'; this.tab = 'fleet'; this.history = []; this.expanded = new Set(); this.plan = null; this.saved = true;
-    try { const raw = localStorage.getItem(PLANNER_SAVE_KEY); if (raw) this.plan = validateTrialPlan(JSON.parse(raw)); }
+    try {
+      const raw = localStorage.getItem(PLANNER_SAVE_KEY), saved = raw && JSON.parse(raw);
+      if (saved?.version === 2 && typeof saved.source?.id === 'string' && ['baseline', 'profile', 'fleet'].includes(saved.source.setup?.mode)) {
+        const plan = validateTrialPlan(saved.plan);
+        if (saved.source.preparation) { saved.source.preparation = validatePreparation(saved.source.preparation); if (saved.source.id !== saved.source.preparation.id) throw new Error('Entwurf gehört zu einer anderen Probe.'); }
+        this.savedDraft = { source: saved.source, plan };
+      }
+    }
     catch { this.loadWarning = 'Gespeicherte Planung unlesbar · eine neue Vorlage ist verfügbar.'; }
     dialog.querySelector('.planner-content').innerHTML = `
-      <p class="trial-menu-hint">Eigener Entwurf · unabhängig vom Reichsspielstand. Änderungen werden hier gespeichert.</p>
+      <p class="trial-menu-hint">Aufstellung dieser Probeschlacht · Änderungen bleiben als Entwurf erhalten. Übernehmen startet die Probe neu.</p>
       <div class="plan-switch" aria-label="Geplante Seite"><button data-plan-side="friendly">Eigene Flotte</button><button data-plan-side="enemy">Gegner</button></div>
       <div class="plan-tabs" aria-label="Planungsebene"><button data-plan-tab="fleet">Flottenplaner</button><button data-plan-tab="group">Verbandsplaner</button></div>
       <p id="plan-summary"></p><p id="plan-message" role="status" aria-live="polite"></p>
@@ -66,17 +75,23 @@ export class BattlePlanner {
   get ship() { return this.fleet.ships.find(s => s.id === this.shipId && s.groupId === this.group.id); }
   remember(before = clone(this.plan)) { this.history.push(before); if (this.history.length > 30) this.history.shift(); }
   save() {
-    try { localStorage.setItem(PLANNER_SAVE_KEY, JSON.stringify(validateTrialPlan(this.plan))); this.saved = true; }
+    try { localStorage.setItem(PLANNER_SAVE_KEY, JSON.stringify({ version: 2, source: this.source, plan: validateTrialPlan(this.plan) })); this.saved = true; }
     catch { this.saved = false; }
   }
-  open() {
-    if (!this.plan) {
-      const b = this.getBattle();
-      this.plan = b.plan ? clone(b.plan) : planFromRosters(Object.fromEntries(PLAN_SIDES.map(side => [side, b.ships.filter(s => s.side === side).map(s => ({ id: s.sourceId, name: s.name, type: s.strategicType }))])), b.setup.scenario);
+  bind(battle) {
+    const id = battle.preparation?.id ?? 'legacy:' + JSON.stringify([battle.setup, battle.plan ?? battle.ships.map(s => [s.id, s.strategicType])]);
+    const same = this.source?.id === id;
+    this.source = { id, setup: clone(battle.setup), preparation: battle.preparation ? clone(battle.preparation) : null };
+    if (!same) {
+      this.plan = this.savedDraft?.source.id === id ? clone(this.savedDraft.plan) : trialPlan(battle);
+      this.savedDraft = null; this.history = []; this.groupId = this.shipId = null;
+      this.chartBounds = null; this.expanded.clear(); this.side = 'friendly'; this.tab = 'fleet';
     }
+  }
+  open() {
+    this.bind(this.getBattle());
     this.message = this.loadWarning ?? ''; this.loadWarning = ''; this.drag = null;
-    this.save();
-    this.paint(); this.openDialog('planner-dialog');
+    this.save(); this.paint(); this.openDialog('planner-dialog');
   }
   change(e) {
     const id = e.target.id;

@@ -32,7 +32,13 @@ export class BattleScene {
     this.controls.rotateSpeed = .55; this.controls.zoomSpeed = .75; this.controls.maxPolarAngle = Math.PI * .88;
     this.controls.target.set(0, 0, 1000); this.followed.copy(this.controls.target);
     this.controls.touches.ONE = THREE.TOUCH.ROTATE; this.controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-    this.controls.addEventListener('change', () => { this.dirty = true; }); this.controls.addEventListener('start', () => { this.transition = null; }); this.controls.update();
+    this.controls.addEventListener('change', () => { this.dirty = true; }); this.controls.addEventListener('start', () => {
+      if (this.transition?.followOverview && this.battle) {
+        const target = new THREE.Vector3().fromArray(this.overviewCenter(this.battle));
+        this.camera.position.add(target.clone().sub(this.controls.target)); this.controls.target.copy(target); this.followed.copy(target);
+      }
+      this.transition = null;
+    }); this.controls.update();
     this.scene.add(new THREE.HemisphereLight(0xb9d4ff, 0x0a101c, .65));
     const key = new THREE.DirectionalLight(0xffedcd, 3.1); key.position.set(-400, 750, 900); this.scene.add(key);
     const rim = new THREE.DirectionalLight(0x81b7ff, 2.2); rim.position.set(400, 200, -900); this.scene.add(rim);
@@ -318,12 +324,16 @@ export class BattleScene {
     if ((this.mode === 'ship' || this.mode === 'target') && focusId !== this.focusId) this.setMode(this.mode, battle);
     if (this.transition) {
       const transition = this.transition; transition.elapsed += cameraDelta;
+      if (transition.followOverview && this.mode === 'overview') {
+        this.a.fromArray(this.overviewCenter(battle)); this.b.subVectors(this.a, this.followed);
+        transition.endPosition.add(this.b); transition.endTarget.add(this.b); this.followed.copy(this.a);
+      }
       const progress = Math.min(1, transition.elapsed / .65), eased = progress * progress * (3 - 2 * progress);
       this.camera.position.lerpVectors(transition.position, transition.endPosition, eased); this.controls.target.lerpVectors(transition.target, transition.endTarget, eased);
       if (progress === 1) this.transition = null;
     } else if (this.mode !== 'overview' || this.overviewFollowsFleet) {
       if (this.mode === 'ship' || this.mode === 'target') this.a.copy(this.ships.get(focusId)?.group.position ?? this.controls.target);
-      else this.a.fromArray(fleetCenter(battle, 'friendly'));
+      else this.a.fromArray(this.overviewCenter?.(battle) ?? fleetCenter(battle, 'friendly'));
       this.b.subVectors(this.a, this.followed); this.camera.position.add(this.b); this.controls.target.add(this.b); this.followed.copy(this.a);
     }
     this.updateAttachments(battle, time);

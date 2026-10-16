@@ -5,12 +5,13 @@ import { BattleScene } from './battle-scene.js';
 import { DEMO_CLASSES, activeShip, commandedShips, demoTarget, fleetCenter } from './battle-demo.js';
 import { OVERVIEW_MODELS, formationCenter } from './battle-overview.js';
 import { distantGeometry } from './battle-lod.js';
+import { focusInfo } from './battle-focus.js';
 import { BattleSelectionOverlay } from './battle-selection-scene.js';
 
 export class HarbingerScene extends BattleScene {
   constructor(canvas, callbacks = {}) {
     super(canvas, callbacks);
-    this.overviewFollowsFleet = true;
+    this.overviewFollowsFleet = true; this.pickFocus = callbacks.pickFocus;
     this.abort = new AbortController(); this.graphics = 'auto'; this.onAssetProgress = callbacks.onAssetProgress;
     this.renderer.toneMappingExposure = 1.18; this.scene.environmentIntensity = 1.6;
     this.camera.fov = 38; this.camera.near = .15;
@@ -200,6 +201,7 @@ export class HarbingerScene extends BattleScene {
   }
   pickContact(x,y) {
     if(!this.battle)return null;
+    const marker = this.pickFocus?.(x, y); if (marker) return marker;
     let picked=null,best=22;const p=new THREE.Vector3();
     for(const ship of this.battle.ships){const view=this.ships.get(ship.id);if(!activeShip(ship)||!view?.group.visible)continue;
       p.copy(view.group.position).project(this.camera);if(p.z < -1||p.z>1)continue;
@@ -221,7 +223,8 @@ export class HarbingerScene extends BattleScene {
     this.renderer.setSize(width,height,false);this.camera.aspect=width/height;this.presentation.resize(width,height,this.pixelRatio);
     const gutter=height<650?0:8;
     this.viewportTop=(document.querySelector('.lab-top')?.getBoundingClientRect().bottom??60)+gutter;
-    this.viewportBottom=(document.querySelector('.lab-bottom')?.getBoundingClientRect().top??height-60)-gutter;
+    const focusBar = document.getElementById('focus-bar');
+    this.viewportBottom=Math.min(document.querySelector('.lab-bottom')?.getBoundingClientRect().top??height-60, focusBar && !focusBar.hidden ? focusBar.getBoundingClientRect().top : height)-gutter;
     if(this.contactPoints){this.contactPoints.material.uniforms.pixelRatio.value=this.pixelRatio;this.contactPoints.material.uniforms.height.value=height;}
     if(this.selectionPoint)this.selectionPoint.material.uniforms.pixelRatio.value=this.pixelRatio;
     this.frameProjection();this.dirty=true;
@@ -230,10 +233,26 @@ export class HarbingerScene extends BattleScene {
     const width=this.canvas.clientWidth,height=this.canvas.clientHeight;
     // Keep the own-fleet pivot below the visual center so the opponent still
     // uses the upper part of the portrait, without changing the orbit point.
-    this.viewportFocusY=this.mode==='overview'?this.viewportTop+(this.viewportBottom-this.viewportTop)*.70:(this.viewportTop+this.viewportBottom)/2;
+    this.viewportFocusY=this.mode==='overview'&&!this.orbitFocus?this.viewportTop+(this.viewportBottom-this.viewportTop)*.70:(this.viewportTop+this.viewportBottom)/2;
     this.camera.setViewOffset(width,height,0,height/2-this.viewportFocusY,width,height);this.camera.updateProjectionMatrix();
   }
+  overviewCenter(battle) { return focusInfo(battle, this.orbitFocus)?.position ?? fleetCenter(battle, 'friendly'); }
+  focusOverview(focus, battle, animated = true) {
+    const info = focusInfo(battle, focus);
+    this.orbitFocus = info ? { kind: info.kind, id: info.id } : null;
+    this.mode = 'overview'; this.inspectionId = null; this.effects.overview = true;
+    this.frameProjection();
+    const startPosition = this.camera.position.clone(), startTarget = this.controls.target.clone();
+    const target = new THREE.Vector3().fromArray(this.overviewCenter(battle));
+    const position = target.clone().add(startPosition.clone().sub(startTarget));
+    this.followed.copy(target);
+    this.transition = animated && !matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? { position: startPosition, target: startTarget, endPosition: position, endTarget: target, elapsed: 0, followOverview: true } : null;
+    if (!this.transition) { this.camera.position.copy(position); this.controls.target.copy(target); }
+    this.dirty = true;
+  }
   setMode(mode,battle,animated=true,inspectionId=null) {
+    this.orbitFocus = null;
     const startPosition=this.camera.position.clone(),startTarget=this.controls.target.clone();this.mode=mode;
     this.effects.overview=mode==='overview';this.camera.userData.viewportHeight=this.canvas.clientHeight;
     this.camera.fov=mode==='overview'?30:38;this.camera.updateProjectionMatrix();
@@ -300,8 +319,12 @@ export class HarbingerScene extends BattleScene {
     }
     this.contactPoints.visible=pointCount>0;this.contactPoints.geometry.setDrawRange(0,pointCount);
     const highlighted=this.ships.get(this.highlightId),highlightShip=battle.ships.find(s=>s.id===this.highlightId);
-    this.selectionPoint.visible=this.mode==='overview'&&Boolean(highlighted?.group.visible&&highlightShip&&activeShip(highlightShip));
-    if(this.selectionPoint.visible){this.selectionPoint.position.copy(highlighted.group.position);this.selectionPoint.material.uniforms.color.value.set(highlightShip.side==='enemy'?0xf1ae70:0x70d0e5);}
+    const focused=focusInfo(battle,this.orbitFocus);
+    this.selectionPoint.visible=this.mode==='overview'&&Boolean(focused || highlighted?.group.visible&&highlightShip&&activeShip(highlightShip));
+    if(this.selectionPoint.visible){
+      if(focused)this.selectionPoint.position.fromArray(focused.position);else this.selectionPoint.position.copy(highlighted.group.position);
+      this.selectionPoint.material.uniforms.color.value.set((focused?.side??highlightShip?.side)==='enemy'?0xf1ae70:0x70d0e5);
+    }
     for(const attribute of [positions,sides,opacities])attribute.needsUpdate=true;
     for(const batch of this.hullBatches){let count=0;for(const view of batch.members)if(view.distant){batch.mesh.setMatrixAt(count,view.meshes[batch.index].matrixWorld);batch.mesh.setColorAt(count++,this.color.setScalar(view.living===false?.22:1));}batch.mesh.count=count;batch.mesh.visible=count>0;batch.mesh.instanceMatrix.needsUpdate=true;batch.mesh.instanceColor.needsUpdate=true;}
     const focus=this.ships.get(this.focusId);if(focus){this.sun.target.position.copy(focus.group.position);this.sun.position.copy(focus.group.position).add(new THREE.Vector3(-400,680,350));this.rim.target.position.copy(focus.group.position);this.rim.position.copy(focus.group.position).add(new THREE.Vector3(400,150,-500));}

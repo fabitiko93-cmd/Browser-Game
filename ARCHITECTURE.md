@@ -29,6 +29,7 @@
 | `src/communications.js` / `src/communications-ui.js` | Reichsweiter Posteingang, Vertragsangebote, Antwortfristen und Gebäudesignale |
 | `src/battle-trial.js` / `src/battle-trial-page.js` | Interaktive Probe mit Spielwerten, Kopien eigener freier Flotten und getrenntem fortsetzbarem Speicherstand |
 | `src/battle-planner.js` / `src/battle-planner-ui.js` | Unabhängiger Entwurf beider Testflotten, Verbände und verschachtelte Formationen, reproduzierbare Aufstellung und Touchplaner |
+| `src/battle-preparation.js` / `src/battle-focus.js` | Gespeicherte Ausgangswerte der Probe und von Befehlen unabhängiger Kamerafokus auf Schiffe, Verbände und Flotten |
 | `src/battle-maneuvers.js` | Trial-Navigation, Flottenbindung, autonome Verbandsrouten, Klassenbewegung und lokale Abstandskorrektur |
 | `src/battle-roster-ui.js` | Gemeinsame verschachtelte Verbands-/Schiffsliste mit Suche für Planung und Befehlsempfänger |
 | `src/battle-selection.js` / `src/battle-selection-scene.js` | Explizite Befehlsempfänger, lesbare Kosten-/Verfügbarkeitsangaben und begrenzte 3D-Ziellinien und Auswahlmarkierungen |

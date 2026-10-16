@@ -1,10 +1,9 @@
 import { SHIPS } from './data.js';
-import { fleetStrength, shipArmor } from './fleets.js';
-import { technologyEffects } from './technology.js';
-import { initialGovernance } from './governance.js';
 import { STRATEGIC_MODELS } from './battle-models.js';
 import { OVERVIEW_MODELS, OVERVIEW_SCENARIOS } from './battle-overview.js';
 import { createDemoBattle, advanceDemoBattle, DEMO_CLASSES, DEMO_STEP, activeShip, shipStrength, targetFor } from './battle-demo.js';
+import { createPreparation, validatePreparation, trialBaseline } from './battle-preparation.js';
+import { planFromRosters } from './battle-planner.js';
 import { validateTrialPlan, deployTrialPlan } from './battle-planner.js';
 import { initializeManeuvers, validateNavigation } from './battle-maneuvers.js';
 
@@ -12,7 +11,7 @@ export const TRIAL_SAVE_KEY = 'orbit3077-trial';
 export const TRIAL_DAMAGE_RATE = .35;
 export const TRIAL_GROUPS = { all: 'Alle', ...Object.fromEntries(Object.entries(SHIPS).map(([id, def]) => [id, def.name])) };
 const pattern = ['cruiser', 'destroyer', 'corvette', 'corvette', 'corvette', 'destroyer', 'corvette', 'corvette', 'destroyer', 'corvette'];
-const baseline = () => ({ day: 0, tech: [], player: { ideology: 'democracy' }, governance: initialGovernance() });
+const baseline = trialBaseline;
 const number = (n, min, max) => Number.isFinite(n) && n >= min && n <= max;
 
 export function trialPorts(state) {
@@ -26,41 +25,50 @@ export function trialPorts(state) {
   }
   return [...ports.values()];
 }
-export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state = null, planetId = null, friendlySupply = 100, enemySupply = 100, plan = null } = {}) {
+export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state = null, planetId = null, friendlySupply = 100, enemySupply = 100, plan = null, preparation = null } = {}) {
   const prepared = plan ? validateTrialPlan(plan) : null;
-  if (prepared) { scenario = prepared.scenario; mode = 'baseline'; friendlySupply = prepared.sides.friendly.supply; enemySupply = prepared.sides.enemy.supply; }
+  const retained = preparation ? validatePreparation(preparation) : null;
+  if (prepared) { scenario = prepared.scenario; friendlySupply = prepared.sides.friendly.supply; enemySupply = prepared.sides.enemy.supply; }
   if (!Object.hasOwn(OVERVIEW_SCENARIOS, scenario)) throw new Error('Unbekannte Probeschlacht.');
   if (!['baseline', 'profile', 'fleet'].includes(mode)) throw new Error('Unbekannte Aufstellung.');
   if (!number(friendlySupply, 0, 100) || !number(enemySupply, 0, 100)) throw new Error('Ungültige Bordversorgung.');
-  if (mode !== 'baseline' && !state) throw new Error('Öffne zuerst dein gespeichertes Reich.');
+  if (mode !== 'baseline' && !state && !retained) throw new Error('Öffne zuerst dein gespeichertes Reich.');
   const def = OVERVIEW_SCENARIOS[scenario], normal = baseline(), own = mode === 'baseline' ? normal : state;
-  const copied = mode === 'fleet' ? state.fleets.filter(f => f.owner === 'player' && f.planetId === planetId && !f.mission && !f.route && f.hp > 0) : null;
+  const copied = mode === 'fleet' && !retained ? state.fleets.filter(f => f.owner === 'player' && f.planetId === planetId && !f.mission && !f.route && f.hp > 0) : null;
   const port = copied && trialPorts(state).find(p => p.id === planetId);
   if (copied && (!port || !copied.length)) throw new Error('Wähle einen Standort mit freien Schiffen.');
   const battle = createDemoBattle(); battle.ships = []; battle.mode = 'trial';
   battle.setup = { scenario, mode, planetId, friendlySupply, enemySupply };
-  battle.sourceLabel = mode === 'baseline' ? 'Testverbände · Grundwerte' : mode === 'profile' ? `Testverbände · eigene Forschung und Politik · Tag ${state.day}` : `Kopie deiner Schiffe · ${port.name} · Tag ${state.day}`;
+  battle.sourceLabel = retained?.label ?? (mode === 'baseline' ? 'Testverbände · Grundwerte' : mode === 'profile' ? `Testverbände · eigene Forschung und Politik · Tag ${state.day}` : `Kopie deiner Schiffe · ${port.name} · Tag ${state.day}`);
   battle.contactGroups = TRIAL_GROUPS; battle.classStrengths = Object.fromEntries(Object.entries(SHIPS).map(([id, d]) => [id, d.strength]));
+  const origin = retained ?? createPreparation(own, battle.sourceLabel);
+  const originalShips = new Map(origin.ships.map(s => [s.side + ':' + s.id + ':' + s.type, s]));
+  const originals = [];
   const deployment = prepared && deployTrialPlan(prepared);
   if (prepared) {
     battle.plan = prepared;
     battle.formations = ['friendly', 'enemy'].flatMap(side => prepared.sides[side].groups.map(g => ({ id: g.id, name: g.name, side, formation: g.formation })));
-    battle.sourceLabel = `Geplante Testflotten · ${prepared.sides.friendly.ships.length} : ${prepared.sides.enemy.ships.length} · Grundwerte`;
+    battle.sourceLabel = `Geplante Testflotten · ${prepared.sides.friendly.ships.length} : ${prepared.sides.enemy.ships.length} · ${mode === 'baseline' ? 'Grundwerte' : mode === 'profile' ? 'Eigenes Forschungs- und Politikprofil' : 'Kopierte Ausgangswerte'}`;
   }
   for (const side of ['friendly', 'enemy']) {
-    const profile = side === 'friendly' ? own : normal, roster = prepared?.sides[side].ships, count = roster?.length ?? (side === 'friendly' && copied ? copied.length : def[side]);
+    const roster = prepared?.sides[side].ships, count = roster?.length ?? (side === 'friendly' && copied ? copied.length : def[side]);
     const columns = Math.max(1, Math.ceil(Math.sqrt(count) * 1.25)), sign = side === 'friendly' ? 1 : -1;
     for (let i = 0; i < count; i++) {
       const f = roster ? { ...roster[i], owner: 'player', hp: 100, supply: prepared.sides[side].supply } : side === 'friendly' && copied ? copied[i] : { id: `${side}-${i + 1}`, name: `${i === 0 ? side === 'friendly' ? 'Harbinger' : 'Nemesis' : SHIPS[pattern[i % pattern.length]].name} ${i + 1}`, type: pattern[i % pattern.length], owner: 'player', hp: 100, supply: side === 'friendly' ? friendlySupply : enemySupply };
+      if (roster) {
+        const original = originalShips.get(side + ':' + f.id + ':' + f.type) ?? (side === 'friendly' && copied ? copied.find(s => s.id === f.id && s.type === f.type) : null);
+        if (original) { f.hp = original.hp; if (!retained || prepared.sides[side].supply === origin.supplies[side]) f.supply = original.supply; }
+      }
+      originals.push({ id: f.id, side, type: f.type, hp: f.hp, supply: f.supply });
       const [type, length] = STRATEGIC_MODELS[f.type], spec = DEMO_CLASSES[type];
       const position = deployment ? deployment[side].ships.find(s => s.id === f.id).position : [(i % columns - (Math.min(columns, count) - 1) / 2) * 130, (i % 3 - 1) * 8, sign * (1000 + Math.floor(i / columns) * 140)];
       const id = `${side}:${f.id}`;
       battle.ships.push({ id, sourceId: f.id, name: f.name, type, strategicType: f.type, className: SHIPS[f.type].name, side,
         length, position, home: [...position], facing: [0, 0, -sign], velocity: [0, 0, 0], weaponMount: [...OVERVIEW_MODELS[type].mount],
         hull: spec.hull * f.hp / 100, initialHull: spec.hull * f.hp / 100, shield: 0, supply: f.supply,
-        combat: { power: fleetStrength(profile, { ...f, hp: 100, supply: 100 }), armor: shipArmor(profile, f),
+        combat: { ...origin.profiles[side][f.type],
           weapon: f.type === 'cruiser' ? 'torpedo' : 'laser', damageRate: TRIAL_DAMAGE_RATE, range: 3600,
-          retreatSpeed: 260 * (SHIPS[f.type].speed ?? 1), retreatFuel: 8 * technologyEffects(profile).fuel },
+        },
         nextFire: 0, lastHit: -10, order: 'engage', targeting: 'auto',
         commandTarget: null, priority: null, target: null, salvos: 0, escaped: false });
       if (roster) battle.ships.at(-1).group = f.groupId;
@@ -76,6 +84,7 @@ export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state
   }
   battle.selected = battle.ships.find(s => s.side === 'friendly').id;
   battle.target = battle.ships.find(s => s.side === 'enemy').id;
+  battle.preparation = { ...origin, ships: originals, supplies: { friendly: friendlySupply, enemy: enemySupply } };
   initializeManeuvers(battle);
   return battle;
 }
@@ -135,8 +144,16 @@ export function parseTrial(raw) {
     projectiles.add(p.id);
   }
   if(b.phase!=='engaged'&&b.projectiles.length)fail();
+  if (b.preparation !== undefined) b.preparation = validatePreparation(b.preparation);
   validateNavigation(b);
   initializeManeuvers(b);
   b.contactGroups=TRIAL_GROUPS;b.classStrengths=Object.fromEntries(Object.entries(SHIPS).map(([id,d])=>[id,d.strength]));
   return b;
+}
+
+export function trialPlan(battle) {
+  if (battle.plan) return structuredClone(battle.plan);
+  const plan = planFromRosters(Object.fromEntries(['friendly', 'enemy'].map(side => [side, battle.ships.filter(s => s.side === side).map(s => ({ id: s.sourceId, name: s.name, type: s.strategicType }))])), battle.setup.scenario);
+  plan.sides.friendly.supply = battle.setup.friendlySupply; plan.sides.enemy.supply = battle.setup.enemySupply;
+  return plan;
 }
