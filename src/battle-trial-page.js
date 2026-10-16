@@ -459,7 +459,15 @@ for (const event of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']
 document.addEventListener('visibilitychange', () => { audio.setHidden(document.hidden); sound.hidden(document.hidden); lastFrame = 0; if (document.hidden) { paused = true; pauseReason='manual'; if (battle) {persistTrial();paint();} } });
 window.addEventListener('pagehide', event => { persistTrial(); paused = true; sound.hidden(true); audio.setHidden(true); if (!event.persisted || !ready) { ++generation; ready = false; view?.dispose(); sound.dispose(); } });
 window.addEventListener('pageshow', () => { audio.setHidden(document.hidden); lastFrame = 0; if (view?.disposed) void start(scenario,true); else viewport(); });
-new ResizeObserver(() => { if (view) { viewport(); if (ready && !cameraFocus) setCamera(view.mode, false); } }).observe($('battle-app'));
+new ResizeObserver(() => {
+  if (!view) return;
+  viewport();
+  if (ready && !cameraFocus) {
+    // Reframe the same camera without invoking the menu-closing camera action.
+    view.setMode(view.mode, battle, false, view.inspectionId); viewport(); lastRender = 0;
+  }
+  menuViewport();
+}).observe($('battle-app'));
 function frame(now) {
   const raw = lastFrame ? Math.max(0, (now - lastFrame) / 1000) : 0, seconds = Math.min(.25, raw); lastFrame = now;
   if (ready && !document.hidden) {

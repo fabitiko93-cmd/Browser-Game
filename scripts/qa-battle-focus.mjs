@@ -53,8 +53,11 @@ try{
    assert.ok((await page.locator('#plan-formation-help').innerText()).length>30);
  }
  assert.notDeepEqual(formationMaps.auto,formationMaps.screen);assert.notDeepEqual(formationMaps.auto,formationMaps.line);assert.notDeepEqual(formationMaps.auto,formationMaps.wedge);
+ const resizedDraft=await draft();await page.setViewportSize({width:320,height:568});await settled();
+ assert.ok(await page.locator('#planner-dialog').evaluate(d=>d.open));assert.deepEqual(await draft(),resizedDraft);
+ await page.setViewportSize({width:390,height:844});await settled();assert.ok(await page.locator('#planner-dialog').evaluate(d=>d.open));
  await page.locator('#plan-fleet-formation').selectOption('auto');await page.locator('[data-close="planner-dialog"]').click();assert.deepEqual(await state(),unchanged);
- pass('The actual fleet selector distinguishes balanced, line and wedge from the static screen and explains their behavior without issuing orders');
+ pass('The actual fleet selector explains distinct formations, preserves its open dialog and draft across portrait resize, and never issues orders');
  const point=await worldPoint('friendly');assert.ok(point);const before=await state(),oldCamera=await camera();await page.touchscreen.tap(point.x,point.y);await settled();
  assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await page.evaluate(()=>ORBIT_TRIAL_DEBUG.focus.id),point.id);assert.deepEqual(await state(),before);let cam=await camera();assert.ok(Math.abs(cam.r-oldCamera.r)<1e-5);assert.equal(cam.fov,oldCamera.fov);
  const selected=(await state()).ships.find(s=>s.id===point.id);assert.ok(cam.t.every((v,i)=>Math.abs(v-selected.position[i])<1e-6));
