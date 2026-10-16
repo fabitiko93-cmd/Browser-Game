@@ -12,11 +12,14 @@ import { MediaAudio } from './audio-media.js';
 import { BattleAudio } from './battle-audio.js';
 import { BattlePlanner } from './battle-planner-ui.js';
 import { createTrialPlan } from './battle-planner.js';
+import { createRoster, filterRoster } from './battle-roster-ui.js';
+import { MANEUVERS, commandManeuver, maneuverInfo } from './battle-maneuvers.js';
 
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const audio = new MediaAudio(), sound = new BattleAudio(() => audio.settings);
-const frames = [], markers = new Map(), ownButtons = new Map(), groupButtons = new Map();
+const frames = [], markers = new Map(), ownButtons = new Map(), groupButtons = new Map(), rosterExpanded = new Set();
+let ownRoster;
 let battle, view, ready = false, paused = false, generation = 0, lastFrame = 0, lastRender = 0, lastHud = 0;
 let visualTime = 0, pending = [], noticeTimer, inspectedId = null, returnToOrders = false, ownToOrders = false, graphics = 'auto';
 let hasSelection = false, selectionId = null, pauseReason = 'start', contactPicked = null, ignoredContactClosures = 0;
@@ -103,22 +106,11 @@ $('contacts-dialog').addEventListener('close', () => {
 });
 $('info-dialog').addEventListener('close',()=>{if(view&&!$('info-dialog').open){view.highlightId=null;view.dirty=true;}});
 function initializeHud() {
-  ownButtons.clear(); groupButtons.clear(); markers.clear(); $('ship-selector').replaceChildren(); $('ship-labels').replaceChildren(); $('group-selector').replaceChildren();
-  for (const group of battle.formations?.filter(g => g.side === 'friendly') ?? []) {
-    if (!battle.ships.some(s => s.group === group.id)) continue;
-    const button = document.createElement('button'); button.dataset.group = group.id;
-    const name = document.createElement('span'), detail = document.createElement('small'), count = document.createElement('span');
-    name.textContent = group.name; detail.textContent = 'Verband gemeinsam auswählen'; name.append(detail);
-    button.append(name, count); $('group-selector').append(button); groupButtons.set(group.id, button);
-  }
-  $('group-selector-heading').hidden = !groupButtons.size;
-  $('ship-selector').closest('details').open = !groupButtons.size;
-  for (const ship of battle.ships.filter(s => s.side === 'friendly')) {
-    const button = document.createElement('button'); button.dataset.ship = ship.id;
-    const name = document.createElement('span'), detail = document.createElement('small'), hull = document.createElement('span');
-    name.textContent = ship.name; detail.textContent = [ship.className, battle.formations?.find(g => g.id === ship.group)?.name].filter(Boolean).join(' · ');
-    name.append(detail); button.append(name, hull); $('ship-selector').append(button); ownButtons.set(ship.id, button);
-  }
+  ownButtons.clear(); groupButtons.clear(); markers.clear(); $('ship-labels').replaceChildren();
+  ownRoster=createRoster($('group-selector'),battle.formations?.filter(g=>g.side==='friendly'&&battle.ships.some(s=>s.group===g.id))??[],battle.ships.filter(s=>s.side==='friendly'),{groupAttribute:'data-group',shipAttribute:'data-ship',expanded:rosterExpanded,onToggle:()=>paint()});
+  for(const [id,node] of ownRoster.shipButtons)ownButtons.set(id,node);
+  for(const [id,node] of ownRoster.groupButtons)groupButtons.set(id,node);
+  $('group-selector-heading').hidden=!groupButtons.size;
   for (const side of ['friendly', 'enemy']) {
     const node = document.createElement('button'); node.dataset.marker = `fleet:${side}`;
     node.className = `lab-marker ${side === 'enemy' ? 'enemy' : ''}`;
@@ -138,8 +130,8 @@ function persistTrial() {
 function loadSource() {
   try { savedEmpire = loadGame(); } catch { savedEmpire = null; }
   const ports = trialPorts(savedEmpire), select = $('source-planet'); select.replaceChildren();
-  for (const port of ports) { const option = document.createElement('option'); option.value = port.id; option.textContent = `${port.name} · ${port.count} freie Schiffe`; option.disabled=port.count>50; select.append(option); }
-  for (const option of $('source-mode').options) option.disabled = option.value !== 'baseline' && (!savedEmpire || option.value === 'fleet' && !ports.some(p => p.count <= 50));
+  for (const port of ports) { const option = document.createElement('option'); option.value = port.id; option.textContent = `${port.name} · ${port.count} freie Schiffe`;  select.append(option); }
+  for (const option of $('source-mode').options) option.disabled = option.value !== 'baseline' && (!savedEmpire || option.value === 'fleet' && !ports.length);
   updateSetup();
 }
 function updateSetup() {
@@ -227,7 +219,10 @@ function paint() {
   text('battle-day', `Tag ${number.format(battle.day)}`);
   text('selected-name', battle.scope === 'fleet' ? 'Gesamte eigene Flotte' : battle.scope === 'group' ? groupName : selected.name);
   text('selected-class', multi ? `BEFEHL AN · ${recipients.ships.length} AKTIVE SCHIFFE` : `BEFEHL AN · ${selected.className.toUpperCase()}`);
-  text('selected-order', display.label); text('orders-heading', 'Befehle');
+  text('selected-order', display.label);
+  const maneuver=maneuverInfo(battle);text('maneuver-state',maneuver.label);text('maneuver-recipient',recipients.label);$('maneuvers-open').disabled=!hasSelection||!maneuver.available;
+  text('maneuver-help',battle.scope==='ship'?'Für Flugmanöver einen Verband oder die Flotte auswählen.':'Bewegung mit ▶ ausführen. Zielbefehle und Flugmanöver lassen sich kombinieren.');
+  for(const node of document.querySelectorAll('[data-maneuver]')){node.disabled=!hasSelection||!maneuver.available;node.setAttribute('aria-pressed',String(maneuver.mode===node.dataset.maneuver));} text('orders-heading', 'Befehle');
   text('recipient-summary', [`${recipients.armed.length} bewaffnet und verfügbar`, recipients.available.length > recipients.armed.length ? `${recipients.available.length-recipients.armed.length} unbewaffnet` : '', recipients.ships.length > recipients.available.length ? `${recipients.ships.length-recipients.available.length} bereits auf Rückzug` : ''].filter(Boolean).join(' · '));
   const hull = Math.round(multi ? recipients.ships.reduce((n,s) => n + s.hull / DEMO_CLASSES[s.type].hull * 100, 0) / Math.max(1,recipients.ships.length) : selected.hull / DEMO_CLASSES[selected.type].hull * 100);
   text('hull-label', multi ? 'Ø Hülle' : 'Hülle'); text('hull-value', `${hull} %`); $('hull-bar').style.width = `${hull}%`;
@@ -254,11 +249,10 @@ function paint() {
       button.disabled = !active.length; pressed(button, hasSelection && battle.scope === 'group' && battle.selectedGroup === id);
       button.lastElementChild.textContent = `${active.length} / ${members.length} aktiv`;
     }
-    const term = $('own-search').value.trim().toLocaleLowerCase('de'); let visible = 0;
+    const visible=filterRoster(ownRoster,$('own-search').value);
     for (const ship of own) {
       const button = ownButtons.get(ship.id); button.disabled = !activeShip(ship); pressed(button, hasSelection && battle.scope === 'ship' && ship.id === selectionId);
-      button.hidden = Boolean(term && !`${ship.name} ${ship.className}`.toLocaleLowerCase('de').includes(term)); if (!button.hidden && activeShip(ship)) visible++;
-      button.lastElementChild.textContent = `${Math.round(ship.hull / DEMO_CLASSES[ship.type].hull * 100)} % · ${ship.order === 'retreat' ? 'Rückzug' : ship.combat.power ? 'bewaffnet' : 'unbewaffnet'}`;
+      button.lastElementChild.textContent = `${ship.className} · ${Math.round(ship.hull / DEMO_CLASSES[ship.type].hull * 100)} %${ship.order==='retreat'?' · Rückzug':''}`;
     }
     $('own-empty').hidden = visible > 0;
   }
@@ -314,13 +308,14 @@ document.addEventListener('click', event => {
   if (button.dataset.marker) { if (button.dataset.marker === 'fleet:friendly') openDialog('own-dialog'); else openContacts(); }
   else if (button.dataset.camera) setCamera(button.dataset.camera);
   else if (button.dataset.scope) {
-    if (button.dataset.scope === 'ship' && battle.scope !== 'ship') { openDialog('own-dialog'); $('ship-selector').closest('details').open = true; ownToOrders = true; }
+    if (button.dataset.scope === 'ship' && battle.scope !== 'ship') { openDialog('own-dialog'); ownToOrders = true; }
     else {
       if (button.dataset.scope === 'group') battle.selectedGroup = battle.ships.find(s => s.id === battle.selected).group;
       if (commandDemo(battle, 'scope', button.dataset.scope)) { hasSelection = true; selectionId = battle.selected; }
     }
   }
   else if (button.dataset.graphics) { graphics = button.dataset.graphics; view.setGraphics(graphics); }
+  else if (button.dataset.maneuver && hasSelection && commandManeuver(battle,button.dataset.maneuver)) {persistTrial();closeDialogs();notice(`${recipientInfo(battle).label}: ${MANEUVERS[button.dataset.maneuver]} · mit ▶ ausführen.`);view.dirty=true;}
   else if (button.id === 'battle-pause') { if(document.querySelector('dialog[open]'))return; paused = !paused; pauseReason = paused ? 'manual' : null; lastFrame = 0; persistTrial(); }
   else if (button.id === 'fleet-open' || button.id === 'info-own-picker') openDialog('own-dialog');
   else if (button.id === 'commands-open') { if(battle.phase!=='engaged')showResult();else openDialog(hasSelection?'orders-dialog':'own-dialog'); }
@@ -331,6 +326,7 @@ document.addEventListener('click', event => {
   else if (button.id === 'setup-open') openDialog('graphics-dialog');
   else if (button.id === 'render-open') openDialog('render-dialog');
   else if (button.id === 'help-open') openDialog('help-dialog');
+  else if (button.id === 'maneuvers-open') openDialog('maneuvers-dialog');
   else if (button.id === 'target-picker') openContacts(true);
   else if (button.id === 'enemy-picker') openContacts();
   else if (button.id === 'target-view') setCamera('target', true, battle.target);
@@ -382,7 +378,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 if (new URLSearchParams(location.search).has('debug')) globalThis.ORBIT_TRIAL_DEBUG = {
   get battle() { return battle; }, get view() { return view; }, get ready() { return ready; }, get paused() { return paused; },
   get selection() { return hasSelection ? {scope:battle.scope,selected:battle.selected,group:battle.selectedGroup} : null; }, get pauseReason() { return pauseReason; }, inspectContact,
-  get planner() { return planner; }, selectGroup,
+  get planner() { return planner; }, selectGroup, commandManeuver:mode=>{const ok=commandManeuver(battle,mode);if(ok){persistTrial();paint();view.dirty=true;}return ok;},
   get frameDurations() { return [...frames]; }, setCamera, selectContact, paint, start, pause:()=>{paused=true;lastFrame=0;},
   advance:days=>{const events=advanceBattleTrial(battle,days);pending.push(...events);persistTrial();paint();return events;},
 };

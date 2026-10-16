@@ -4,7 +4,7 @@ import { createGame, getPlanet } from '../src/state.js';
 import { exportGame } from '../src/save.js';
 import { fleetStrength, shipArmor } from '../src/fleets.js';
 import { SHIPS } from '../src/data.js';
-import { createBattleTrial, advanceBattleTrial, trialSummary, trialPorts, serializeTrial, parseTrial, TRIAL_LIMIT } from '../src/battle-trial.js';
+import { createBattleTrial, advanceBattleTrial, trialSummary, trialPorts, serializeTrial, parseTrial } from '../src/battle-trial.js';
 import { activeShip, commandDemo, shipStrength, DEMO_CLASSES, DEMO_STEP, WEAPONS } from '../src/battle-demo.js';
 import { contactInfo, enemyContacts } from '../src/battle-targets.js';
 import { commandDisplay } from '../src/harbinger-display.js';
@@ -56,12 +56,12 @@ test('copied fleets retain real names, hull, supply, technology and policy effec
  commandDemo(b,'scope','fleet');commandDemo(b,'attack');advanceBattleTrial(b,2);commandDemo(b,'retreat');advanceBattleTrial(b,15);assert.equal(exportGame(s),before);
  const reloaded=parseTrial(serializeTrial(b));assert.deepEqual(reloaded,b);
 });
-test('fleet copies cover all twelve classes and reject busy, empty or oversized groups',()=>{
+test('fleet copies cover all twelve classes, exclude busy ships and accept large groups',()=>{
  const s=fleetState(),prototype=structuredClone(s.fleets[0]);s.fleets=Object.keys(SHIPS).map((type,i)=>({...structuredClone(prototype),id:`f-${i}`,type}));
  const b=createBattleTrial({mode:'fleet',state:s,planetId:'nereid'});assert.equal(b.ships.filter(s=>s.side==='friendly').length,Object.keys(SHIPS).length);
  s.fleets[0].mission={kind:'move'};s.fleets[1].route={};assert.equal(trialPorts(s)[0].count,Object.keys(SHIPS).length-2);
  assert.throws(()=>createBattleTrial({mode:'fleet',state:s,planetId:'missing'}));
- s.fleets=Array.from({length:TRIAL_LIMIT+1},(_,i)=>({...structuredClone(prototype),id:`big-${i}`}));assert.throws(()=>createBattleTrial({mode:'fleet',state:s,planetId:'nereid'}));
+ s.fleets=Array.from({length:75},(_,i)=>({...structuredClone(prototype),id:`big-${i}`}));assert.equal(createBattleTrial({mode:'fleet',state:s,planetId:'nereid'}).ships.filter(s=>s.side==='friendly').length,75);
  assert.throws(()=>createBattleTrial({mode:'profile'}));assert.throws(()=>createBattleTrial({scenario:'bad'}));
 });
 test('supply and research affect firepower according to the existing fleet formula',()=>{

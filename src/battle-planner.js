@@ -2,8 +2,8 @@ import { SHIPS } from './data.js';
 import { STRATEGIC_MODELS } from './battle-models.js';
 
 export const PLANNER_SAVE_KEY = 'orbit3077-trial-plan';
-export const PLAN_LIMIT = 50;
-export const FORMATIONS = { staggered: 'Gestaffelt', wedge: 'Keil', line: 'Linie', column: 'Kolonne' };
+export const FORMATIONS = { auto: 'Auto · Ausgewogen', line: 'Schlachtlinie', wedge: 'Keil', screen: 'Schutzaufstellung', staggered: 'Gestaffelt', column: 'Kolonne' };
+export const AUTO_FORMATIONS = ['auto', 'line', 'wedge', 'screen'];
 export const PLAN_SIDES = ['friendly', 'enemy'];
 const presets = { '20v20': [20, 20], '5v35': [5, 35], '35v5': [35, 5], '50v50': [50, 50] };
 const pattern = ['cruiser', 'destroyer', 'corvette', 'corvette', 'corvette', 'destroyer', 'corvette', 'corvette', 'destroyer', 'corvette'];
@@ -33,12 +33,12 @@ function slots(count, formation, spacing) {
 export function planFromRosters(rosters, scenario = '20v20', seed = 3077) {
   const plan = { version: 1, seed, scenario, nextId: 101, sides: {} };
   for (const side of PLAN_SIDES) {
-    const fleet = { formation: 'staggered', spacing: 1, heading: 0, supply: 100, groups: [], ships: [] };
+    const fleet = { formation: 'auto', spacing: 1, heading: 0, supply: 100, groups: [], ships: [] };
     for (const source of rosters[side]) {
-      let group = fleet.groups.find(g => g.type === source.type && fleet.ships.filter(s => s.groupId === g.id).length < 8);
+      let group = fleet.groups.find(g => g.type === source.type);
       if (!group) {
         const n = fleet.groups.filter(g => g.type === source.type).length + 1;
-        group = { id: `${side}-g${fleet.groups.length + 1}`, name: `${SHIPS[source.type].name} ${n}`, type: source.type, formation: source.type === 'cruiser' ? 'wedge' : 'staggered', spacing: 1, scatter: .65, heading: 0, offset: null };
+        group = { id: `${side}-g${fleet.groups.length + 1}`, name: `${SHIPS[source.type].name} ${n}`, type: source.type, formation: 'auto', spacing: 1, scatter: .65, heading: 0, offset: null };
         fleet.groups.push(group);
       }
       fleet.ships.push({ id: source.id, name: source.name, type: source.type, groupId: group.id, offset: null });
@@ -68,7 +68,7 @@ export function validateTrialPlan(value) {
   for (const side of PLAN_SIDES) {
     const f = value.sides[side];
     if (!f || !Object.hasOwn(FORMATIONS, f.formation) || !num(f.spacing, .7, 2) || !num(f.heading, -180, 180) || !num(f.supply, 0, 100)
-      || !Array.isArray(f.groups) || f.groups.length < 1 || f.groups.length > PLAN_LIMIT || !Array.isArray(f.ships) || f.ships.length < 1 || f.ships.length > PLAN_LIMIT) fail();
+      || !Array.isArray(f.groups) || f.groups.length < 1 || !Array.isArray(f.ships) || f.ships.length < 1) fail();
     const local = new Set();
     for (const g of f.groups) {
       if (!g || !id(g.id) || groups.has(g.id) || !text(g.name) || !Object.hasOwn(FORMATIONS, g.formation) || !num(g.spacing, .7, 2)
@@ -93,8 +93,25 @@ export function validateTrialPlan(value) {
 export function groupLayout(plan, side, groupId) {
   const f = plan.sides[side], g = f.groups.find(g => g.id === groupId), ships = f.ships.filter(s => s.groupId === groupId);
   const gap = (Math.max(40, ...ships.map(length)) + 40) * g.spacing;
-  const positions = slots(ships.length, g.formation, gap);
-  return ships.map((s, i) => ({ ...s, length: length(s), slot: [...(s.offset ?? positions[i])], local: add(s.offset ?? positions[i], [noise(plan.seed, s.id, 0) * gap * .10 * g.scatter, noise(plan.seed, s.id, 1) * gap * .075 * g.scatter, noise(plan.seed, s.id, 2) * gap * .10 * g.scatter]) }));
+  const positions = automaticSlots(ships, g.formation, gap, shipRole);
+  return ships.map((s, i) => ({ ...s, length: length(s), slot: [...(s.offset ?? positions[i])], local: add(s.offset ?? positions[i], [noise(plan.seed, s.id, 0) * gap * .10 * g.scatter, noise(plan.seed, s.id, 1) * gap * .28, noise(plan.seed, s.id, 2) * gap * .10 * g.scatter]) }));
+}
+
+const shipRole = s => SHIPS[s.type].strength <= 0 ? 'support' : (SHIPS[s.type].speed ?? 1) > 1.1 ? 'fast' : 'core';
+function automaticSlots(items, formation, gap, role) {
+  if (!['auto', 'screen'].includes(formation)) return slots(items.length, formation, gap);
+  const core = [], fast = [], support = [], result = new Array(items.length);
+  items.forEach((s, i) => ({ core, fast, support })[role(s)].push(i));
+  // A homogeneous group still gets a coherent, compact formation.
+  if (!core.length && (!support.length || !fast.length)) return slots(items.length, 'staggered', gap);
+  const front = slots(core.length, 'staggered', gap), width = front.reduce((n, p) => Math.max(n, Math.abs(p[0])), 0);
+  const depth = front.reduce((n, p) => Math.max(n, p[2]), 0);
+  core.forEach((index, i) => { result[index] = front[i]; });
+  fast.forEach((index, i) => { result[index] = [(i % 2 ? 1 : -1) * (width + gap * (1 + Math.floor(i / 6))), 0, (Math.floor(i / 2) % 3 - 1) * gap * .8]; });
+  const rear = slots(support.length, 'staggered', gap);
+  support.forEach((index, i) => { result[index] = [rear[i][0], 0, rear[i][2] + depth + gap * (formation === 'screen' ? .8 : 1.5)]; });
+  const center = mean(result);
+  return result.map(p => p.map((v, i) => v - center[i]));
 }
 
 function separate(ships) {
@@ -116,11 +133,16 @@ function separate(ships) {
 export function fleetLayout(plan, side) {
   const f = plan.sides[side], layouts = f.groups.map(g => groupLayout(plan, side, g.id));
   const diameters = layouts.map(list => Math.max(60, ...list.map(s => Math.hypot(s.local[0], s.local[2]) * 2 + s.length)));
-  const gap = (Math.max(80, ...diameters) + 65) * f.spacing, anchors = slots(f.groups.length, f.formation, gap);
+  const gap = (Math.max(80, ...diameters) + 65) * f.spacing;
+  const occupied=f.groups.filter((g,i)=>layouts[i].length), arranged = automaticSlots(occupied, f.formation, gap, g => {
+    const members = f.ships.filter(s => s.groupId === g.id), armed = members.filter(s => SHIPS[s.type].strength > 0);
+    return !armed.length ? 'support' : armed.every(s => shipRole(s) === 'fast') ? 'fast' : 'core';
+  });
+  const anchors=f.groups.map(g=>arranged[occupied.indexOf(g)]??[0,0,0]);
   const ships = [], groups = [];
   f.groups.forEach((g, i) => {
-    const anchor = g.offset ?? anchors[i];
-    groups.push({ ...g, position: rotate(anchor, f.heading) });
+    const anchor = add(g.offset ?? anchors[i], [0, noise(plan.seed, g.id, 'height') * gap * .24, 0]);
+    groups.push({ ...g, slot: [...(g.offset ?? anchors[i])], position: rotate(anchor, f.heading) });
     for (const s of layouts[i]) ships.push({ ...s, position: rotate(add(anchor, rotate(s.local, g.heading)), f.heading) });
   });
   separate(ships);
@@ -141,15 +163,15 @@ export function deployTrialPlan(plan) {
 }
 
 export function addPlanGroup(plan, side) {
-  const f = plan.sides[side]; if (f.groups.length >= PLAN_LIMIT) throw new Error('Höchstens 50 Verbände je Seite.');
+  const f = plan.sides[side];
   while (f.groups.some(g => g.id === `${side}-g${plan.nextId}`)) plan.nextId++;
   const id = `${side}-g${plan.nextId++}`;
-  f.groups.push({ id, name: `Verband ${f.groups.length + 1}`, formation: 'wedge', spacing: 1, scatter: .65, heading: 0, offset: null });
+  f.groups.push({ id, name: `Verband ${f.groups.length + 1}`, formation: 'auto', spacing: 1, scatter: .65, heading: 0, offset: null });
   return id;
 }
 export function addPlanShips(plan, side, groupId, type, count) {
   const f = plan.sides[side];
-  if (!Object.hasOwn(STRATEGIC_MODELS, type) || !f.groups.some(g => g.id === groupId) || !Number.isInteger(count) || count < 1 || f.ships.length + count > PLAN_LIMIT) throw new Error('Wähle 1 bis 50 Schiffe je Seite.');
+  if (!Object.hasOwn(STRATEGIC_MODELS, type) || !f.groups.some(g => g.id === groupId) || !Number.isSafeInteger(count) || count < 1) throw new Error('Wähle eine positive ganze Schiffszahl.');
   for (let i = 0; i < count; i++) { while (f.ships.some(s => s.id === `${side}-${plan.nextId}`)) plan.nextId++; const n = plan.nextId++; f.ships.push({ id: `${side}-${n}`, name: `${SHIPS[type].name} ${n}`, type, groupId, offset: null }); }
 }
 export function removePlanGroup(plan, side, groupId) {

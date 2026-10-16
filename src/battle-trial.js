@@ -6,9 +6,9 @@ import { STRATEGIC_MODELS } from './battle-models.js';
 import { OVERVIEW_MODELS, OVERVIEW_SCENARIOS } from './battle-overview.js';
 import { createDemoBattle, advanceDemoBattle, DEMO_CLASSES, DEMO_STEP, activeShip, shipStrength, targetFor } from './battle-demo.js';
 import { validateTrialPlan, deployTrialPlan } from './battle-planner.js';
+import { initializeManeuvers, validateNavigation } from './battle-maneuvers.js';
 
 export const TRIAL_SAVE_KEY = 'orbit3077-trial';
-export const TRIAL_LIMIT = 50;
 export const TRIAL_DAMAGE_RATE = .35;
 export const TRIAL_GROUPS = { all: 'Alle', ...Object.fromEntries(Object.entries(SHIPS).map(([id, def]) => [id, def.name])) };
 const pattern = ['cruiser', 'destroyer', 'corvette', 'corvette', 'corvette', 'destroyer', 'corvette', 'corvette', 'destroyer', 'corvette'];
@@ -36,7 +36,7 @@ export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state
   const def = OVERVIEW_SCENARIOS[scenario], normal = baseline(), own = mode === 'baseline' ? normal : state;
   const copied = mode === 'fleet' ? state.fleets.filter(f => f.owner === 'player' && f.planetId === planetId && !f.mission && !f.route && f.hp > 0) : null;
   const port = copied && trialPorts(state).find(p => p.id === planetId);
-  if (copied && (!port || !copied.length || copied.length > TRIAL_LIMIT)) throw new Error(`Wähle einen Standort mit 1 bis ${TRIAL_LIMIT} freien Schiffen.`);
+  if (copied && (!port || !copied.length)) throw new Error('Wähle einen Standort mit freien Schiffen.');
   const battle = createDemoBattle(); battle.ships = []; battle.mode = 'trial';
   battle.setup = { scenario, mode, planetId, friendlySupply, enemySupply };
   battle.sourceLabel = mode === 'baseline' ? 'Testverbände · Grundwerte' : mode === 'profile' ? `Testverbände · eigene Forschung und Politik · Tag ${state.day}` : `Kopie deiner Schiffe · ${port.name} · Tag ${state.day}`;
@@ -76,6 +76,7 @@ export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state
   }
   battle.selected = battle.ships.find(s => s.side === 'friendly').id;
   battle.target = battle.ships.find(s => s.side === 'enemy').id;
+  initializeManeuvers(battle);
   return battle;
 }
 export const advanceBattleTrial = (battle, days) => advanceDemoBattle(battle, days);
@@ -95,8 +96,8 @@ export function parseTrial(raw) {
     || !number(b.day,0,126) || Math.abs(b.day-b.tick*DEMO_STEP)>1e-8 || !number(b.remainder,0,DEMO_STEP)
     || !text(b.sourceLabel) || !Object.hasOwn(OVERVIEW_SCENARIOS,b.setup?.scenario) || !['baseline','profile','fleet'].includes(b.setup.mode)
     || !number(b.setup.friendlySupply,0,100) || !number(b.setup.enemySupply,0,100)
-    || !Array.isArray(b.ships) || b.ships.length < 2 || b.ships.length > TRIAL_LIMIT*2 || !Array.isArray(b.projectiles) || b.projectiles.length>1000
-    || !Number.isInteger(b.projectileId) || !number(b.projectileId,0,1e7)) fail();
+    || !Array.isArray(b.ships) || b.ships.length < 2 || !Array.isArray(b.projectiles)
+    || !Number.isSafeInteger(b.projectileId) || !number(b.projectileId,0,Number.MAX_SAFE_INTEGER) || b.projectiles.length>b.projectileId) fail();
   const ids = new Map();
   for (const s of b.ships) {
     if (!s || !text(s.id) || ids.has(s.id) || !text(s.name) || !text(s.sourceId) || !['friendly','enemy'].includes(s.side)
@@ -110,7 +111,7 @@ export function parseTrial(raw) {
       || !number(s.nextFire,0,130) || !number(s.lastHit,-10,126) || !Number.isInteger(s.salvos) || !number(s.salvos,0,100000)) fail();
     ids.set(s.id,s); s.className=SHIPS[s.strategicType].name;
   }
-  for (const side of ['friendly','enemy']) { const n=b.ships.filter(s=>s.side===side).length; if(n<1||n>TRIAL_LIMIT)fail(); }
+  for (const side of ['friendly','enemy']) { if(!b.ships.some(s=>s.side===side))fail(); }
   if(ids.get(b.selected)?.side!=='friendly'||ids.get(b.target)?.side!=='enemy')fail();
   if (b.plan !== undefined) {
     b.plan = validateTrialPlan(b.plan);
@@ -134,6 +135,8 @@ export function parseTrial(raw) {
     projectiles.add(p.id);
   }
   if(b.phase!=='engaged'&&b.projectiles.length)fail();
+  validateNavigation(b);
+  initializeManeuvers(b);
   b.contactGroups=TRIAL_GROUPS;b.classStrengths=Object.fromEntries(Object.entries(SHIPS).map(([id,d])=>[id,d.strength]));
   return b;
 }

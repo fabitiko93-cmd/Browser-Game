@@ -1,6 +1,7 @@
 import { SHIPS } from './data.js';
+import { createRoster, filterRoster } from './battle-roster-ui.js';
 import { KM_PER_UNIT } from './battle-demo.js';
-import { PLANNER_SAVE_KEY, FORMATIONS, PLAN_SIDES, PLAN_LIMIT, createTrialPlan, planFromRosters, validateTrialPlan, fleetLayout, groupLayout, deployTrialPlan, addPlanGroup, addPlanShips, removePlanGroup } from './battle-planner.js';
+import { PLANNER_SAVE_KEY, FORMATIONS, PLAN_SIDES, AUTO_FORMATIONS, createTrialPlan, planFromRosters, validateTrialPlan, fleetLayout, groupLayout, deployTrialPlan, addPlanGroup, addPlanShips, removePlanGroup } from './battle-planner.js';
 
 const $ = id => document.getElementById(id);
 const clone = v => structuredClone(v);
@@ -13,7 +14,7 @@ const svgNode = (tag, attrs, text) => { const n = document.createElementNS('http
 export class BattlePlanner {
   constructor(dialog, { getBattle, openDialog, onApply }) {
     this.dialog = dialog; this.getBattle = getBattle; this.openDialog = openDialog; this.onApply = onApply;
-    this.side = 'friendly'; this.tab = 'fleet'; this.history = []; this.plan = null; this.saved = true;
+    this.side = 'friendly'; this.tab = 'fleet'; this.history = []; this.expanded = new Set(); this.plan = null; this.saved = true;
     try { const raw = localStorage.getItem(PLANNER_SAVE_KEY); if (raw) this.plan = validateTrialPlan(JSON.parse(raw)); }
     catch { this.loadWarning = 'Gespeicherte Planung unlesbar · eine neue Vorlage ist verfügbar.'; }
     dialog.querySelector('.planner-content').innerHTML = `
@@ -21,10 +22,10 @@ export class BattlePlanner {
       <div class="plan-switch" aria-label="Geplante Seite"><button data-plan-side="friendly">Eigene Flotte</button><button data-plan-side="enemy">Gegner</button></div>
       <div class="plan-tabs" aria-label="Planungsebene"><button data-plan-tab="fleet">Flottenplaner</button><button data-plan-tab="group">Verbandsplaner</button></div>
       <p id="plan-summary"></p><p id="plan-message" role="status" aria-live="polite"></p>
-      <div class="plan-chart"><span class="plan-direction">▲ GEGNERSEITE</span><svg id="plan-map" viewBox="0 0 320 230" role="img" aria-label="Aufstellung von oben. Positionen durch Ziehen oder mit den Richtungstasten bearbeiten."></svg><span id="plan-scale"></span></div>
-      <p id="plan-map-help" class="trial-menu-hint"></p>
-      <div class="plan-pair"><label class="lab-field" for="plan-group">Verband<select id="plan-group"></select></label><button id="plan-new-group" class="plan-add" aria-label="Neuen Verband erstellen">＋ Verband</button></div>
-      <div id="plan-fleet-fields" class="plan-fields">
+      <div id="plan-active-formation"></div><div class="plan-chart"><span class="plan-direction">▲ GEGNERSEITE</span><svg id="plan-map" viewBox="0 0 320 230" role="img" aria-label="Aufstellung von oben. Objekt auswählen und Ziel antippen oder direkt ziehen. Freie Fläche zum Verschieben ziehen."></svg><span id="plan-scale"></span></div><div class="plan-map-tools"><button id="plan-zoom-out" aria-label="Plan verkleinern">−</button><button id="plan-fit">Alles zeigen</button><button id="plan-zoom-in" aria-label="Plan vergrößern">+</button></div>
+      <p id="plan-map-help" class="trial-menu-hint"></p><button id="plan-auto-place" class="lab-restart">Auswahl automatisch aufstellen</button>
+      <div class="plan-pair"><label class="lab-field" for="plan-group">Verband<select id="plan-group"></select></label><button id="plan-new-group" class="plan-add" aria-label="Neuen Verband erstellen">+ Verband</button></div>
+      <label class="lab-field" for="plan-search">Verbände und Schiffe finden<input id="plan-search" type="search" placeholder="Name oder Schiffsklasse" autocomplete="off"></label><div id="plan-roster" class="battle-roster"></div><div id="plan-fleet-fields" class="plan-fields">
         <label class="lab-field" for="plan-fleet-formation">Flottenformation<select id="plan-fleet-formation"></select></label>
         <label class="lab-field" for="plan-fleet-spacing">Abstand der Verbände <output id="plan-fleet-spacing-value"></output><input id="plan-fleet-spacing" type="range" min="0.7" max="2" step="0.1"></label>
         <label class="lab-field" for="plan-fleet-heading">Gesamte Aufstellung drehen<select id="plan-fleet-heading"></select></label>
@@ -33,32 +34,32 @@ export class BattlePlanner {
         <label class="lab-field" for="plan-group-name">Verbandsname<input id="plan-group-name" maxlength="80" autocomplete="off"></label>
         <label class="lab-field" for="plan-group-formation">Innere Formation<select id="plan-group-formation"></select></label>
         <label class="lab-field" for="plan-group-spacing">Abstand der Schiffe <output id="plan-group-spacing-value"></output><input id="plan-group-spacing" type="range" min="0.7" max="2" step="0.1"></label>
-        <label class="lab-field" for="plan-scatter">Natürliche Abweichung <output id="plan-scatter-value"></output><input id="plan-scatter" type="range" min="0" max="1" step="0.05"></label>
         <label class="lab-field" for="plan-group-heading">Aufstellung des Verbandes drehen<select id="plan-group-heading"></select></label>
         <label class="lab-field" for="plan-ship">Schiff auswählen<select id="plan-ship"></select></label>
       </div>
-      <fieldset class="plan-position"><legend id="plan-position-label">Verband verschieben</legend><div class="plan-nudges"><button data-plan-move="left" aria-label="Nach links">←</button><button data-plan-move="front" aria-label="Nach vorn">↑</button><button data-plan-move="back" aria-label="Nach hinten">↓</button><button data-plan-move="right" aria-label="Nach rechts">→</button></div><div class="plan-height"><button data-plan-move="up">Höher</button><span id="plan-height-value"></span><button data-plan-move="down">Tiefer</button></div><button id="plan-reset-position" class="trial-subtle">Zur Formationsposition zurück</button></fieldset>
+      <fieldset class="plan-position"><legend id="plan-position-label">Verband verschieben</legend><div class="plan-nudges"><button data-plan-move="left" aria-label="Nach links">←</button><button data-plan-move="front" aria-label="Nach vorn">↑</button><button data-plan-move="back" aria-label="Nach hinten">↓</button><button data-plan-move="right" aria-label="Nach rechts">→</button></div><button id="plan-reset-position" class="trial-subtle">Zur Formationsposition zurück</button></fieldset>
       <div id="plan-ship-fields" hidden>
-        <label class="lab-field" for="plan-ship-name">Schiffsname<input id="plan-ship-name" maxlength="160" autocomplete="off"></label>
+        <label class="lab-field" for="plan-ship-type">Schiffsklasse<select id="plan-ship-type"></select></label><label class="lab-field" for="plan-ship-name">Schiffsname<input id="plan-ship-name" maxlength="160" autocomplete="off"></label>
         <label class="lab-field" for="plan-transfer">Schiff einem Verband zuweisen<select id="plan-transfer"></select></label>
         <button id="plan-remove-ship" class="lab-restart">Ausgewähltes Schiff entfernen</button>
       </div>
-      <details class="plan-roster"><summary>Schiffe hinzufügen · alle Spielklassen</summary><label class="lab-field" for="plan-type">Schiffsklasse<select id="plan-type"></select></label><label class="lab-field" for="plan-count">Anzahl<input id="plan-count" type="number" inputmode="numeric" min="1" max="50" value="1"></label><button id="plan-add-ships" class="lab-restart">Zum ausgewählten Verband hinzufügen</button><p>Bis zu 50 Schiffe je Seite. Forschung und Baukosten begrenzen diese Testflotten nicht. Waffenlose Klassen bleiben waffenlos.</p></details>
-      <details class="plan-roster"><summary>Vorlage und weitere Optionen</summary><label class="lab-field" for="plan-supply">Versorgung dieser Flotte<select id="plan-supply"><option value="100">100 % · Voll</option><option value="60">60 %</option><option value="20">20 % · Knapp</option><option value="5">5 % · Kritisch</option></select></label><label class="lab-field" for="plan-preset">Neue Vorlage für beide Seiten<select id="plan-preset"><option value="20v20">20 : 20 · Gemischte Verbände</option><option value="5v35">5 : 35 · Eigene Unterzahl</option><option value="35v5">35 : 5 · Eigene Überzahl</option><option value="50v50">50 : 50 · Große Schlacht</option></select></label><div class="trial-menu"><button id="plan-load-preset">Vorlage als neuen Entwurf laden</button><button id="plan-new-scatter">Natürliche Abweichungen neu verteilen</button><button id="plan-remove-group">Verband auflösen · Schiffe umgliedern</button></div></details>
-      <p class="plan-explanation">Positionen sind relativ zur eigenen Flotte. Ziehen verändert die Aufstellung; Mindestabstände werden gesichert. Ein ganzer Verband nimmt seine Schiffe mit. Die Bugwaffen richten sich beim Aufstellen zum Gegner aus. Aktuell halten die Schiffe ihre Position bis auf Rückzug; Flugmanöver folgen im nächsten Schritt.</p>
+      <details class="plan-roster"><summary>Schiffe hinzufügen · alle Spielklassen</summary><label class="lab-field" for="plan-type">Schiffsklasse<select id="plan-type"></select></label><label class="lab-field" for="plan-count">Anzahl<input id="plan-count" type="number" inputmode="numeric" min="1" value="1"></label><button id="plan-add-ships" class="lab-restart">Zum ausgewählten Verband hinzufügen</button><p>Verbände dürfen beliebig zusammengesetzt werden. Forschung und Baukosten begrenzen diese Testflotten nicht. Waffenlose Klassen bleiben waffenlos.</p></details>
+      <details class="plan-roster"><summary>Vorlage und weitere Optionen</summary><label class="lab-field" for="plan-supply">Versorgung dieser Flotte<select id="plan-supply"><option value="100">100 % · Voll</option><option value="60">60 %</option><option value="20">20 % · Knapp</option><option value="5">5 % · Kritisch</option></select></label><label class="lab-field" for="plan-preset">Neue Vorlage für beide Seiten<select id="plan-preset"><option value="20v20">20 : 20 · Gemischte Verbände</option><option value="5v35">5 : 35 · Eigene Unterzahl</option><option value="35v5">35 : 5 · Eigene Überzahl</option><option value="50v50">50 : 50 · Große Schlacht</option></select></label><div class="trial-menu"><button id="plan-load-preset">Vorlage als neuen Entwurf laden</button><button id="plan-new-scatter">Natürliche Abweichungen neu verteilen</button><button id="plan-empty-group">Schiffe dieses Verbandes entfernen</button><button id="plan-remove-group">Verband auflösen · Schiffe umgliedern</button></div></details>
+      <p class="plan-explanation">Objekt auswählen, freie Zielposition antippen oder direkt ziehen. Ziehen auf freier Fläche verschiebt den Plan. Automatische Formationen übernehmen die Einzelplatzierung. Höhe und natürliche Abstände entstehen automatisch. Ein Verband nimmt seine Schiffe gemeinsam mit.</p>
       <div class="plan-footer"><button id="plan-undo">Änderung zurück</button><button id="plan-apply" class="lab-restart">Mit Planung neu aufstellen</button><small>Ersetzt die laufende Probeschlacht und startet pausiert.</small></div>`;
-    for (const id of ['plan-fleet-formation', 'plan-group-formation']) options($(id), Object.entries(FORMATIONS), 'staggered');
+    for (const id of ['plan-fleet-formation', 'plan-group-formation']) options($(id), Object.entries(FORMATIONS).filter(([id]) => AUTO_FORMATIONS.includes(id)), 'auto');
     const angles = Array.from({ length: 13 }, (_, i) => [(i - 6) * 30, `${(i - 6) * 30}°`]);
     for (const id of ['plan-fleet-heading', 'plan-group-heading']) options($(id), angles, '0');
-    options($('plan-type'), Object.entries(SHIPS).map(([id, d]) => [id, `${d.name}${d.strength ? '' : ' · unbewaffnet'}`]), 'corvette');
+    for (const id of ['plan-type','plan-ship-type']) options($(id), Object.entries(SHIPS).map(([id, d]) => [id, `${d.name}${d.strength ? '' : ' · unbewaffnet'}`]), 'corvette');
     dialog.addEventListener('click', e => this.click(e));
     dialog.addEventListener('change', e => this.change(e));
+    $('plan-search').addEventListener('input', () => this.filter());
     const svg = $('plan-map');
     svg.addEventListener('pointerdown', e => this.pointerDown(e));
     svg.addEventListener('pointermove', e => this.pointerMove(e));
     svg.addEventListener('pointerup', e => this.pointerEnd(e));
     svg.addEventListener('pointercancel', e => this.pointerEnd(e, true));
-    dialog.addEventListener('close', () => { if (this.drag) { this.plan = this.drag.before; this.drag = null; this.paint(); } });
+    dialog.addEventListener('close', () => { if (this.drag) { if(this.drag.before)this.plan = this.drag.before; this.drag = null; this.paint(); } });
   }
   get fleet() { return this.plan.sides[this.side]; }
   get group() { return this.fleet.groups.find(g => g.id === this.groupId) ?? this.fleet.groups[0]; }
@@ -80,18 +81,19 @@ export class BattlePlanner {
   change(e) {
     const id = e.target.id;
     if (!id.startsWith('plan-')) return;
-    if (id === 'plan-group') { this.groupId = e.target.value; this.shipId = null; this.paint(); return; }
+    if (id === 'plan-group') { this.chartBounds=null;this.groupId = e.target.value; this.shipId = null; this.paint(); return; }
     if (id === 'plan-ship') { this.shipId = e.target.value; this.paint(); return; }
-    if (['plan-type', 'plan-count', 'plan-preset'].includes(id)) return;
+    if (['plan-type', 'plan-count', 'plan-preset', 'plan-search'].includes(id)) return;
     this.mutate(() => {
       const value = e.target.value;
+      if (['plan-fleet-formation','plan-group-formation','plan-fleet-spacing','plan-group-spacing','plan-fleet-heading','plan-group-heading'].includes(id)) this.chartBounds=null;
       if (id === 'plan-group-name') { if (!value.trim()) throw new Error('Bitte einen Verbandsnamen eingeben.'); this.group.name = value.trim(); }
       if (id === 'plan-ship-name' && this.ship) { if (!value.trim()) throw new Error('Bitte einen Schiffsnamen eingeben.'); this.ship.name = value.trim(); }
       if (id === 'plan-fleet-formation') { this.fleet.formation = value; for (const g of this.fleet.groups) g.offset = null; }
       if (id === 'plan-group-formation') { this.group.formation = value; for (const s of this.fleet.ships.filter(s => s.groupId === this.group.id)) s.offset = null; }
       if (id === 'plan-fleet-spacing') this.fleet.spacing = Number(value);
       if (id === 'plan-group-spacing') this.group.spacing = Number(value);
-      if (id === 'plan-scatter') this.group.scatter = Number(value);
+      if (id === 'plan-ship-type' && this.ship) this.ship.type = value;
       if (id === 'plan-fleet-heading') this.fleet.heading = Number(value);
       if (id === 'plan-group-heading') this.group.heading = Number(value);
       if (id === 'plan-supply') this.fleet.supply = Number(value);
@@ -106,8 +108,12 @@ export class BattlePlanner {
   }
   click(e) {
     const button = e.target.closest('button'); if (!button) return;
-    if (button.dataset.planSide) { this.side = button.dataset.planSide; this.groupId = this.shipId = null; this.paint(); return; }
-    if (button.dataset.planTab) { this.tab = button.dataset.planTab; this.paint(); return; }
+    if (button.dataset.planSelectGroup) { this.groupId=button.dataset.planSelectGroup;this.shipId=null;this.chartBounds=null;this.paint();return; }
+    if (button.dataset.planSelectShip) { const ship=this.fleet.ships.find(s=>s.id===button.dataset.planSelectShip);this.shipId=ship.id;this.groupId=ship.groupId;this.tab='group';this.chartBounds=null;this.paint();return; }
+    if (button.id==='plan-zoom-in'||button.id==='plan-zoom-out') { this.chartBounds.scale*=button.id==='plan-zoom-in'?1.3:1/1.3;this.chart(this.chartBounds);return; }
+    if (button.id==='plan-fit') {this.chartBounds=null;this.chart();return;}
+    if (button.dataset.planSide) { this.chartBounds=null;this.side = button.dataset.planSide; this.groupId = this.shipId = null; this.paint(); return; }
+    if (button.dataset.planTab) { this.chartBounds=null;this.tab = button.dataset.planTab; this.paint(); return; }
     if (button.dataset.planMove) {
       const direction = { left: [-1, 0, 0], right: [1, 0, 0], front: [0, 0, -1], back: [0, 0, 1], up: [0, 1, 0], down: [0, -1, 0] }[button.dataset.planMove];
       const step = this.tab === 'fleet' ? 30 : 15;
@@ -117,8 +123,11 @@ export class BattlePlanner {
       if (this.history.length) { this.plan = this.history.pop(); this.save(); this.message = ''; this.paint(); } return;
     }
     if (button.id === 'plan-apply') { void this.apply(); return; }
-    if (!['plan-new-group', 'plan-reset-position', 'plan-remove-ship', 'plan-add-ships', 'plan-remove-group', 'plan-load-preset', 'plan-new-scatter'].includes(button.id)) return;
+    if (!['plan-new-group', 'plan-reset-position', 'plan-remove-ship', 'plan-add-ships', 'plan-remove-group', 'plan-load-preset', 'plan-new-scatter', 'plan-auto-place', 'plan-empty-group'].includes(button.id)) return;
     this.mutate(() => {
+      if (['plan-new-group','plan-load-preset','plan-add-ships','plan-remove-group','plan-empty-group','plan-new-scatter'].includes(button.id)) this.chartBounds=null;
+      if (button.id === 'plan-auto-place') {if(this.tab==='fleet')for(const g of this.fleet.groups)g.offset=null;else for(const s of this.fleet.ships.filter(s=>s.groupId===this.group.id))s.offset=null;this.chartBounds=null;}
+      if (button.id === 'plan-empty-group') {if(this.fleet.ships.every(s=>s.groupId===this.group.id))throw new Error('Mindestens ein Schiff je Seite ist erforderlich.');this.fleet.ships=this.fleet.ships.filter(s=>s.groupId!==this.group.id);this.shipId=null;}
       if (button.id === 'plan-new-group') { this.groupId = addPlanGroup(this.plan, this.side); this.shipId = null; this.tab = 'group'; }
       if (button.id === 'plan-reset-position') { if (this.tab === 'fleet') this.group.offset = null; else if (this.ship) this.ship.offset = null; }
       if (button.id === 'plan-remove-ship' && this.ship) { if (this.fleet.ships.length === 1) throw new Error('Mindestens ein Schiff je Seite ist erforderlich.'); this.fleet.ships = this.fleet.ships.filter(s => s.id !== this.ship.id); this.shipId = null; }
@@ -130,7 +139,7 @@ export class BattlePlanner {
   }
   move(delta, base = null) {
     const object = this.tab === 'fleet' ? this.group : this.ship; if (!object) return;
-    if (!base) base = this.tab === 'fleet' ? turn(fleetLayout(this.plan, this.side).groups.find(g => g.id === object.id).position, -this.fleet.heading) : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === object.id).slot;
+    if (!base) base = this.tab === 'fleet' ? fleetLayout(this.plan, this.side).groups.find(g => g.id === object.id).slot : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === object.id).slot;
     object.offset = base.map((v, i) => Math.max(-6000, Math.min(6000, v + delta[i])));
   }
   paint() {
@@ -150,27 +159,30 @@ export class BattlePlanner {
     options($('plan-ship'), ships.map(s => [s.id, s.name]), this.shipId);
     options($('plan-transfer'), this.fleet.groups.map(g => [g.id, g.name]), this.group.id);
     $('plan-group-name').value = this.group.name; $('plan-ship-name').value = this.ship?.name ?? '';
-    $('plan-fleet-formation').value = this.fleet.formation; $('plan-group-formation').value = this.group.formation;
+    for(const [id,value] of [['plan-fleet-formation',this.fleet.formation],['plan-group-formation',this.group.formation]])options($(id),Object.entries(FORMATIONS).filter(([key])=>AUTO_FORMATIONS.includes(key)||key===value),value);
     $('plan-fleet-heading').value = this.fleet.heading; $('plan-group-heading').value = this.group.heading;
-    $('plan-fleet-spacing').value = this.fleet.spacing; $('plan-group-spacing').value = this.group.spacing; $('plan-scatter').value = this.group.scatter;
+    $('plan-fleet-spacing').value = this.fleet.spacing; $('plan-group-spacing').value = this.group.spacing;
     $('plan-fleet-spacing-value').value = `${format.format(this.fleet.spacing)}×`;
     $('plan-group-spacing-value').value = `${format.format(this.group.spacing)}×`;
-    $('plan-scatter-value').value = `${Math.round(this.group.scatter * 100)} %`;
     $('plan-supply').value = this.fleet.supply; $('plan-preset').value = this.plan.scenario;
     $('plan-remove-group').disabled = this.fleet.groups.length === 1;
     $('plan-remove-ship').disabled = this.fleet.ships.length === 1;
-    $('plan-add-ships').disabled = this.fleet.ships.length >= PLAN_LIMIT;
-    $('plan-count').max = Math.max(1, PLAN_LIMIT - this.fleet.ships.length);
+    $('plan-add-ships').disabled = false;
+    $('plan-ship-type').value = this.ship?.type??'corvette';
     $('plan-undo').disabled = !this.history.length;
-    $('plan-map-help').textContent = this.tab === 'fleet' ? 'Verband antippen und ziehen. Seine Schiffe bewegen sich gemeinsam.' : 'Schiff antippen und ziehen. Richtungstasten erlauben kleine Korrekturen.';
+    $('plan-map-help').textContent = this.tab === 'fleet' ? 'Verband wählen → Zielposition antippen. Freie Fläche ziehen zum Verschieben.' : 'Schiff wählen → Zielposition antippen. Ziehen bleibt ebenfalls möglich.';
     $('plan-position-label').textContent = this.tab === 'fleet' ? `${this.group.name} verschieben` : this.ship ? `${this.ship.name} verschieben` : 'Leerer Verband · Schiffe hinzufügen';
     const empty = this.tab === 'group' && !this.ship;
     for (const b of this.dialog.querySelectorAll('[data-plan-move],#plan-reset-position')) b.disabled = empty;
-    const offset = this.tab === 'fleet' ? this.group.offset : this.ship?.offset;
-    $('plan-height-value').textContent = `${format.format((offset?.[1] ?? 0) * KM_PER_UNIT)} km Höhe`;
+    this.roster=createRoster($('plan-roster'),this.fleet.groups,this.fleet.ships.map(s=>({...s,className:SHIPS[s.type].name})),{groupAttribute:'data-plan-select-group',shipAttribute:'data-plan-select-ship',expanded:this.expanded,onToggle:()=>this.filter()});
+    for(const [id,row] of this.roster.shipButtons){const ship=this.fleet.ships.find(s=>s.id===id);row.lastElementChild.textContent=SHIPS[ship.type].name;row.setAttribute('aria-pressed',String(id===this.shipId&&this.tab==='group'));}
+    for(const [id,row] of this.roster.groupButtons)row.setAttribute('aria-pressed',String(id===this.groupId));
+    this.filter();
+    for(const [id,container] of [['plan-fleet-formation','plan-fleet-fields'],['plan-group-formation','plan-group-fields']]){const active=this.tab==='fleet'?id==='plan-fleet-formation':id==='plan-group-formation';$(active?'plan-active-formation':container).append($(id).closest('label'));}
     this.chart();
   }
-  chart(fixed = null) {
+  filter(){if(this.roster)filterRoster(this.roster,$('plan-search').value);}
+  chart(fixed = this.chartBounds) {
     const layout = fleetLayout(this.plan, this.side), group = layout.groups.find(g => g.id === this.group.id);
     const points = this.tab === 'fleet' ? layout.ships : layout.ships.filter(s => s.groupId === group.id).map(s => ({ ...s, position: turn(s.position.map((v, a) => v - group.position[a]), -this.fleet.heading) }));
     const handles = this.tab === 'fleet' ? layout.groups.map(g => ({ id: g.id, name: g.name, position: g.position })) : points;
@@ -199,9 +211,9 @@ export class BattlePlanner {
     if (e.button !== 0 || this.drag) return;
     const rect = $('plan-map').getBoundingClientRect(), x = (e.clientX - rect.left) * 320 / rect.width, y = (e.clientY - rect.top) * 230 / rect.height;
     const b = this.chartBounds, candidates = this.handles.map(h => ({ h, d: Math.hypot(x - (160 + (h.position[0] - b.x) * b.scale), y - (115 + (h.position[2] - b.z) * b.scale)) })).sort((a, c) => a.d - c.d);
-    if (!candidates.length || candidates[0].d > 26) return;
+    if (!candidates.length || candidates[0].d > 26) {this.drag={id:e.pointerId,x:e.clientX,y:e.clientY,bounds:{...this.chartBounds},pan:true,moved:false};$('plan-map').setPointerCapture(e.pointerId);e.preventDefault();return;}
     if (this.tab === 'fleet') this.groupId = candidates[0].h.id; else this.shipId = candidates[0].h.id;
-    const before = clone(this.plan), base = this.tab === 'fleet' ? turn(candidates[0].h.position, -this.fleet.heading) : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === this.shipId).slot;
+    const before = clone(this.plan), base = this.tab === 'fleet' ? fleetLayout(this.plan,this.side).groups.find(g=>g.id===this.group.id).slot : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === this.shipId).slot;
     this.paint(); this.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, base, before, bounds: this.chartBounds, moved: false };
     $('plan-map').setPointerCapture(e.pointerId); e.preventDefault();
   }
@@ -210,10 +222,12 @@ export class BattlePlanner {
     const dx = e.clientX - d.x, dy = e.clientY - d.y; if (Math.hypot(dx, dy) < 4 && !d.moved) return;
     d.moved = true;
     const rect = $('plan-map').getBoundingClientRect(), delta = [dx * 320 / rect.width / d.bounds.scale, 0, dy * 230 / rect.height / d.bounds.scale];
+    if(d.pan){this.chart({...d.bounds,x:d.bounds.x-delta[0],z:d.bounds.z-delta[2]});e.preventDefault();return;}
     this.move(turn(delta, -(this.tab === 'fleet' ? this.fleet.heading : this.group.heading)), d.base); this.chart(d.bounds); e.preventDefault();
   }
   pointerEnd(e, cancel = false) {
     const d = this.drag; if (!d || d.id !== e.pointerId) return;
+    if(d.pan){this.drag=null;if(!cancel&&!d.moved){const rect=$('plan-map').getBoundingClientRect(),b=this.chartBounds,point=[b.x+((e.clientX-rect.left)*320/rect.width-160)/b.scale,0,b.z+((e.clientY-rect.top)*230/rect.height-115)/b.scale];const current=this.handles.find(h=>h.id===(this.tab==='fleet'?this.group.id:this.shipId));if(current)this.mutate(()=>this.move(turn([point[0]-current.position[0],0,point[2]-current.position[2]],-(this.tab==='fleet'?this.fleet.heading:this.group.heading))));}return;}
     if (cancel) this.plan = d.before;
     else if (d.moved) { this.remember(d.before); this.save(); }
     this.drag = null; this.paint();

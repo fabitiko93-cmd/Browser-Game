@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { WEAPONS, DEMO_CLASSES, activeShip, shipWeapon } from './battle-demo.js';
 
-// Room for a complete 50:50 opening, still using the same fixed GPU batches.
+// Minimum capacities; beam and opening buffers grow once with the participants.
 const MAX_PROJECTILES = 64, MAX_BEAMS = 128, MAX_FLASHES = 384, MAX_PINGS = 200, MAX_PARTICLES = 192, MAX_DEBRIS = 96;
 const UP = new THREE.Vector3(0, 1, 0);
 const billboardVertex = `varying vec2 vUv;varying vec3 vTint;
@@ -11,7 +11,7 @@ vec2 size=vec2(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz));p.xy
 // Persistent GPU buffers serve the entire battle, including damage and wrecks.
 export class BattleEffects {
   constructor(scene, camera) {
-    this.scene = scene; this.camera = camera; this.beams = []; this.particles = []; this.debris = []; this.explosions = [];
+    this.scene = scene; this.camera = camera; this.maxBeams=MAX_BEAMS;this.maxFlashes=MAX_FLASHES;this.maxPings=MAX_PINGS;this.maxProjectiles=MAX_PROJECTILES; this.beams = []; this.particles = []; this.debris = []; this.explosions = [];
     this.tracks = new Map(); this.lastDamage = new Map(); this.pings = [];
     this.object = new THREE.Object3D(); this.a = new THREE.Vector3(); this.b = new THREE.Vector3(); this.direction = new THREE.Vector3(); this.color = new THREE.Color();
     const material = opacity => new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, opacity, depthWrite: false, toneMapped: false });
@@ -31,6 +31,14 @@ export class BattleEffects {
     this.trails = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .75, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
     this.trails.frustumCulled = false; scene.add(this.trails);
     this.lights = Array.from({ length: 3 }, () => { const light = new THREE.PointLight(0xffffff, 0, 55, 2); scene.add(light); return { light, until: -1, power: 0 }; });
+  }
+  ensureCapacity(count) {
+    this.maxBeams=Math.max(MAX_BEAMS,count*2);this.maxFlashes=Math.max(MAX_FLASHES,count*4);this.maxPings=Math.max(MAX_PINGS,count*2);this.maxProjectiles=Math.max(MAX_PROJECTILES,count*4);
+    for(const [key,n] of [['glows',this.maxBeams],['cores',this.maxBeams],['flashes',this.maxFlashes],['heads',this.maxProjectiles],['bolts',this.maxProjectiles]]){
+      const old=this[key];if(old.instanceMatrix.count>=n)continue;
+      const next=this.batch(old.geometry,old.material,n);old.removeFromParent();old.dispose();this[key]=next;
+    }
+    if(this.trails.geometry.attributes.position.count<this.maxProjectiles*16)for(const name of ['position','color'])this.trails.geometry.setAttribute(name,new THREE.BufferAttribute(new Float32Array(this.maxProjectiles*8*6),3).setUsage(THREE.DynamicDrawUsage));
   }
   batch(geometry, material, capacity) {
     const mesh = new THREE.InstancedMesh(geometry, material, capacity); mesh.count = 0; mesh.frustumCulled = false;
@@ -100,7 +108,7 @@ export class BattleEffects {
         const from = view?.fixedWeapons ? event.from : gun ? gun.localToWorld(this.a.set(0, .2, -1.65)).toArray() : event.from;
         if (view) { view.recoil = 1; view.muzzleTime = time; view.muzzle = [...from]; }
         if (event.weapon === 'laser') {
-          if (this.beams.length === MAX_BEAMS) this.beams.shift();
+          if (this.beams.length === this.maxBeams) this.beams.shift();
           this.beams.push({ from: [...from], to: event.to, time });
         }
         this.flash(from, WEAPONS[event.weapon].color, time, event.weapon === 'torpedo' ? .7 : .35);
@@ -122,14 +130,14 @@ export class BattleEffects {
     this.cores.count = this.glows.count = this.beams.length;
     let heads = 0, bolts = 0, segments = 0;
     const live = new Set();
-    for (const projectile of battle.projectiles.slice(0, MAX_PROJECTILES)) {
+    for (const projectile of battle.projectiles.slice(0, this.maxProjectiles)) {
       const { position, velocity, weapon } = projectile, color = WEAPONS[weapon].color;
       live.add(projectile.id); this.a.fromArray(position);
       const radius = Math.max(weapon === 'torpedo' ? .48 : .2, this.camera.position.distanceTo(this.a) * .00045);
       this.object.position.copy(this.a); this.object.quaternion.setFromUnitVectors(UP, this.direction.fromArray(velocity).normalize());
       this.object.scale.set(radius, radius * (weapon === 'torpedo' ? 1.7 : 1), radius); this.object.updateMatrix();
       this.heads.setMatrixAt(heads, this.object.matrix); this.heads.setColorAt(heads++, this.color.set(color).multiplyScalar(2.5));
-      if (flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, position, radius * 3, color, 2);
+      if (flashes < this.maxFlashes) this.sprite(this.flashes, flashes++, position, radius * 3, color, 2);
       if (weapon === 'torpedo') {
         let track = this.tracks.get(projectile.id);
         if (!track) { track = { points: [], age: -1 }; this.tracks.set(projectile.id, track); }
@@ -146,17 +154,17 @@ export class BattleEffects {
     this.explosions = this.explosions.filter(explosion => time - explosion.time < 3.2);
     for (const explosion of this.explosions) {
       const age = time - explosion.time;
-      if (flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, explosion.position, explosion.size * (.12 + age * .32), 0xff973f, Math.max(0, 2.5 - age));
+      if (flashes < this.maxFlashes) this.sprite(this.flashes, flashes++, explosion.position, explosion.size * (.12 + age * .32), 0xff973f, Math.max(0, 2.5 - age));
       if (rings < 24) this.sprite(this.rings, rings++, explosion.position, explosion.size * (.15 + age * .9), 0xffbf72, Math.max(0, 1 - age / 2));
     }
-    this.pings=this.pings.filter(p=>time-p.time<.32).slice(-MAX_PINGS);
-    if(this.overview)for(const ping of this.pings){if(flashes>=MAX_FLASHES)break;const age=(time-ping.time)/.32;
+    this.pings=this.pings.filter(p=>time-p.time<.32).slice(-this.maxPings);
+    if(this.overview)for(const ping of this.pings){if(flashes>=this.maxFlashes)break;const age=(time-ping.time)/.32;
       const pixel=this.camera.position.distanceTo(this.a.fromArray(ping.position))*2*Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))/(this.camera.userData.viewportHeight||844);
       this.sprite(this.flashes,flashes++,ping.position,pixel*(ping.impact?3.2:1.9)*(1+age*.4),ping.color,(1-age)*(ping.impact?1.6:1.1));
     }
     for (const ship of battle.ships) {
       const view = ships.get(ship.id); if (!view || !activeShip(ship)) continue;
-      if (time - (view.muzzleTime ?? -10) < .18 && flashes < MAX_FLASHES) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[shipWeapon(ship)].color, 4);
+      if (time - (view.muzzleTime ?? -10) < .18 && flashes < this.maxFlashes) this.sprite(this.flashes, flashes++, view.muzzle, 1.8, WEAPONS[shipWeapon(ship)].color, 4);
       const health = ship.hull / DEMO_CLASSES[ship.type].hull;
       if (health < .65 && time - (this.lastDamage.get(ship.id) ?? -10) > .25) {
         this.lastDamage.set(ship.id, time);

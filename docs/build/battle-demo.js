@@ -1,4 +1,5 @@
 import { weaponPosition, turnToward } from './battle-geometry.js';
+import { updateManeuvers, maneuverSpec } from './battle-maneuvers.js';
 // The preview owns its own clock and ships. It never imports or changes a saved empire.
 export const DEMO_STEP = 1 / 60;
 export const KM_PER_UNIT = .025;
@@ -213,6 +214,7 @@ export function advanceDemoBattle(battle, days) {
     battle.remainder = Math.max(0, battle.remainder - DEMO_STEP);
     battle.tick++;
     battle.day = battle.tick * DEMO_STEP;
+    updateManeuvers(battle, DEMO_STEP);
     for (const ship of battle.ships) {
       if (!activeShip(ship)) continue;
       const def = DEMO_CLASSES[ship.type];
@@ -248,10 +250,12 @@ export function advanceDemoBattle(battle, days) {
         const length = Math.hypot(...aim);
         if (length > 1e-8) {
           const direction = aim.map(v => v / length);
-          const movingFlight = ship.flightDelay != null && Math.hypot(...ship.velocity) > 1;
+          const navigation = battle.navigation?.groups.find(g => g.id === ship.group);
+          const flankingTravel = navigation?.mode.startsWith('flank') && navigation.stage === 0 && Math.hypot(...ship.velocity) > 8;
+          const movingFlight = (ship.flightDelay != null || flankingTravel) && Math.hypot(...ship.velocity) > 1;
           const travel = movingFlight ? ship.velocity.map(v => v / Math.hypot(...ship.velocity)) : direction;
-          ship.facing = turnToward(ship.facing, travel, DEMO_STEP * (ship.type === 'interceptor' ? 3 : .65));
-          const tolerance = target ? Math.min(.015, (target.length ?? DEMO_CLASSES[target.type].size) * .2 / Math.max(1, distance(ship.position, target.position))) : .015;
+          ship.facing = turnToward(ship.facing, travel, DEMO_STEP * (navigation ? maneuverSpec(ship).turnRate : ship.type === 'interceptor' ? 3 : .65));
+          const tolerance = navigation ? maneuverSpec(ship).fireArc : target ? Math.min(.015, (target.length ?? DEMO_CLASSES[target.type].size) * .2 / Math.max(1, distance(ship.position, target.position))) : .015;
           aligned = ship.facing.reduce((n, v, i) => n + v * direction[i], 0) > Math.cos(tolerance);
         }
         // Fixed bow weapons never fire sideways while the hull is still turning.

@@ -55,7 +55,7 @@ test('minimum hull distances survive crowded manual ship slots and overlapping w
 });
 test('moving a whole group preserves every internal offset and rotating the fleet rotates both levels', () => {
   const p = createTrialPlan('5v35'), f = p.sides.friendly;
-  const first = fleetLayout(p,'friendly'), g = f.groups[0], origin = first.groups[0].position;
+  const first = fleetLayout(p,'friendly'), g = f.groups[0], origin = first.groups[0].slot;
   g.offset = origin.map((v,i) => v + [500,100,0][i]);
   const moved = fleetLayout(p,'friendly');
   for (const s of first.ships) vector(moved.ships.find(n=>n.id===s.id).position, s.position.map((v,i)=>v+(s.groupId===g.id?[500,100,0][i]:0)));
@@ -95,8 +95,8 @@ test('every armed planned preset opens in one shared tick regardless of processi
     assert.equal(shots.length,b.ships.length);assert.ok(shots.every(e=>e.day===DEMO_STEP));
   }
 });
-test('plan limits and invalid references reject corrupt drafts and checkpoints', () => {
-  const p=createTrialPlan('50v50');assert.throws(()=>addPlanShips(p,'friendly',p.sides.friendly.groups[0].id,'cruiser',1));
+test('free sizes and invalid references retain safe draft and checkpoint validation', () => {
+  const p=createTrialPlan('50v50');addPlanShips(p,'friendly',p.sides.friendly.groups[0].id,'cruiser',25);assert.equal(p.sides.friendly.ships.length,75);
   for(const mutate of [p=>p.version=2,p=>p.seed=-1,p=>p.sides.enemy.ships=[],p=>p.sides.friendly.ships[0].type='fake',p=>p.sides.friendly.ships[0].groupId='missing',p=>p.sides.friendly.groups[0].offset=[NaN,0,0],p=>p.sides.friendly.groups[0].name='',p=>p.sides.friendly.ships[1].id=p.sides.friendly.ships[0].id,p=>p.sides.enemy.groups[0].id=p.sides.friendly.groups[0].id]) {
     const bad=structuredClone(p);mutate(bad);assert.throws(()=>validateTrialPlan(bad));
   }

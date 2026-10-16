@@ -176,6 +176,7 @@ export class HarbingerScene extends BattleScene {
     this.engineTemplate=view.engines.map(({engine})=>({position:engine.position.toArray(),quaternion:engine.quaternion.toArray()}));
   }
   ensureCapacity(count) {
+    this.effects.ensureCapacity(count);this.selectionOverlay.ensureCapacity(count);
     const points=this.contactPoints.geometry;
     if(points.attributes.side.count<count){
       for(const [name,size]of [['position',3],['side',1],['opacity',1]])points.setAttribute(name,new THREE.BufferAttribute(new Float32Array(count*size),size).setUsage(THREE.DynamicDrawUsage));
