@@ -1,5 +1,6 @@
 import { weaponPosition, turnToward } from './battle-geometry.js';
 import { updateManeuvers, maneuverSpec } from './battle-maneuvers.js';
+import { formationFor } from './battle-formations.js';
 // The preview owns its own clock and ships. It never imports or changes a saved empire.
 export const DEMO_STEP = 1 / 60;
 export const KM_PER_UNIT = .025;
@@ -123,16 +124,71 @@ export function targetFor(battle, attacker) {
     const target = battle.ships.find(ship => ship.id === attacker.commandTarget && activeShip(ship));
     return target && distance(target.position, attacker.position) <= range ? target : null;
   }
+  const tactic = (!manual || attacker.targeting === 'auto') && battle.mode === 'trial' ? tacticalContext(battle,attacker) : null;
+  const assigned=tactic?.assignments.get(attacker.id);
+  if(assigned&&activeShip(assigned)&&distance(attacker.position,assigned.position)<=range)return assigned;
   let best, score = Infinity;
   for (const ship of battle.ships) {
     if (ship.side === attacker.side || !activeShip(ship)) continue;
     if (manual && attacker.targeting === 'class' && shipClass(ship) !== attacker.priority) continue;
     const separation = distance(ship.position, attacker.position);
     if (separation > range) continue;
-    const candidate = separation - (shipClass(ship) === shipClass(attacker) ? 300 : 0);
+    const candidate = tactic ? tacticalScore(tactic,attacker,ship,separation) : separation - (shipClass(ship) === shipClass(attacker) ? 300 : 0);
     if (candidate < score) { score = candidate; best = ship; }
   }
   return best;
+}
+// Derived per-tick plans coordinate automatic wedge salvos. They are never saved
+// or allowed to override an explicit target, class priority or retreat.
+const tacticalCache = new WeakMap();
+function tacticalContext(battle, attacker) {
+  const formation=formationFor(battle,attacker);
+  if(formation!=='wedge')return null;
+  let cached=tacticalCache.get(battle);
+  if(!cached||cached.tick!==battle.tick){
+    const sides={};
+    for(const side of ['friendly','enemy']){
+      const own=battle.ships.filter(s=>s.side===side&&activeShip(s)&&s.order!=='retreat');
+      sides[side]={own};
+    }
+    cached={tick:battle.tick,sides,groups:new Map()};tacticalCache.set(battle,cached);
+  }
+  const fleet=battle.plan?.sides[attacker.side]?.formation===formation;
+  const key=attacker.side+':'+(fleet?'fleet':attacker.group)+':'+formation;
+  if(!cached.groups.has(key)){
+    const side=cached.sides[attacker.side],own=side.own.filter(s=>(fleet||s.group===attacker.group)&&formationFor(battle,s)==='wedge');
+    const center=list=>[0,1,2].map(a=>list.reduce((n,s)=>n+s.position[a],0)/Math.max(1,list.length));
+    const context={center:center(own)};
+    context.assignments=formationAssignments(battle,context,own);
+    cached.groups.set(key,context);
+  }
+  return cached.groups.get(key);
+}
+function tacticalScore(tactic,attacker,target,separation){
+  return distance(target.position,tactic.center)*.85+separation*.15-Math.min(300,shipStrength(target)*3);
+}
+function formationAssignments(battle,tactic,own){
+  const assignments=new Map(),remaining=new Map(),side=own[0]?.side;
+  const opponents=battle.ships.filter(s=>s.side!==side&&activeShip(s));
+  for(const s of opponents)remaining.set(s.id,s.hull/DEMO_CLASSES[s.type].hull*100);
+  // Reserve the actual pending torpedo damage before allocating ready salvos.
+  for(const p of battle.projectiles)if(p.side===side&&remaining.has(p.target)){
+    const target=opponents.find(s=>s.id===p.target);remaining.set(p.target,remaining.get(p.target)-p.damage*(1-target.combat.armor));
+  }
+  const salvo=s=>shipStrength(s)*s.combat.damageRate*WEAPONS[shipWeapon(s)].interval;
+  const shooters=own.filter(s=>armedShip(s)&&s.targeting==='auto').sort((a,b)=>Number(a.nextFire>battle.day)-Number(b.nextFire>battle.day)||salvo(b)-salvo(a)||a.id.localeCompare(b.id));
+  for(const s of shooters){
+    const candidates=opponents.filter(t=>distance(s.position,t.position)<=shipRange(s));
+    if(!candidates.length)continue;
+    const previous=candidates.find(t=>t.id===s.target);
+    if(s.nextFire>battle.day&&previous){assignments.set(s.id,previous);continue;}
+    const available=candidates.filter(t=>remaining.get(t.id)>0),choices=available.length?available:candidates;
+    let chosen,best=Infinity;
+    for(const t of choices){const score=tacticalScore(tactic,s,t,distance(s.position,t.position));if(score<best){best=score;chosen=t;}}
+    assignments.set(s.id,chosen);
+    if(s.nextFire<=battle.day)remaining.set(chosen.id,remaining.get(chosen.id)-salvo(s)*(1-chosen.combat.armor));
+  }
+  return assignments;
 }
 export function demoTarget(battle, ship) {
   return battle.ships.find(target => target.id === ship.target && activeShip(target));

@@ -4,6 +4,7 @@ import { trialPlan } from './battle-trial.js';
 import { validatePreparation } from './battle-preparation.js';
 import { KM_PER_UNIT } from './battle-demo.js';
 import { PLANNER_SAVE_KEY, FORMATIONS, PLAN_SIDES, AUTO_FORMATIONS, createTrialPlan, planFromRosters, validateTrialPlan, fleetLayout, groupLayout, deployTrialPlan, addPlanGroup, addPlanShips, removePlanGroup } from './battle-planner.js';
+import { FORMATION_HELP } from './battle-formations.js';
 
 const $ = id => document.getElementById(id);
 const clone = v => structuredClone(v);
@@ -31,7 +32,7 @@ export class BattlePlanner {
       <div class="plan-switch" aria-label="Geplante Seite"><button data-plan-side="friendly">Eigene Flotte</button><button data-plan-side="enemy">Gegner</button></div>
       <div class="plan-tabs" aria-label="Planungsebene"><button data-plan-tab="fleet">Flottenplaner</button><button data-plan-tab="group">Verbandsplaner</button></div>
       <p id="plan-summary"></p><p id="plan-message" role="status" aria-live="polite"></p>
-      <div id="plan-active-formation"></div><div class="plan-chart"><span class="plan-direction">▲ GEGNERSEITE</span><svg id="plan-map" viewBox="0 0 320 230" role="img" aria-label="Aufstellung von oben. Objekt auswählen und Ziel antippen oder direkt ziehen. Freie Fläche zum Verschieben ziehen."></svg><span id="plan-scale"></span></div><div class="plan-map-tools"><button id="plan-zoom-out" aria-label="Plan verkleinern">−</button><button id="plan-fit">Alles zeigen</button><button id="plan-zoom-in" aria-label="Plan vergrößern">+</button></div>
+      <div id="plan-active-formation"></div><p id="plan-formation-help" class="plan-explanation"></p><div class="plan-chart"><span class="plan-direction">▲ GEGNERSEITE</span><svg id="plan-map" viewBox="0 0 320 230" role="img" aria-label="Aufstellung von oben. Objekt auswählen und Ziel antippen oder direkt ziehen. Freie Fläche zum Verschieben ziehen."></svg><span id="plan-scale"></span></div><div class="plan-map-tools"><button id="plan-zoom-out" aria-label="Plan verkleinern">−</button><button id="plan-fit">Alles zeigen</button><button id="plan-zoom-in" aria-label="Plan vergrößern">+</button></div>
       <p id="plan-map-help" class="trial-menu-hint"></p><button id="plan-auto-place" class="lab-restart">Auswahl automatisch aufstellen</button>
       <div class="plan-pair"><label class="lab-field" for="plan-group">Verband<select id="plan-group"></select></label><button id="plan-new-group" class="plan-add" aria-label="Neuen Verband erstellen">+ Verband</button></div>
       <label class="lab-field" for="plan-search">Verbände und Schiffe finden<input id="plan-search" type="search" placeholder="Name oder Schiffsklasse" autocomplete="off"></label><div id="plan-roster" class="battle-roster"></div><div id="plan-fleet-fields" class="plan-fields">
@@ -154,7 +155,7 @@ export class BattlePlanner {
   }
   move(delta, base = null) {
     const object = this.tab === 'fleet' ? this.group : this.ship; if (!object) return;
-    if (!base) base = this.tab === 'fleet' ? fleetLayout(this.plan, this.side).groups.find(g => g.id === object.id).slot : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === object.id).slot;
+    if (!base) base = this.tab === 'fleet' ? fleetLayout(this.plan, this.side, this.source?.preparation).groups.find(g => g.id === object.id).slot : groupLayout(this.plan, this.side, this.group.id, this.source?.preparation).find(s => s.id === object.id).slot;
     object.offset = base.map((v, i) => Math.max(-6000, Math.min(6000, v + delta[i])));
   }
   paint() {
@@ -166,6 +167,7 @@ export class BattlePlanner {
     for (const b of this.dialog.querySelectorAll('[data-plan-tab]')) b.setAttribute('aria-pressed', String(b.dataset.planTab === this.tab));
     const total = this.plan.sides.friendly.ships.length, enemy = this.plan.sides.enemy.ships.length;
     $('plan-summary').textContent = `${total} eigene : ${enemy} Gegner · ${this.fleet.groups.length} Verbände auf dieser Seite`;
+    $('plan-formation-help').textContent = FORMATION_HELP[this.tab === 'fleet' ? this.fleet.formation : this.group.formation];
     $('plan-message').textContent = this.message || (!this.saved ? 'Speichern im Browser nicht möglich · Entwurf bleibt für diesen Besuch verfügbar.' : 'Entwurf gespeichert · laufende Schlacht unverändert.');
     $('plan-message').classList.toggle('plan-warning', Boolean(this.message || !this.saved));
     $('plan-fleet-fields').hidden = this.tab !== 'fleet'; $('plan-group-fields').hidden = this.tab !== 'group';
@@ -198,7 +200,7 @@ export class BattlePlanner {
   }
   filter(){if(this.roster)filterRoster(this.roster,$('plan-search').value);}
   chart(fixed = this.chartBounds) {
-    const layout = fleetLayout(this.plan, this.side), group = layout.groups.find(g => g.id === this.group.id);
+    const layout = fleetLayout(this.plan, this.side, this.source?.preparation), group = layout.groups.find(g => g.id === this.group.id);
     const points = this.tab === 'fleet' ? layout.ships : layout.ships.filter(s => s.groupId === group.id).map(s => ({ ...s, position: turn(s.position.map((v, a) => v - group.position[a]), -this.fleet.heading) }));
     const handles = this.tab === 'fleet' ? layout.groups.map(g => ({ id: g.id, name: g.name, position: g.position })) : points;
     const all = [...points, ...handles], xs = all.map(s => s.position[0]), zs = all.map(s => s.position[2]);
@@ -228,7 +230,7 @@ export class BattlePlanner {
     const b = this.chartBounds, candidates = this.handles.map(h => ({ h, d: Math.hypot(x - (160 + (h.position[0] - b.x) * b.scale), y - (115 + (h.position[2] - b.z) * b.scale)) })).sort((a, c) => a.d - c.d);
     if (!candidates.length || candidates[0].d > 26) {this.drag={id:e.pointerId,x:e.clientX,y:e.clientY,bounds:{...this.chartBounds},pan:true,moved:false};$('plan-map').setPointerCapture(e.pointerId);e.preventDefault();return;}
     if (this.tab === 'fleet') this.groupId = candidates[0].h.id; else this.shipId = candidates[0].h.id;
-    const before = clone(this.plan), base = this.tab === 'fleet' ? fleetLayout(this.plan,this.side).groups.find(g=>g.id===this.group.id).slot : groupLayout(this.plan, this.side, this.group.id).find(s => s.id === this.shipId).slot;
+    const before = clone(this.plan), base = this.tab === 'fleet' ? fleetLayout(this.plan,this.side,this.source?.preparation).groups.find(g=>g.id===this.group.id).slot : groupLayout(this.plan, this.side, this.group.id, this.source?.preparation).find(s => s.id === this.shipId).slot;
     this.paint(); this.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, base, before, bounds: this.chartBounds, moved: false };
     $('plan-map').setPointerCapture(e.pointerId); e.preventDefault();
   }
@@ -249,7 +251,7 @@ export class BattlePlanner {
   }
   async apply() {
     try {
-      const plan = validateTrialPlan(this.plan); deployTrialPlan(plan); this.save();
+      const plan = validateTrialPlan(this.plan); deployTrialPlan(plan, this.source?.preparation); this.save();
       $('plan-apply').disabled = true;
       await this.onApply(plan);
     } catch (e) { this.message = e.message; this.paint(); }

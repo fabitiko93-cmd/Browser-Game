@@ -1,0 +1,7824 @@
+{
+  "baselineRevision": "2411acc61d6c52937c2348e9307e6685ccc99e10",
+  "level": "fleet",
+  "seeds": [
+    123457,
+    334477,
+    971123,
+    119437,
+    420001,
+    7368874
+  ],
+  "cases": [
+    "convoy-front",
+    "convoy-flank",
+    "mixed-duel",
+    "wide-front",
+    "damaged-escort",
+    "pure-corvettes"
+  ],
+  "rows": [
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9,
+        "shots": 143,
+        "remainingHull": 180.07483412543183,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 209,
+        "remainingHull": 618.6016194746015,
+        "day": 27.75,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 183,
+        "remainingHull": 680,
+        "day": 29.266666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 184,
+        "remainingHull": 525.0687107300289,
+        "day": 35.45,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 205,
+        "remainingHull": 534.4166334438512,
+        "day": 36.983333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.933333333333333,
+        "shots": 143,
+        "remainingHull": 180.07483412543183,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 177,
+        "remainingHull": 674.0889613374754,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.1814355354294,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 238,
+        "remainingHull": 450.3703321390767,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9499999999999997,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 168,
+        "remainingHull": 463.3281210191934,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 1.3166666666666667,
+        "shots": 177,
+        "remainingHull": 0,
+        "day": 43.78333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.4833333333333334,
+        "shots": 204,
+        "remainingHull": 596.0686735746933,
+        "day": 30.266666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9166666666666665,
+        "shots": 149,
+        "remainingHull": 207.1814355354294,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 168,
+        "remainingHull": 457.6359322473743,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.1814355354294,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 227,
+        "remainingHull": 546.2183942698623,
+        "day": 34.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 166,
+        "remainingHull": 580.0347594637251,
+        "day": 34.85,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 197,
+        "remainingHull": 497.32646798854705,
+        "day": 39.25,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.05,
+        "shots": 214,
+        "remainingHull": 553.2816564210877,
+        "day": 34.75,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.933333333333333,
+        "shots": 149,
+        "remainingHull": 207.1814355354294,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 169,
+        "remainingHull": 637.782578512697,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.1814355354294,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 230,
+        "remainingHull": 557.8316664848929,
+        "day": 32.516666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 173,
+        "remainingHull": 637.782578512697,
+        "day": 29.266666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 197,
+        "remainingHull": 497.32646798854705,
+        "day": 39.21666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.716666666666667,
+        "shots": 215,
+        "remainingHull": 517.0147227725372,
+        "day": 39.483333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.933333333333333,
+        "shots": 149,
+        "remainingHull": 207.6125203116691,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 170,
+        "remainingHull": 630.729051354692,
+        "day": 29.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.0325799372357,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 236,
+        "remainingHull": 563.9375447293025,
+        "day": 32.083333333333336,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 170,
+        "remainingHull": 640.4351115981466,
+        "day": 29.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 211,
+        "remainingHull": 475.539962249808,
+        "day": 43.68333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 203,
+        "remainingHull": 610.8379327456448,
+        "day": 29.4,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.933333333333333,
+        "shots": 149,
+        "remainingHull": 207.0325799372357,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 170,
+        "remainingHull": 637.782578512697,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 6,
+        "cargoLoss": 1,
+        "firstKill": 3.9,
+        "shots": 172,
+        "remainingHull": 235.6882743562725,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 210,
+        "remainingHull": 612.5246034379636,
+        "day": 27.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 150,
+        "remainingHull": 256.79013121666276,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 182,
+        "remainingHull": 678.5951340702401,
+        "day": 29.25,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 9,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 161,
+        "remainingHull": 26.245690235612585,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 210,
+        "remainingHull": 544.2904012959588,
+        "day": 35.63333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 6,
+        "cargoLoss": 1,
+        "firstKill": 3.933333333333333,
+        "shots": 172,
+        "remainingHull": 235.6882743562725,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 179,
+        "remainingHull": 675.5829212747673,
+        "day": 29.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9,
+        "shots": 144,
+        "remainingHull": 179.82061654630593,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 224,
+        "remainingHull": 540.7906381996479,
+        "day": 33.81666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 172,
+        "remainingHull": 633.1914866656626,
+        "day": 29.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 185,
+        "remainingHull": 522.4430763392479,
+        "day": 35.9,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.716666666666667,
+        "shots": 199,
+        "remainingHull": 603.1596251936011,
+        "day": 29.9,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.933333333333333,
+        "shots": 144,
+        "remainingHull": 179.82061654630593,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 172,
+        "remainingHull": 637.782578512697,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.6125203116691,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 228,
+        "remainingHull": 568.9340089185632,
+        "day": 31.216666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9499999999999997,
+        "shots": 150,
+        "remainingHull": 256.79013121666276,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 169,
+        "remainingHull": 640.4351115981466,
+        "day": 29.25,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 197,
+        "remainingHull": 497.32646798854705,
+        "day": 39.21666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 208,
+        "remainingHull": 553.7568030448126,
+        "day": 33.916666666666664,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.933333333333333,
+        "shots": 149,
+        "remainingHull": 207.6125203116691,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 164,
+        "remainingHull": 637.782578512697,
+        "day": 29.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.9,
+        "shots": 145,
+        "remainingHull": 0,
+        "day": 43.35,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 225,
+        "remainingHull": 573.1736784124121,
+        "day": 30.8,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 9,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.966666666666667,
+        "shots": 140,
+        "remainingHull": 25.019211673073443,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 168,
+        "remainingHull": 640.4351115981466,
+        "day": 29.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 195,
+        "remainingHull": 514.9486583213945,
+        "day": 36.833333333333336,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 204,
+        "remainingHull": 539.3571345189412,
+        "day": 36,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.9166666666666665,
+        "shots": 145,
+        "remainingHull": 0,
+        "day": 43.35,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 167,
+        "remainingHull": 637.782578512697,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 213.1634294978946,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 224,
+        "remainingHull": 578.4461558565794,
+        "day": 30.349999999999998,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.9499999999999997,
+        "shots": 150,
+        "remainingHull": 256.79013121666276,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 173,
+        "remainingHull": 650.1986069733889,
+        "day": 29.25,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 204,
+        "remainingHull": 463.8086908249058,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.6999999999999997,
+        "shots": 209,
+        "remainingHull": 583.8911106869045,
+        "day": 31.216666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 149,
+        "remainingHull": 213.1634294978946,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 171,
+        "remainingHull": 642.5482664545227,
+        "day": 29.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.9166666666666665,
+        "shots": 140,
+        "remainingHull": 0,
+        "day": 42.483333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 224,
+        "remainingHull": 540.7906381996479,
+        "day": 33.81666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.966666666666667,
+        "shots": 154,
+        "remainingHull": 398.02520080756824,
+        "day": 40.43333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 172,
+        "remainingHull": 633.1914866656626,
+        "day": 29.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 184,
+        "remainingHull": 525.0687107300289,
+        "day": 35.483333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.716666666666667,
+        "shots": 206,
+        "remainingHull": 590.0833222563705,
+        "day": 31.083333333333332,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.933333333333333,
+        "shots": 140,
+        "remainingHull": 0,
+        "day": 42.483333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 172,
+        "remainingHull": 630.6126604158735,
+        "day": 29.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.9,
+        "shots": 149,
+        "remainingHull": 207.6125203116691,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 225,
+        "remainingHull": 568.8747156256111,
+        "day": 31.216666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 1,
+        "firstKill": 3.966666666666667,
+        "shots": 149,
+        "remainingHull": 274.9732177248306,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 163,
+        "remainingHull": 645.2497908636099,
+        "day": 29.25,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 199,
+        "remainingHull": 494.21502280773154,
+        "day": 39.21666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.716666666666667,
+        "shots": 200,
+        "remainingHull": 597.978758265233,
+        "day": 30.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 7,
+        "cargoLoss": 0,
+        "firstKill": 3.933333333333333,
+        "shots": 149,
+        "remainingHull": 207.6125203116691,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 162,
+        "remainingHull": 642.5482664545227,
+        "day": 29.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.9,
+        "shots": 252,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 344,
+        "remainingHull": 360.4518337622365,
+        "day": 34.68333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.283333333333333,
+        "shots": 238,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 355,
+        "remainingHull": 372.0189865967517,
+        "day": 35.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.35,
+        "shots": 329,
+        "remainingHull": 344.2645815220187,
+        "day": 38.93333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 271,
+        "remainingHull": 34.36791235795302,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.75,
+        "shots": 229,
+        "remainingHull": 0,
+        "day": 33.81666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 342,
+        "remainingHull": 326.3060705339003,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.85,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 371,
+        "remainingHull": 374.75954711345236,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.183333333333333,
+        "shots": 226,
+        "remainingHull": 0,
+        "day": 33.85,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 355,
+        "remainingHull": 477.3522461585676,
+        "day": 34.31666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 325,
+        "remainingHull": 333.7731936154986,
+        "day": 39.71666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 273,
+        "remainingHull": 71.53029694983609,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.6999999999999997,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 351,
+        "remainingHull": 332.348167811734,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.8,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 352,
+        "remainingHull": 414.57148785276013,
+        "day": 39.016666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.2,
+        "shots": 225,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 344,
+        "remainingHull": 485.95695005017296,
+        "day": 32.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 7,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 316,
+        "remainingHull": 281.8708781756262,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 9.133333333333333,
+        "shots": 270,
+        "remainingHull": 46.78743947538242,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.65,
+        "shots": 225,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 344,
+        "remainingHull": 346.58294203354916,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.783333333333333,
+        "shots": 242,
+        "remainingHull": 0,
+        "day": 35.983333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 354,
+        "remainingHull": 331.19165128306656,
+        "day": 37.28333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.183333333333333,
+        "shots": 224,
+        "remainingHull": 0,
+        "day": 33.85,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 357,
+        "remainingHull": 361.21270620848395,
+        "day": 35.63333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 307,
+        "remainingHull": 252.68473590306314,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 6,
+        "cargoLoss": 1,
+        "firstKill": 9,
+        "shots": 275,
+        "remainingHull": 47.57179657972499,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.6333333333333333,
+        "shots": 221,
+        "remainingHull": 0,
+        "day": 33.81666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 349,
+        "remainingHull": 332.3496056397209,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.8333333333333335,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 338,
+        "remainingHull": 362.3638428289843,
+        "day": 34.43333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.1666666666666665,
+        "shots": 221,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 345,
+        "remainingHull": 408.1593903573852,
+        "day": 33.46666666666667,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 323,
+        "remainingHull": 351.59587684833446,
+        "day": 38.88333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 273,
+        "remainingHull": 50.28306494532925,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.6166666666666667,
+        "shots": 230,
+        "remainingHull": 0,
+        "day": 34.28333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 359,
+        "remainingHull": 392.12583915262286,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.8333333333333335,
+        "shots": 252,
+        "remainingHull": 0,
+        "day": 35.983333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 358,
+        "remainingHull": 337.8430936598596,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.183333333333333,
+        "shots": 224,
+        "remainingHull": 0,
+        "day": 33.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 355,
+        "remainingHull": 488.4922822354662,
+        "day": 33.81666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 339,
+        "remainingHull": 310.4655164744029,
+        "day": 41.916666666666664,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 9.016666666666666,
+        "shots": 271,
+        "remainingHull": 67.4912388011631,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.6333333333333333,
+        "shots": 224,
+        "remainingHull": 0,
+        "day": 34.25,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 351,
+        "remainingHull": 332.348167811734,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.7333333333333334,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 34.733333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 348,
+        "remainingHull": 340.847990326844,
+        "day": 36.416666666666664,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.0833333333333335,
+        "shots": 232,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 346,
+        "remainingHull": 410.89876436075076,
+        "day": 33.46666666666667,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 310,
+        "remainingHull": 278.8617886375208,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 271,
+        "remainingHull": 45.309011514181805,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.533333333333333,
+        "shots": 224,
+        "remainingHull": 0,
+        "day": 34.233333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 341,
+        "remainingHull": 308.0970474493235,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.8,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 356,
+        "remainingHull": 448.16269272955736,
+        "day": 37.28333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.183333333333333,
+        "shots": 231,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 355,
+        "remainingHull": 476.3604711467219,
+        "day": 34.3,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 331,
+        "remainingHull": 348.35229523281527,
+        "day": 40.11666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 9.133333333333333,
+        "shots": 272,
+        "remainingHull": 69.44262146196893,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.65,
+        "shots": 227,
+        "remainingHull": 0,
+        "day": 33.766666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 354,
+        "remainingHull": 370.85583628260883,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.8833333333333333,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 344,
+        "remainingHull": 360.9569939015895,
+        "day": 34.68333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.4833333333333334,
+        "shots": 222,
+        "remainingHull": 0,
+        "day": 34.25,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 348,
+        "remainingHull": 388.57887691386367,
+        "day": 34.18333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 336,
+        "remainingHull": 335.5034366581239,
+        "day": 41.43333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 5.783333333333333,
+        "shots": 277,
+        "remainingHull": 68.62221548719965,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.75,
+        "shots": 227,
+        "remainingHull": 0,
+        "day": 33.81666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 353,
+        "remainingHull": 363.43723281070663,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.8166666666666664,
+        "shots": 238,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 337,
+        "remainingHull": 368.1475871883088,
+        "day": 33.81666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.2333333333333334,
+        "shots": 221,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 348,
+        "remainingHull": 394.8623582411037,
+        "day": 34.2,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 8,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 307,
+        "remainingHull": 252.88731827184654,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 273,
+        "remainingHull": 58.00305169047064,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.6999999999999997,
+        "shots": 220,
+        "remainingHull": 0,
+        "day": 32.96666666666667,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 334,
+        "remainingHull": 278.24857190900934,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.7666666666666666,
+        "shots": 245,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 366,
+        "remainingHull": 337.96016444504085,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.15,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 352,
+        "remainingHull": 467.45835107779556,
+        "day": 34.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.35,
+        "shots": 329,
+        "remainingHull": 345.05970383660576,
+        "day": 38.016666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 269,
+        "remainingHull": 68.79825887096065,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.6,
+        "shots": 221,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 6,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 2.6166666666666667,
+        "shots": 355,
+        "remainingHull": 370.85583628260883,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 6,
+        "cargoLoss": 3,
+        "firstKill": 3.8,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 350,
+        "remainingHull": 452.1416856973742,
+        "day": 35.983333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 4,
+        "cargoLoss": 3,
+        "firstKill": 3.1333333333333333,
+        "shots": 221,
+        "remainingHull": 0,
+        "day": 34.68333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 5,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 353,
+        "remainingHull": 478.4345171551544,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 6,
+        "hostileKills": 9,
+        "cargoLoss": 1,
+        "firstKill": 1.3333333333333333,
+        "shots": 326,
+        "remainingHull": 340.12887724798685,
+        "day": 39.766666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 8.7,
+        "shots": 269,
+        "remainingHull": 55.28455528658454,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "convoy-flank",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 10,
+        "hostileKills": 5,
+        "cargoLoss": 3,
+        "firstKill": 3.5833333333333335,
+        "shots": 232,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 8,
+        "cargoLoss": 1,
+        "firstKill": 2.6166666666666667,
+        "shots": 334,
+        "remainingHull": 261.5787126844413,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 508,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 485,
+        "remainingHull": 0,
+        "day": 35.55,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 508,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 381,
+        "remainingHull": 514.5479541080175,
+        "day": 26.633333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 515,
+        "remainingHull": 122.14305417762866,
+        "day": 39.166666666666664,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9333333333333333,
+        "shots": 461,
+        "remainingHull": 567.7509024527035,
+        "day": 23.5,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 508,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 381,
+        "remainingHull": 514.5479541080175,
+        "day": 26.633333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 522,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 577,
+        "remainingHull": 261.90477186469263,
+        "day": 35.55,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 522,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 515.2918088642306,
+        "day": 26.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 481,
+        "remainingHull": 0,
+        "day": 36,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 452,
+        "remainingHull": 695.7207327764683,
+        "day": 20.683333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 522,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 515.2918088642306,
+        "day": 26.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 455,
+        "remainingHull": 0,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 531,
+        "remainingHull": 0,
+        "day": 44.21666666666667,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 455,
+        "remainingHull": 0,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 513.1000372876738,
+        "day": 26.78333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 504,
+        "remainingHull": 0,
+        "day": 39.266666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 455,
+        "remainingHull": 655.5731568890211,
+        "day": 21.483333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 455,
+        "remainingHull": 0,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 513.1000372876738,
+        "day": 26.78333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 489,
+        "remainingHull": 140.9552576819405,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 589,
+        "remainingHull": 150.057274060194,
+        "day": 44.21666666666667,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 489,
+        "remainingHull": 140.9552576819405,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 374,
+        "remainingHull": 517.8773256506632,
+        "day": 26.03333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 485,
+        "remainingHull": 0,
+        "day": 35.95,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 434,
+        "remainingHull": 705.2174601774211,
+        "day": 20.466666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 489,
+        "remainingHull": 140.9552576819405,
+        "day": 39.88333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 374,
+        "remainingHull": 517.8773256506632,
+        "day": 26.03333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 518,
+        "remainingHull": 107.52722983302195,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 512,
+        "remainingHull": 0,
+        "day": 42.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 518,
+        "remainingHull": 107.52722983302195,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 375,
+        "remainingHull": 518.1870887340154,
+        "day": 26.03333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 465,
+        "remainingHull": 0,
+        "day": 32.96666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9333333333333333,
+        "shots": 445,
+        "remainingHull": 696.6534055453156,
+        "day": 20.75,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 518,
+        "remainingHull": 107.52722983302195,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 375,
+        "remainingHull": 518.1870887340154,
+        "day": 26.03333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 0,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 590,
+        "remainingHull": 169.40755941655686,
+        "day": 42.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 0,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 435.1339184509506,
+        "day": 29.633333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 475,
+        "remainingHull": 0,
+        "day": 35.56666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 440,
+        "remainingHull": 697.8003412457315,
+        "day": 20.466666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 0,
+        "day": 43.4,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 435.1339184509506,
+        "day": 29.633333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 0,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 602,
+        "remainingHull": 160,
+        "day": 42.483333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 0,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 507.410890080498,
+        "day": 26.816666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 439,
+        "remainingHull": 0,
+        "day": 31.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 450,
+        "remainingHull": 686.5248406140211,
+        "day": 21.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 0,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 507.410890080498,
+        "day": 26.816666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 133.3066826820717,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 0.9833333333333333,
+        "shots": 512,
+        "remainingHull": 0,
+        "day": 42.483333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 133.3066826820717,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 518.0212031097352,
+        "day": 26.083333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 479,
+        "remainingHull": 0,
+        "day": 35.31666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 434,
+        "remainingHull": 676.7975138115198,
+        "day": 20.933333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 133.3066826820717,
+        "day": 40.36666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 518.0212031097352,
+        "day": 26.083333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 472,
+        "remainingHull": 0,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 518,
+        "remainingHull": 0,
+        "day": 42.916666666666664,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 472,
+        "remainingHull": 0,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 513.519176387013,
+        "day": 26.766666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 481,
+        "remainingHull": 0,
+        "day": 35.3,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 440,
+        "remainingHull": 677.3641120098267,
+        "day": 20.983333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 472,
+        "remainingHull": 0,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 513.519176387013,
+        "day": 26.766666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 153.81498814781432,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 591,
+        "remainingHull": 164.92064485571987,
+        "day": 42.916666666666664,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 153.81498814781432,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 506.6742080672058,
+        "day": 26.733333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 487,
+        "remainingHull": 0,
+        "day": 35.916666666666664,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 441,
+        "remainingHull": 689.1221252948902,
+        "day": 20.85,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 153.81498814781432,
+        "day": 38.583333333333336,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 382,
+        "remainingHull": 506.6742080672058,
+        "day": 26.733333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 533,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 0.9666666666666667,
+        "shots": 508,
+        "remainingHull": 0,
+        "day": 39.45,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 533,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 514.5479541080175,
+        "day": 26.633333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 439,
+        "remainingHull": 0,
+        "day": 31.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 450,
+        "remainingHull": 655.7551609739146,
+        "day": 21.566666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 533,
+        "remainingHull": 61.50735018606867,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1,
+        "shots": 385,
+        "remainingHull": 514.5479541080175,
+        "day": 26.633333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.9833333333333333,
+        "shots": 583,
+        "remainingHull": 202.69657097862594,
+        "day": 39.45,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 376,
+        "remainingHull": 518.9065125727113,
+        "day": 26.03333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 473,
+        "remainingHull": 0,
+        "day": 35.56666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 0.95,
+        "shots": 438,
+        "remainingHull": 697.9720512895661,
+        "day": 20.566666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "mixed-duel",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 33.2977014646452,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 10,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 376,
+        "remainingHull": 518.9065125727113,
+        "day": 26.03333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 89.47422018667538,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 417,
+        "remainingHull": 0,
+        "day": 27.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 89.47422018667538,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 555,
+        "remainingHull": 101.08497699508594,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 445,
+        "remainingHull": 0,
+        "day": 30.75,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 465,
+        "remainingHull": 482.358855460659,
+        "day": 25.416666666666668,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 89.47422018667538,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 555,
+        "remainingHull": 101.08497699508594,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 441,
+        "remainingHull": 0,
+        "day": 38.31666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 410,
+        "remainingHull": 0,
+        "day": 27.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 441,
+        "remainingHull": 0,
+        "day": 38.31666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 504,
+        "remainingHull": 43.9148997884636,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 422,
+        "remainingHull": 0,
+        "day": 27.75,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 472,
+        "remainingHull": 629.9260786847758,
+        "day": 21.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 441,
+        "remainingHull": 0,
+        "day": 38.31666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 504,
+        "remainingHull": 43.9148997884636,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 510,
+        "remainingHull": 96.08248955736701,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 385,
+        "remainingHull": 0,
+        "day": 25.4,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 510,
+        "remainingHull": 96.08248955736701,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 484,
+        "remainingHull": 1.2646625261238813,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 418,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 446,
+        "remainingHull": 589.2429402464497,
+        "day": 22.916666666666668,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 510,
+        "remainingHull": 96.08248955736701,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 484,
+        "remainingHull": 1.2646625261238813,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 149.7106031102282,
+        "day": 40.31666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 392,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 149.7106031102282,
+        "day": 40.31666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 609,
+        "remainingHull": 109.0736805576189,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 407,
+        "remainingHull": 0,
+        "day": 25.6,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 472,
+        "remainingHull": 624.2078102023505,
+        "day": 22.216666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 500,
+        "remainingHull": 149.7106031102282,
+        "day": 40.31666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 609,
+        "remainingHull": 109.0736805576189,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 523,
+        "remainingHull": 36.12872102170626,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 422,
+        "remainingHull": 0,
+        "day": 27.383333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 523,
+        "remainingHull": 36.12872102170626,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 546,
+        "remainingHull": 80,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 418,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 477,
+        "remainingHull": 575.0640353801949,
+        "day": 23.4,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 523,
+        "remainingHull": 36.12872102170626,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 546,
+        "remainingHull": 80,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 177.189293993702,
+        "day": 37.4,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 420,
+        "remainingHull": 0,
+        "day": 27.383333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 177.189293993702,
+        "day": 37.4,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 575,
+        "remainingHull": 98.22373088688497,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 443,
+        "remainingHull": 0,
+        "day": 29.266666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 449,
+        "remainingHull": 587.733116239937,
+        "day": 23.166666666666668,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 177.189293993702,
+        "day": 37.4,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 575,
+        "remainingHull": 98.22373088688497,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 514,
+        "remainingHull": 11.25189725234967,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 414,
+        "remainingHull": 0,
+        "day": 27.383333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 514,
+        "remainingHull": 11.25189725234967,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 528,
+        "remainingHull": 146.9027610858549,
+        "day": 40.56666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 420,
+        "remainingHull": 0,
+        "day": 27.75,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1333333333333333,
+        "shots": 469,
+        "remainingHull": 599.4690981638408,
+        "day": 22.53333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 514,
+        "remainingHull": 11.25189725234967,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 528,
+        "remainingHull": 146.9027610858549,
+        "day": 40.56666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 482,
+        "remainingHull": 177.75753720505463,
+        "day": 37.56666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 398,
+        "remainingHull": 0,
+        "day": 25.583333333333332,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 482,
+        "remainingHull": 177.75753720505463,
+        "day": 37.56666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 541,
+        "remainingHull": 135.5578343642527,
+        "day": 42.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 424,
+        "remainingHull": 0,
+        "day": 27.316666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1333333333333333,
+        "shots": 435,
+        "remainingHull": 569.455801663411,
+        "day": 22.9,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 482,
+        "remainingHull": 177.75753720505463,
+        "day": 37.56666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 541,
+        "remainingHull": 135.5578343642527,
+        "day": 42.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 137.96451791067747,
+        "day": 42,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 386,
+        "remainingHull": 0,
+        "day": 24.95,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 137.96451791067747,
+        "day": 42,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 553,
+        "remainingHull": 152.5707259759075,
+        "day": 40.516666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 484,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 449,
+        "remainingHull": 543.8680139485385,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 512,
+        "remainingHull": 137.96451791067747,
+        "day": 42,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 553,
+        "remainingHull": 152.5707259759075,
+        "day": 40.516666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 198.27972900568895,
+        "day": 36.8,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 389,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 198.27972900568895,
+        "day": 36.8,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 503,
+        "remainingHull": 91.45303124218057,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 412,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 7,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 481,
+        "remainingHull": 541.5465301609677,
+        "day": 23.866666666666667,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 11,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 483,
+        "remainingHull": 198.27972900568895,
+        "day": 36.8,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 503,
+        "remainingHull": 91.45303124218057,
+        "day": 45,
+        "phase": "engaged"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 511,
+        "remainingHull": 97.75828602333863,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 388,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 511,
+        "remainingHull": 97.75828602333863,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 477,
+        "remainingHull": 0,
+        "day": 43.35,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 11,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 473,
+        "remainingHull": 0,
+        "day": 34.55,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1333333333333333,
+        "shots": 443,
+        "remainingHull": 581.6711208841841,
+        "day": 22.983333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 13,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 511,
+        "remainingHull": 97.75828602333863,
+        "day": 45,
+        "phase": "engaged"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 477,
+        "remainingHull": 0,
+        "day": 43.35,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 451,
+        "remainingHull": 0,
+        "day": 40.75,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 8,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 392,
+        "remainingHull": 0,
+        "day": 24.766666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 451,
+        "remainingHull": 0,
+        "day": 40.75,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 452,
+        "remainingHull": 0,
+        "day": 40.55,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 10,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 419,
+        "remainingHull": 0,
+        "day": 27.316666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 14,
+        "cargoLoss": 0,
+        "firstKill": 1.1166666666666667,
+        "shots": 443,
+        "remainingHull": 606.1798467204095,
+        "day": 22.933333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "wide-front",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 451,
+        "remainingHull": 0,
+        "day": 40.75,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 14,
+        "hostileKills": 12,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 452,
+        "remainingHull": 0,
+        "day": 40.55,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 232,
+        "remainingHull": 0,
+        "day": 24.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 207,
+        "remainingHull": 0,
+        "day": 26.65,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 217,
+        "remainingHull": 0,
+        "day": 30.333333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 25.583333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 211,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 232,
+        "remainingHull": 0,
+        "day": 23.966666666666665,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 264,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 238,
+        "remainingHull": 0,
+        "day": 24.066666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 202,
+        "remainingHull": 0,
+        "day": 27.75,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 264,
+        "remainingHull": 0,
+        "day": 25.333333333333332,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 208,
+        "remainingHull": 0,
+        "day": 28.016666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 245,
+        "remainingHull": 0,
+        "day": 26.016666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 238,
+        "remainingHull": 0,
+        "day": 23.983333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 270,
+        "remainingHull": 0,
+        "day": 33.81666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.25,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 208,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 244,
+        "remainingHull": 0,
+        "day": 32.666666666666664,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 237,
+        "remainingHull": 0,
+        "day": 25.6,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 211,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.216666666666665,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 269,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 239,
+        "remainingHull": 0,
+        "day": 23.866666666666667,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 209,
+        "remainingHull": 0,
+        "day": 27.316666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 259,
+        "remainingHull": 0,
+        "day": 25.3,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 243,
+        "remainingHull": 0,
+        "day": 30.349999999999998,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 28.016666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 216,
+        "remainingHull": 0,
+        "day": 36.28333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 239,
+        "remainingHull": 0,
+        "day": 23.716666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 268,
+        "remainingHull": 0,
+        "day": 35.11666666666667,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 236,
+        "remainingHull": 0,
+        "day": 24.066666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 205,
+        "remainingHull": 0,
+        "day": 26.65,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.3,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 223,
+        "remainingHull": 0,
+        "day": 33.05,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 239,
+        "remainingHull": 0,
+        "day": 25.666666666666668,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 216,
+        "remainingHull": 0,
+        "day": 36.016666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 236,
+        "remainingHull": 0,
+        "day": 23.966666666666665,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 266,
+        "remainingHull": 0,
+        "day": 31.216666666666665,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 212,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 211,
+        "remainingHull": 0,
+        "day": 30.349999999999998,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 25.633333333333333,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 209,
+        "remainingHull": 0,
+        "day": 32.983333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 241,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 267,
+        "remainingHull": 0,
+        "day": 34.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 257,
+        "remainingHull": 0,
+        "day": 24.28333333333333,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 259,
+        "remainingHull": 0,
+        "day": 25.316666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 216,
+        "remainingHull": 0,
+        "day": 30.316666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 28.066666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 212,
+        "remainingHull": 0,
+        "day": 35.31666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 257,
+        "remainingHull": 0,
+        "day": 24.25,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 272,
+        "remainingHull": 0,
+        "day": 32.95,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 239,
+        "remainingHull": 0,
+        "day": 24.066666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 205,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 30.349999999999998,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 237,
+        "remainingHull": 0,
+        "day": 25.583333333333332,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 207,
+        "remainingHull": 0,
+        "day": 32.95,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 239,
+        "remainingHull": 0,
+        "day": 23.966666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 267,
+        "remainingHull": 0,
+        "day": 34.25,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 258,
+        "remainingHull": 0,
+        "day": 24.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 205,
+        "remainingHull": 0,
+        "day": 26.65,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 208,
+        "remainingHull": 0,
+        "day": 30.333333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 25.583333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 258,
+        "remainingHull": 0,
+        "day": 23.966666666666665,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 262,
+        "remainingHull": 0,
+        "day": 32.95,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 235,
+        "remainingHull": 0,
+        "day": 24.066666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 26.883333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.733333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 218,
+        "remainingHull": 0,
+        "day": 30.349999999999998,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 237,
+        "remainingHull": 0,
+        "day": 25.683333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3166666666666667,
+        "shots": 211,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 235,
+        "remainingHull": 0,
+        "day": 23.966666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 269,
+        "remainingHull": 0,
+        "day": 32.95,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 23.566666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 211,
+        "remainingHull": 0,
+        "day": 27.75,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 259,
+        "remainingHull": 0,
+        "day": 25.316666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 7,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 215,
+        "remainingHull": 0,
+        "day": 30.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 28.066666666666666,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 218,
+        "remainingHull": 0,
+        "day": 35.31666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 23.583333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 272,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 236,
+        "remainingHull": 0,
+        "day": 24.066666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 203,
+        "remainingHull": 0,
+        "day": 24.28333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 256,
+        "remainingHull": 0,
+        "day": 24.3,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.4833333333333334,
+        "shots": 217,
+        "remainingHull": 0,
+        "day": 30.75,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 5,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 240,
+        "remainingHull": 0,
+        "day": 26.016666666666666,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 8,
+        "cargoLoss": 2,
+        "firstKill": 1.3333333333333333,
+        "shots": 210,
+        "remainingHull": 0,
+        "day": 35.03333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "damaged-escort",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 13,
+        "hostileKills": 4,
+        "cargoLoss": 2,
+        "firstKill": 2.6166666666666667,
+        "shots": 236,
+        "remainingHull": 0,
+        "day": 23.983333333333334,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 13,
+        "hostileKills": 6,
+        "cargoLoss": 2,
+        "firstKill": 3.05,
+        "shots": 268,
+        "remainingHull": 0,
+        "day": 33.38333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.016666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.016666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 484,
+        "remainingHull": 178.34951583164633,
+        "day": 36.483333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.016666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 4.35,
+        "shots": 483,
+        "remainingHull": 170.92938302076428,
+        "day": 37.53333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 123457,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 321,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 348,
+        "remainingHull": 0,
+        "day": 25.35,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 321,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 348,
+        "remainingHull": 0,
+        "day": 25.35,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 321,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 470,
+        "remainingHull": 217.2458900005928,
+        "day": 33.88333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 321,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 348,
+        "remainingHull": 0,
+        "day": 25.35,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 349,
+        "remainingHull": 0,
+        "day": 26.466666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 349,
+        "remainingHull": 0,
+        "day": 26.466666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 349,
+        "remainingHull": 0,
+        "day": 26.466666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 495,
+        "remainingHull": 163.56035601710465,
+        "day": 38.2,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 334477,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 349,
+        "remainingHull": 0,
+        "day": 26.466666666666665,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 330,
+        "remainingHull": 0,
+        "day": 23.866666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 330,
+        "remainingHull": 0,
+        "day": 23.866666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 330,
+        "remainingHull": 0,
+        "day": 23.866666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 488,
+        "remainingHull": 222.04806743128142,
+        "day": 33.63333333333333,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 330,
+        "remainingHull": 0,
+        "day": 23.866666666666667,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 312,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 295,
+        "remainingHull": 0,
+        "day": 21.266666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 312,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 295,
+        "remainingHull": 0,
+        "day": 21.266666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 312,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 4.35,
+        "shots": 475,
+        "remainingHull": 218.12217633520413,
+        "day": 33.85,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 971123,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 312,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 295,
+        "remainingHull": 0,
+        "day": 21.266666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 21.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 21.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 21.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 480,
+        "remainingHull": 222.5989775745074,
+        "day": 33.016666666666666,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.75,
+        "shots": 308,
+        "remainingHull": 0,
+        "day": 21.05,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 318,
+        "remainingHull": 0,
+        "day": 23.433333333333334,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 336,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 336,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 4.35,
+        "shots": 480,
+        "remainingHull": 178.72675506761874,
+        "day": 36.516666666666666,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 119437,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 336,
+        "remainingHull": 0,
+        "day": 25.15,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 488,
+        "remainingHull": 169.01051723020686,
+        "day": 37.55,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 319,
+        "remainingHull": 0,
+        "day": 23.65,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 347,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 313,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 323,
+        "remainingHull": 0,
+        "day": 23.583333333333332,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 313,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 323,
+        "remainingHull": 0,
+        "day": 23.583333333333332,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 313,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 487,
+        "remainingHull": 175.10131042392507,
+        "day": 36.9,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 420001,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 313,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 323,
+        "remainingHull": 0,
+        "day": 23.583333333333332,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 327,
+        "remainingHull": 0,
+        "day": 23.833333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 291,
+        "remainingHull": 0,
+        "day": 20.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 327,
+        "remainingHull": 0,
+        "day": 23.833333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 291,
+        "remainingHull": 0,
+        "day": 20.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 327,
+        "remainingHull": 0,
+        "day": 23.833333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 8,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 3.9166666666666665,
+        "shots": 485,
+        "remainingHull": 216.99727921424366,
+        "day": 33.85,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "friendly",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 2.183333333333333,
+        "shots": 327,
+        "remainingHull": 0,
+        "day": 23.833333333333332,
+        "phase": "defeat"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 5,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 291,
+        "remainingHull": 0,
+        "day": 20.833333333333332,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "auto",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 341,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "line",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 341,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "victory"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "wedge",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 9,
+        "hostileKills": 9,
+        "cargoLoss": 0,
+        "firstKill": 4.35,
+        "shots": 485,
+        "remainingHull": 180.47925443455418,
+        "day": 36.43333333333333,
+        "phase": "defeat"
+      }
+    },
+    {
+      "case": "pure-corvettes",
+      "seed": 7368874,
+      "side": "enemy",
+      "formation": "screen",
+      "baseline": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 311,
+        "remainingHull": 0,
+        "day": 23.666666666666668,
+        "phase": "victory"
+      },
+      "candidate": {
+        "dead": 12,
+        "hostileKills": 6,
+        "cargoLoss": 0,
+        "firstKill": 1.3166666666666667,
+        "shots": 341,
+        "remainingHull": 0,
+        "day": 26.45,
+        "phase": "victory"
+      }
+    }
+  ],
+  "summary": [
+    {
+      "case": "convoy-front",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 7.92,
+      "loss": 5.42,
+      "oldCargoLoss": 0.92,
+      "cargoLoss": 0,
+      "oldKills": 6.75,
+      "kills": 8.92,
+      "oldFirstKill": 3.9,
+      "firstKill": 2.62
+    },
+    {
+      "case": "convoy-front",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 7.08,
+      "loss": 6,
+      "oldCargoLoss": 1,
+      "cargoLoss": 0,
+      "oldKills": 7.08,
+      "kills": 8.92,
+      "oldFirstKill": 3.96,
+      "firstKill": 2.62
+    },
+    {
+      "case": "convoy-front",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 6.58,
+      "loss": 5.5,
+      "oldCargoLoss": 0.42,
+      "cargoLoss": 0,
+      "oldKills": 8.42,
+      "kills": 9,
+      "oldFirstKill": 1.32,
+      "firstKill": 3.63
+    },
+    {
+      "case": "convoy-front",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 7.83,
+      "loss": 6,
+      "oldCargoLoss": 0.83,
+      "cargoLoss": 0,
+      "oldKills": 6.75,
+      "kills": 8.92,
+      "oldFirstKill": 3.93,
+      "firstKill": 2.62
+    },
+    {
+      "case": "convoy-flank",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 10,
+      "loss": 6,
+      "oldCargoLoss": 3,
+      "cargoLoss": 1.5,
+      "oldKills": 5.33,
+      "kills": 8.75,
+      "oldFirstKill": 3.82,
+      "firstKill": 2.62
+    },
+    {
+      "case": "convoy-flank",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 10,
+      "loss": 5,
+      "oldCargoLoss": 3,
+      "cargoLoss": 1,
+      "oldKills": 4,
+      "kills": 9,
+      "oldFirstKill": 3.21,
+      "firstKill": 2.62
+    },
+    {
+      "case": "convoy-flank",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 6.58,
+      "loss": 8.92,
+      "oldCargoLoss": 1,
+      "cargoLoss": 1.92,
+      "oldKills": 8.67,
+      "kills": 5.08,
+      "oldFirstKill": 1.34,
+      "firstKill": 8.58
+    },
+    {
+      "case": "convoy-flank",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 10,
+      "loss": 6.33,
+      "oldCargoLoss": 3,
+      "cargoLoss": 0.17,
+      "oldKills": 4.92,
+      "kills": 8,
+      "oldFirstKill": 3.65,
+      "firstKill": 2.62
+    },
+    {
+      "case": "mixed-duel",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 12.58,
+      "loss": 12.58,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 12.58,
+      "kills": 12.58,
+      "oldFirstKill": 1.75,
+      "firstKill": 0.97
+    },
+    {
+      "case": "mixed-duel",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 12.58,
+      "loss": 10.08,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 12.58,
+      "kills": 14,
+      "oldFirstKill": 1.75,
+      "firstKill": 1.1
+    },
+    {
+      "case": "mixed-duel",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 13.83,
+      "loss": 7.08,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 11.08,
+      "kills": 14,
+      "oldFirstKill": 1.75,
+      "firstKill": 0.95
+    },
+    {
+      "case": "mixed-duel",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 12.58,
+      "loss": 10.08,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 12.58,
+      "kills": 14,
+      "oldFirstKill": 1.75,
+      "firstKill": 1.1
+    },
+    {
+      "case": "wide-front",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 14,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 13.17,
+      "kills": 8.5,
+      "oldFirstKill": 1.75,
+      "firstKill": 1.75
+    },
+    {
+      "case": "wide-front",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 12.25,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 13.17,
+      "kills": 13,
+      "oldFirstKill": 1.75,
+      "firstKill": 2.18
+    },
+    {
+      "case": "wide-front",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 14,
+      "loss": 7.58,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 9.92,
+      "kills": 14,
+      "oldFirstKill": 1.75,
+      "firstKill": 1.12
+    },
+    {
+      "case": "wide-front",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 12.25,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 13.17,
+      "kills": 13,
+      "oldFirstKill": 1.75,
+      "firstKill": 2.18
+    },
+    {
+      "case": "damaged-escort",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 13,
+      "loss": 13,
+      "oldCargoLoss": 2,
+      "cargoLoss": 2,
+      "oldKills": 4.25,
+      "kills": 5,
+      "oldFirstKill": 2.62,
+      "firstKill": 2.62
+    },
+    {
+      "case": "damaged-escort",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 13,
+      "loss": 13,
+      "oldCargoLoss": 2,
+      "cargoLoss": 2,
+      "oldKills": 5,
+      "kills": 6.83,
+      "oldFirstKill": 2.62,
+      "firstKill": 3.48
+    },
+    {
+      "case": "damaged-escort",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 13,
+      "loss": 13,
+      "oldCargoLoss": 2,
+      "cargoLoss": 2,
+      "oldKills": 5,
+      "kills": 7.5,
+      "oldFirstKill": 2.62,
+      "firstKill": 1.32
+    },
+    {
+      "case": "damaged-escort",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 13,
+      "loss": 13,
+      "oldCargoLoss": 2,
+      "cargoLoss": 2,
+      "oldKills": 4.25,
+      "kills": 6,
+      "oldFirstKill": 2.62,
+      "firstKill": 3.05
+    },
+    {
+      "case": "pure-corvettes",
+      "form": "auto",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 12,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 5.67,
+      "kills": 5.42,
+      "oldFirstKill": 1.46,
+      "firstKill": 1.32
+    },
+    {
+      "case": "pure-corvettes",
+      "form": "line",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 12,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 5.67,
+      "kills": 5.42,
+      "oldFirstKill": 1.46,
+      "firstKill": 1.32
+    },
+    {
+      "case": "pure-corvettes",
+      "form": "wedge",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 8.75,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 5.67,
+      "kills": 9,
+      "oldFirstKill": 1.46,
+      "firstKill": 4.06
+    },
+    {
+      "case": "pure-corvettes",
+      "form": "screen",
+      "n": 12,
+      "oldLoss": 12,
+      "loss": 12,
+      "oldCargoLoss": 0,
+      "cargoLoss": 0,
+      "oldKills": 5.67,
+      "kills": 5.42,
+      "oldFirstKill": 1.46,
+      "firstKill": 1.32
+    }
+  ]
+}

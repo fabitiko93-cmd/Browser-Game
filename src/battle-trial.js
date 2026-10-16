@@ -44,7 +44,9 @@ export function createBattleTrial({ scenario = '20v20', mode = 'baseline', state
   const origin = retained ?? createPreparation(own, battle.sourceLabel);
   const originalShips = new Map(origin.ships.map(s => [s.side + ':' + s.id + ':' + s.type, s]));
   const originals = [];
-  const deployment = prepared && deployTrialPlan(prepared);
+  const layoutOrigin = !retained && copied ? { ...origin, supplies: { friendly: friendlySupply, enemy: enemySupply },
+    ships: copied.map(s => ({ id: s.id, side: 'friendly', type: s.type, hp: s.hp, supply: s.supply })) } : origin;
+  const deployment = prepared && deployTrialPlan(prepared, layoutOrigin);
   if (prepared) {
     battle.plan = prepared;
     battle.formations = ['friendly', 'enemy'].flatMap(side => prepared.sides[side].groups.map(g => ({ id: g.id, name: g.name, side, formation: g.formation })));

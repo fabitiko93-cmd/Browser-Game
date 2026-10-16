@@ -1,5 +1,6 @@
 import { SHIPS } from './data.js';
 import { STRATEGIC_MODELS } from './battle-models.js';
+import { formationSlots, planningProfiles, groupProfile } from './battle-formations.js';
 
 export const PLANNER_SAVE_KEY = 'orbit3077-trial-plan';
 export const FORMATIONS = { auto: 'Auto · Ausgewogen', line: 'Schlachtlinie', wedge: 'Keil', screen: 'Schutzaufstellung', staggered: 'Gestaffelt', column: 'Kolonne' };
@@ -90,15 +91,17 @@ export function validateTrialPlan(value) {
   return clean;
 }
 
-export function groupLayout(plan, side, groupId) {
+export function groupLayout(plan, side, groupId, preparation = null) {
   const f = plan.sides[side], g = f.groups.find(g => g.id === groupId), ships = f.ships.filter(s => s.groupId === groupId);
   const gap = (Math.max(40, ...ships.map(length)) + 40) * g.spacing;
-  const positions = automaticSlots(ships, g.formation, gap, shipRole);
+  const profiles = planningProfiles(plan, side, preparation);
+  const positions = g.formation === 'screen' ? legacyScreenSlots(ships, 'screen', gap, legacyScreenRole) : ['staggered','column'].includes(g.formation) ? slots(ships.length,g.formation,gap) : formationSlots(ships,g.formation,gap,s=>profiles.get(s.id));
   return ships.map((s, i) => ({ ...s, length: length(s), slot: [...(s.offset ?? positions[i])], local: add(s.offset ?? positions[i], [noise(plan.seed, s.id, 0) * gap * .10 * g.scatter, noise(plan.seed, s.id, 1) * gap * .28, noise(plan.seed, s.id, 2) * gap * .10 * g.scatter]) }));
 }
 
-const shipRole = s => SHIPS[s.type].strength <= 0 ? 'support' : (SHIPS[s.type].speed ?? 1) > 1.1 ? 'fast' : 'core';
-function automaticSlots(items, formation, gap, role) {
+// Keep the existing static screen; the moving escort experiment did not pass.
+const legacyScreenRole = s => SHIPS[s.type].strength <= 0 ? 'support' : (SHIPS[s.type].speed ?? 1) > 1.1 ? 'fast' : 'core';
+function legacyScreenSlots(items, formation, gap, role) {
   if (!['auto', 'screen'].includes(formation)) return slots(items.length, formation, gap);
   const core = [], fast = [], support = [], result = new Array(items.length);
   items.forEach((s, i) => ({ core, fast, support })[role(s)].push(i));
@@ -130,14 +133,13 @@ function separate(ships) {
 
 // The planner preview and the combat scene use these exact same positions.
 // Seeded offsets are evaluated once on deployment; no render-time jitter.
-export function fleetLayout(plan, side) {
-  const f = plan.sides[side], layouts = f.groups.map(g => groupLayout(plan, side, g.id));
+export function fleetLayout(plan, side, preparation = null) {
+  const f = plan.sides[side], layouts = f.groups.map(g => groupLayout(plan, side, g.id, preparation));
   const diameters = layouts.map(list => Math.max(60, ...list.map(s => Math.hypot(s.local[0], s.local[2]) * 2 + s.length)));
   const gap = (Math.max(80, ...diameters) + 65) * f.spacing;
-  const occupied=f.groups.filter((g,i)=>layouts[i].length), arranged = automaticSlots(occupied, f.formation, gap, g => {
-    const members = f.ships.filter(s => s.groupId === g.id), armed = members.filter(s => SHIPS[s.type].strength > 0);
-    return !armed.length ? 'support' : armed.every(s => shipRole(s) === 'fast') ? 'fast' : 'core';
-  });
+  const profiles = planningProfiles(plan,side,preparation);
+  const occupied = f.groups.filter((g,i)=>layouts[i].length);
+  const arranged = f.formation==='screen' ? legacyScreenSlots(occupied,'screen',gap,g=>{const armed=f.ships.filter(s=>s.groupId===g.id&&SHIPS[s.type].strength>0);return !armed.length?'support':armed.every(s=>legacyScreenRole(s)==='fast')?'fast':'core';}) : ['staggered','column'].includes(f.formation) ? slots(occupied.length,f.formation,gap) : formationSlots(occupied,f.formation,gap,g=>groupProfile(f.ships.filter(s=>s.groupId===g.id).map(s=>profiles.get(s.id))));
   const anchors=f.groups.map(g=>arranged[occupied.indexOf(g)]??[0,0,0]);
   const ships = [], groups = [];
   f.groups.forEach((g, i) => {
@@ -149,8 +151,8 @@ export function fleetLayout(plan, side) {
   return { ships, groups };
 }
 
-export function deployTrialPlan(plan) {
-  const fleets = Object.fromEntries(PLAN_SIDES.map(side => [side, fleetLayout(plan, side)]));
+export function deployTrialPlan(plan, preparation = null) {
+  const fleets = Object.fromEntries(PLAN_SIDES.map(side => [side, fleetLayout(plan, side, preparation)]));
   // Normally the fleet origins are 50 km apart. Deep columns move back far enough
   // to leave at least 10 km between the nearest opposing hulls.
   const front = Object.fromEntries(PLAN_SIDES.map(side => [side, Math.min(0, ...fleets[side].ships.map(s => s.position[2] - s.length / 2))]));

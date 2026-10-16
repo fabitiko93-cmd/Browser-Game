@@ -1,4 +1,5 @@
-import { SHIPS } from './data.js';
+import { maneuverSpec } from './battle-formations.js';
+export { maneuverSpec } from './battle-formations.js';
 
 export const MANEUVERS = { fleet: 'Bei Flotte bleiben', hold: 'Position halten', attack: 'Selbstständig angreifen', 'flank-left': 'Links flankieren', 'flank-right': 'Rechts flankieren', regroup: 'Zur Flotte sammeln' };
 const active = s => s.hull > 0 && !s.escaped && s.order !== 'retreat';
@@ -9,11 +10,6 @@ const delta = (a,b) => a.map((v,i)=>v-b[i]);
 const scale = (a,n) => a.map(v=>v*n);
 const unit = v => scale(v,1/(Math.hypot(...v)||1));
 
-export function maneuverSpec(ship) {
-  const speed = SHIPS[ship.strategicType]?.speed ?? 1, size=ship.length??36;
-  return { speed: (size>=60?180:size>=28?250:520)*speed,
-    turnRate: size>=60?.12:size>=28?.36:1.25, fireArc:size>=60?.035:size>=28?.05:.07 };
-}
 export function initializeManeuvers(battle) {
   if (battle.mode!=='trial'||!battle.formations||battle.navigation) return;
   const fleets=['friendly','enemy'].map(side=>{
