@@ -25,7 +25,7 @@ let cameraFocus = null, pendingWorldPick = null;
 let ownRoster;
 let battle, view, ready = false, paused = false, generation = 0, lastFrame = 0, lastRender = 0, lastHud = 0;
 let visualTime = 0, pending = [], noticeTimer, inspectedId = null, returnToOrders = false, ownToOrders = false, graphics = 'auto';
-let hasSelection = false, selectionId = null, pauseReason = 'start', contactPicked = null, ignoredContactClosures = 0;
+let hasSelection = false, selectionId = null, showRecipientMarks = false, pauseReason = 'start', contactPicked = null, ignoredContactClosures = 0;
 const requested = new URLSearchParams(location.search).get('scenario');
 let savedEmpire = null, persistenceFailed = false, lastCheckpoint = 0;
 let scenario = Object.hasOwn(OVERVIEW_SCENARIOS, requested) ? requested : '20v20';
@@ -51,7 +51,11 @@ function menuViewport() {
     dialog.style.margin = '0 auto';
   }
 }
-function openDialog(id) { pauseForMenu(); closeDialogs(); $(id).showModal(); paint(); menuViewport(); }
+function openDialog(id) {
+  pauseForMenu(); closeDialogs();
+  if (id === 'orders-dialog' && hasSelection) showRecipientMarks = true;
+  $(id).showModal(); paint(); menuViewport();
+}
 function openContacts(fromOrders = false) { pauseForMenu(); closeDialogs(); returnToOrders = fromOrders && hasSelection; contacts.open(); paint(); }
 function viewport() {
   if (!view) return;
@@ -87,6 +91,9 @@ function markerFocusAt(x, y) {
 }
 function setFocus(focus) {
   const info = focusInfo(battle, focus);
+  // Keep the command recipient for explicit target selection, but let the new
+  // camera focus replace its old rings, target links and route preview.
+  showRecipientMarks = false;
   cameraFocus = info ? { kind: info.kind, id: info.id } : null;
   $('focus-bar').hidden = !cameraFocus; $('battle-app').classList.toggle('has-focus', Boolean(cameraFocus));
   viewport(); view.focusOverview(cameraFocus, battle);
@@ -151,7 +158,7 @@ function inspectContact(id) {
   inspectedId = id; openDialog('info-dialog'); view.highlightId = id; view.dirty = true; lastRender = 0;
 }
 function clearSelection() {
-  hasSelection = false; selectionId = null; closeDialogs(); view.highlightId = null; paint(); lastRender = 0;
+  hasSelection = false; selectionId = null; showRecipientMarks = false; closeDialogs(); view.highlightId = null; paint(); lastRender = 0;
 }
 const contacts = new TargetPanel($('contacts-dialog'), {
   getBattle: () => battle, onSelect: selectContact, groups: TRIAL_GROUPS,
@@ -246,7 +253,7 @@ async function start(nextScenario = scenario, resume = false, preparedPlan = nul
   }
   scenario = candidate.setup.scenario;
   const run = ++generation; ready = false; paused = true; lastFrame = lastRender = lastHud = visualTime = 0;
-  pending = []; frames.length = 0; inspectedId = null; hasSelection = false; selectionId = null; cameraFocus = null;
+  pending = []; frames.length = 0; inspectedId = null; hasSelection = false; selectionId = null; showRecipientMarks = false; cameraFocus = null;
   $('focus-bar').hidden = true; $('battle-app').classList.remove('has-focus');
   pauseReason = 'start'; clearTimeout(noticeTimer); closeDialogs();
   view?.dispose(); view = null; const old = $('battle-canvas'); old.replaceWith(old.cloneNode(false));
@@ -291,10 +298,10 @@ function paint() {
   if (['ship','target'].includes(view.mode) && !battle.ships.some(s => s.id === view.focusId && activeShip(s))) setCamera('overview');
   const own = battle.ships.filter(s => s.side === 'friendly'), selected = own.find(s => s.id === battle.selected);
   const target = battle.ships.find(s => s.id === battle.target), info = target && contactInfo(target, selected), display = commandDisplay(battle), recipients = recipientInfo(battle);
-  const selection = hasSelection ? { scope: battle.scope, selected: battle.selected, group: battle.selectedGroup } : null, marked = battleSelection(battle, selection);
+  const selection = hasSelection && showRecipientMarks ? { scope: battle.scope, selected: battle.selected, group: battle.selectedGroup } : null, marked = battleSelection(battle, selection);
   const selectionKey = selection ? `${selection.scope}:${selection.selected}:${selection.group}` : '';
   if (selectionKey !== view.selectionKey) { view.selectionKey = selectionKey; view.tacticalSelection = selection; view.dirty = true; }
-  $('selection-readout').hidden = !hasSelection;
+  $('selection-readout').hidden = !selection;
   const multi = battle.scope !== 'ship', groupName = battle.formations?.find(g => g.id === battle.selectedGroup)?.name;
   text('selection-readout', `${battle.scope === 'fleet' ? 'Flotte' : battle.scope === 'group' ? groupName : selected.name} · ${marked.targets.length} ${marked.targets.length === 1 ? 'Ziel' : 'Ziele'}`);
   text('friendly-count', own.filter(activeShip).length); text('enemy-count', battle.ships.filter(s => s.side === 'enemy' && activeShip(s)).length);
