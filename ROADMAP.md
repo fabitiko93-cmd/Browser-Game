@@ -1,5 +1,19 @@
 # Vorgemerkte Entwicklung
 
+## Planungsstand · 17.10.2026
+
+### Festgehalten durch den Nutzer
+
+- Im Kernspiel fehlen aus Nutzersicht weiterhin Vision und Umfang; auch die Schlacht ist noch nicht finalisiert. Die fertigen Teilpatches bedeuten keinen Abschluss des Gesamtspiels oder des Gefechtssystems.
+- Ein Flottensystem nach dem Kartenprinzip von Mount & Blade wird als spätere Zielrichtung vorgemerkt: Flotten bewegen sich sichtbar über die strategische Karte; ihre Darstellung vermittelt die tatsächliche Größenordnung und Zusammensetzung.
+- Diese Kartenumstellung ist eine große Anpassung und wird derzeit nicht umgesetzt. Sie ersetzt nicht die noch offene Finalisierung von Kernspiel und Schlacht.
+
+### Vorschläge zur weiteren Planung · noch abzustimmen
+
+- Den angestrebten Umfang einer vollständigen Partie anhand des vorhandenen Kernspiels zusammenführen: Aufbau und Versorgung, Erkundung und Expansion, Innen- und Außenpolitik, Krieg und langfristige Ziele. Vorhandene Systeme dabei nach ihrer tatsächlichen Spielwirkung bewerten.
+- Einen begrenzten Abschlussumfang für die Schlacht festlegen: verständliche und wirksame Befehle, nachvollziehbare Formationen und Manöver, Gefechtsdauer und Rückzug, Skalierung auf dem iPhone sowie die Übernahme von Teilnehmern, Schaden, Versorgung und Ergebnis ins Hauptspiel.
+- Für das vorgemerkte Kartenprinzip bleiben Zoomdarstellung, Reise- und Abfangregeln, Sensorik, Eskorte, Zeitablauf und der Übergang in Gefechte auszuarbeiten. Die besprochenen Details sind noch kein freigegebener Umsetzungskatalog.
+
 ## Immersive 3D-Gefechte · erster Schritt mit 0.11.0
 
 - Nutzerentscheidung: Quaternius als Ausgangsset verwenden. Gefechtsdauer bedeutet Wochen und Monate **Spielzeit**, keine Kalenderzeit.
