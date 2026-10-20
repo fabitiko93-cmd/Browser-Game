@@ -1,0 +1,146 @@
+{
+  "assets": [
+    {
+      "file": "moon-rock.glb",
+      "collection": "Lunar Landscape",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/moon_rock_01",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/bhushan0705/r3f-physics-world",
+      "mirrorCommit": "4943aa8ea81c82a863c877c641c4767c89774675",
+      "changes": "Select one provided source mesh/LOD; embed textures resized to 1024 px. Geometry unchanged.",
+      "sourceSha256": "004cc353fa0c29572a9ba40535f3716c297466fdf2c650d36deaf9e27eed5ce7",
+      "sha256": "d7879e7306686189613db26a1257243a1032f3b515b3720fe3f0ae2582331c0c",
+      "bytes": 496252,
+      "triangles": 2488,
+      "sourceNode": "moon_rock_01_LOD2"
+    },
+    {
+      "file": "namaqualand-cliff.glb",
+      "collection": "Namaqualand",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/namaqualand_cliff_01",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/shadow-kernel/Vortex-Engine-OpenWorld-Template",
+      "mirrorCommit": "5257e1e54fd2cc4b8a0a5b144ab838be35299f97",
+      "changes": "Select one provided source mesh/LOD; embed textures resized to 1024 px. Geometry unchanged.",
+      "sourceSha256": "2b427ee727da374dd334bedb14aec4fc0ceba315e27d28890ea53a638e9a8ce9",
+      "sha256": "3e4a48b80b56889873b0d0781017aba50e6070c24006c9e866d61de500f0439f",
+      "bytes": 1214420,
+      "triangles": 9000,
+      "sourceNode": "drone_rock_01"
+    },
+    {
+      "file": "regolith-color.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/moon_01",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/Joker-of-Gotham/Joker-of-Gotham.github.io",
+      "mirrorCommit": "32dda5b95b9968012d7c0fd43b460bfee7e9f72c",
+      "changes": "WebP conversion, original resolution retained.",
+      "sourceSha256": "ebe99635c8babc05620fb532eba8459b9168b5b09f9704e320938c231900ed62",
+      "sha256": "b26b9de3140fd0fa46ce30a8d115e7805ba6083f159f9678f25e40e5c13bb9f5",
+      "bytes": 20868
+    },
+    {
+      "file": "regolith-normal.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/moon_01",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/Joker-of-Gotham/Joker-of-Gotham.github.io",
+      "mirrorCommit": "32dda5b95b9968012d7c0fd43b460bfee7e9f72c",
+      "changes": "WebP conversion, original resolution retained.",
+      "sourceSha256": "cd0f110d7a5079fa2ae3739f91cad85480b5314fd2b414998a08f1f444c6a110",
+      "sha256": "bd58e05da87a6385c405c440f838e4bf7cd2dcfbcdddeb05b8f1bccad28716f3",
+      "bytes": 558946
+    },
+    {
+      "file": "regolith-arm.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/moon_01",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/Joker-of-Gotham/Joker-of-Gotham.github.io",
+      "mirrorCommit": "32dda5b95b9968012d7c0fd43b460bfee7e9f72c",
+      "changes": "WebP conversion, original resolution retained.",
+      "sourceSha256": "96c3c6fe0d387e728b8df1b7bafa146979c328e4a1599bb856fdb59a5e3fb79c",
+      "sha256": "ff8c3ee1da6747f00cd1add03d6fef51ef9bbf5dca08d480172001c99c3d5b19",
+      "bytes": 211032
+    },
+    {
+      "file": "sand-color.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/gravelly_sand",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/einbaumhaus/Dimension-Tension",
+      "mirrorCommit": "68044a191c8a3573971eb0f334087dc2acc89acd",
+      "changes": "WebP conversion, original resolution retained.",
+      "sourceSha256": "bc1624594ce807f04eaa023f6f9df93ffefd20904570cd46ca302b954ef80eec",
+      "sha256": "c0884d22e6d5cf09b89c5ffa063ce3ba773b5e0309cf969221f09409de578579",
+      "bytes": 484964
+    },
+    {
+      "file": "earth-day.jpg",
+      "creator": "Solar System Scope / INOVE",
+      "source": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "mirror": "https://github.com/Sanghel/solar-system-3d",
+      "mirrorCommit": "c826ebef5762074e5c8ba696254bedb0d3694757",
+      "changes": "None",
+      "sha256": "767ee1dc6eb3802699bfccf6f264880f8acd0b80de3191cd24984fe279b07b7c",
+      "bytes": 463087
+    },
+    {
+      "file": "mars.jpg",
+      "creator": "Solar System Scope / INOVE",
+      "source": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "mirror": "https://github.com/Sanghel/solar-system-3d",
+      "mirrorCommit": "c826ebef5762074e5c8ba696254bedb0d3694757",
+      "changes": "None",
+      "sha256": "2d187f3e77a98eaa8cea5f4cc722f633c122ef170b9e94ace6b5fb6cbc3f8e01",
+      "bytes": 750547
+    },
+    {
+      "file": "moon.jpg",
+      "creator": "Solar System Scope / INOVE",
+      "source": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "mirror": "https://github.com/Sanghel/solar-system-3d",
+      "mirrorCommit": "c826ebef5762074e5c8ba696254bedb0d3694757",
+      "changes": "None",
+      "sha256": "2764ba6535ea0481a062846ee033cc7a909dae05b31a8fd13f3e98f3a7fd92bd",
+      "bytes": 1053869
+    },
+    {
+      "file": "earth-clouds.jpg",
+      "creator": "Solar System Scope / INOVE",
+      "source": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "mirror": "https://github.com/igorSzymczak/AF2-Client/tree/619675d6d7800984955184273c1ac771bcedae35/assets/structures/planets/Earth",
+      "changes": "None",
+      "sha256": "fffd7f68d41b37274822150e54a6ef605af1d3ec35624d9f628c3b896bfa42ed",
+      "bytes": 965676
+    },
+    {
+      "file": "earth-night.jpg",
+      "creator": "Solar System Scope / INOVE",
+      "source": "https://www.solarsystemscope.com/textures/",
+      "license": "CC-BY-4.0",
+      "mirror": "https://github.com/igorSzymczak/AF2-Client/tree/619675d6d7800984955184273c1ac771bcedae35/assets/structures/planets/Earth",
+      "changes": "None",
+      "sha256": "c16fd1bc096ab91a5c5265c6ff9847c43f489f2e2ee790ccdbcbd03251cf3a5a",
+      "bytes": 255287
+    },
+    {
+      "file": "sand-normal.webp",
+      "creator": "Poly Haven / Dario Barresi",
+      "source": "https://polyhaven.com/a/gravelly_sand",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/DeerajS2004/GODOT-GAME/blob/95ca2fc930d0a9e8347f204546da7b8c0ecf0db9/godot%20materials/gravelly_sand_1k.gltf/textures/gravelly_sand_nor_gl_1k.jpg",
+      "changes": "WebP conversion, original resolution retained.",
+      "sourceSha256": "3801dd88a9e4cad92098599adcf8224d7cc9380a503f53900a1a074c2ac61edd",
+      "sha256": "6b02f2295826050a7a3be8454ae09b719d137f413eee520838b2f2d7c14d0f98",
+      "bytes": 25060
+    }
+  ]
+}

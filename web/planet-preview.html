@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070e19">
+  <title>Nereid · ORBIT 3077</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="stylesheet" href="./planet-preview.css">
+</head>
+<body>
+<main class="planet-app">
+  <header class="planet-header">
+    <a class="round-button" href="./index.html" aria-label="Zum Spiel zurück">‹</a>
+    <div><span class="eyebrow">ORBIT 3077 · PLANETENPROBE</span><h1 id="planet-name">Nereid</h1></div>
+    <button class="round-button" id="settings-open" aria-label="Planetenoptionen öffnen">☷</button>
+  </header>
+  <section class="planet-stage" id="stage" aria-label="Drehbare Planetenansicht">
+    <canvas id="planet-canvas" aria-label="Planet mit einem Finger drehen; Regionen über Markierungen oder die Regionsliste auswählen."></canvas>
+    <div id="markers" class="markers"></div>
+    <div class="stage-caption"><span id="view-caption" class="eyebrow">ORBITALE ÜBERSICHT</span><p id="view-description">Eine Welt. Vier Regionen.</p></div>
+    <div class="view-tools">
+      <button class="round-button" id="zoom-in" aria-label="Näher heranzoomen">+</button>
+      <button class="round-button" id="zoom-out" aria-label="Weiter herauszoomen">−</button>
+      <button class="round-button" id="camera-home" aria-label="Ansicht zentrieren"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg></button>
+      <button class="round-button" id="grid-toggle" aria-label="Bauflächen einblenden" aria-pressed="false" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M9 4v16m6-16v16M4 9h16M4 15h16"/></svg></button>
+    </div>
+    <div class="stage-bottom"><span id="gesture-hint">Ziehen zum Drehen · Region antippen</span><span id="asset-state" role="status">Planet wird geladen …</span></div>
+    <div class="loading" id="loading"><span class="loading-orbit"></span><span id="loading-label">Welt wird aufgebaut</span></div>
+    <div class="error-card" id="planet-error" role="alert" hidden><strong>Ansicht konnte nicht geladen werden</strong><p id="error-text"></p><button id="reload">Erneut laden</button></div>
+  </section>
+  <section class="planet-footer" aria-label="Regionsauswahl">
+    <div class="planet-facts" id="planet-facts"></div>
+    <div class="regions" id="regions" aria-label="Region wählen"></div>
+    <div class="region-detail"><div><span class="eyebrow" id="region-kind">KÜSTENEBENE</span><h2 id="region-name">Meridian</h2></div><span class="region-status" id="region-status">Erschlossen</span></div>
+    <p id="region-description" class="region-description"></p>
+    <div class="site-info" id="site-info" hidden role="status"></div>
+    <button class="primary-button" id="region-enter">Region betreten <span>↘</span></button>
+    <button class="back-button" id="orbit-return" hidden>↑ Zur Planetenübersicht</button>
+  </section>
+</main>
+<dialog id="settings-dialog">
+  <form method="dialog" class="dialog-heading"><div><span class="eyebrow">MUSTERPLANET</span><h2>Eine Welt gestalten</h2></div><button class="round-button" aria-label="Optionen schließen">×</button></form>
+  <p>Ein Seed erzeugt immer dieselbe Zusammenstellung. Die Probe verändert deinen Reichsspielstand nicht.</p>
+  <form id="seed-form"><label for="seed-input">Welt-Seed</label><div class="seed-row"><input id="seed-input" name="seed" maxlength="80" autocomplete="off" required><button type="button" class="round-button" id="seed-random" aria-label="Neuen zufälligen Seed einsetzen">↻</button></div>
+    <label for="planet-preset">Planetentyp</label><select id="planet-preset"><option value="temperate">Bewohnbare Welt</option><option value="arid">Trockene Welt</option><option value="lunar">Luftlose Welt</option></select>
+    <label for="region-count">Regionen</label><select id="region-count"><option value="3">3 Regionen</option><option value="4" selected>4 Regionen</option><option value="5">5 Regionen</option></select>
+    <button class="primary-button" type="submit">Musterplanet erzeugen <span>↗</span></button>
+  </form>
+  <details><summary>Verwendete Assets</summary><p>Planetenkarten: Solar System Scope / INOVE, CC BY 4.0. Gelände und Felsmodelle: Poly Haven, Sammlungen Namaqualand und Lunar Landscape, CC0.</p><p>Geländeabschnitte und Platzierungen entstehen aus dem Seed. Diese erste Probe zeigt Landschaft und Bauflächen; die vollständige Koloniewirtschaft ist noch nicht angebunden.</p><a href="./models/planets/provenance.json" target="_blank" rel="noopener">Herkunft der einzelnen Dateien</a></details>
+</dialog>
+<script type="module" src="./build/planet-preview-page.js"></script>
+</body>
+</html>

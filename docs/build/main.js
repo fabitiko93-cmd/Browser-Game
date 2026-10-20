@@ -172,6 +172,14 @@ document.addEventListener('click', e => {
     try{saveGame(state);}catch{toast('Die Schlacht konnte nicht gespeichert werden. Bitte Spielstand sichern und den Browserspeicher prüfen.',true);render();return;}
     const url=new URL('./battle-replay.html',location.href);url.searchParams.set('battle',report.id);location.href=url.href;return;
   }
+  else if (action === 'planet-preview') {
+    ui.speed = 0;
+    try { saveGame(state); } catch { toast('Bitte Spielstand sichern, bevor du die Planetenprobe öffnest.', true); render(); return; }
+    const url = new URL('./planet-preview.html', location.href);
+    const source = p.owner === 'player' ? p : homePlanet(state);
+    if (source) { url.searchParams.set('seed', String(source.seed)); url.searchParams.set('name', source.name); url.searchParams.set('preset', source.kind === 'Vulkanisch' ? 'arid' : 'temperate'); }
+    location.href = url.href; return;
+  }
   else if (action === 'battle-preview') { ui.speed = 0; persist(); location.href = new URL('./battle-trial.html', location.href).href; return; }
   else if (action === 'resource-toggle') { ui.resourcePage=(ui.resourcePage+1)%resourcePages(state,hudPlanet(state,ui)).length; }
   else if (action === 'local-sale') return act(localSale(state,p,el.dataset.resource,25),'Waren an örtliche Privatkäufer verkauft.');

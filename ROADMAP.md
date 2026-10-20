@@ -1,5 +1,15 @@
 # Vorgemerkte Entwicklung
 
+## Planetenbau · Nutzerentscheidungen und Musterplanet · 20.10.2026
+
+- Festgelegt: Regionen am drehbaren Planeten auswählen, innerhalb einer konzentrierten regionalen Ansicht bauen. Drei bis fünf Regionen dienen als erste Testgröße; die Erde mit etwa neun Milliarden Einwohnern ist der spätere Bevölkerungsmaßstab.
+- Der Startplanet ist vollständig erschlossen. Nutzbarkeit hängt später an Versorgung, nicht am Kauf einzelner Kacheln. Weitere Welten werden je nach Erkundungsstand teilweise oder vollständig bekannt; Expeditionen können fehlende Gebiete erschließen.
+- Gebäude dürfen mehrere Kacheln belegen; planetare Großwaffen benötigen entsprechend große Flächen. Planetentyp, Größe und örtliche Bedingungen dürfen bestimmte Bauwerke ausschließen. Erze unter Teilen einer Grundfläche, abfallende Geothermieeffizienz und Wasserzugang über Nachbarschaft sollen differenziert berechnet und im Bauplaner mit Ertrag und Produktion sichtbar werden.
+- Versorgung innerhalb eines Planeten soll überschaubar bleiben. Staatsformen und Gesetzeskosten sollen zusammenwirken; Umweltverschmutzung ist erst eine spätere Erweiterung. Diese Regeln sind mit der neuen Darstellung noch nicht implementiert.
+- Gewählte Quellen: Minerva für zukünftige Gebäude, Solar System Scope für Planetenkarten sowie Poly Haven Namaqualand und Lunar Landscape für Gelände. Minerva-Dateien sind noch nicht verfügbar und werden in der Probe nicht durch erfundene Modelle ersetzt.
+- Umgesetzt: separater Musterplanet mit vier vollständig erschlossenen Regionen, drei Planetenvorlagen, Landschaftsmodulen, Touchkamera und zuschaltbarem Vorschau-Raster. Tatsächliche freie Pack-Assets liegen samt Lizenz-/Herkunftsnachweis im Repository. Gebäude, Wirtschaft und das bestehende Oberflächenspiel werden darüber noch nicht bedient.
+- Vorbereitet: versionierte Rezepte mit stabilen unabhängigen Teil-Seeds. Die bereits vorhandene strategische Weltgeneration hat einen gespeicherten Welt-Seed; ein neuer Spielstand wählt standardmäßig einen neuen Seed. Die spätere Verknüpfung der neuen Regionen mit Spielständen und Erkundung sowie frei generierte globale Kontinente bleiben offen. Die jetzigen globalen Karten sind feste Referenztexturen.
+
 ## Planungsstand · 17.10.2026
 
 ### Festgehalten durch den Nutzer
