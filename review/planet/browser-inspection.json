@@ -2,6 +2,7 @@
   "checks": [
     "Region selection focuses the rotating globe; entering terrain is an explicit action",
     "Original scanned terrain assets render; touch rotation, build grid and ground inspection work without selecting during a drag",
+    "Four distinct regional landscapes have buried mesh footprints; scanned boulders render from all four camera directions",
     "Region switches reuse resources; same seed and reload reproduce the recipe while a different seed changes it without modifying the game save",
     "Temperate, arid and airless modules work at 390, 375 and 320 pixel portrait widths with reachable touch controls",
     "The game entry opens a preview based on the actual home planet seed and safely returns to the saved game"
@@ -82,11 +83,11 @@
       "stageHeight": 544.71875,
       "stageBottom": 616.71875,
       "mode": "region",
-      "calls": 9,
-      "triangles": 394570,
+      "calls": 12,
+      "triangles": 284338,
       "memory": {
-        "geometries": 13,
-        "textures": 10
+        "geometries": 16,
+        "textures": 13
       },
       "controls": [
         {
@@ -156,11 +157,11 @@
       "stageHeight": 474.4375,
       "stageBottom": 546.4375,
       "mode": "region",
-      "calls": 12,
-      "triangles": 394730,
+      "calls": 15,
+      "triangles": 284498,
       "memory": {
-        "geometries": 16,
-        "textures": 10
+        "geometries": 18,
+        "textures": 13
       },
       "controls": [
         {
@@ -230,11 +231,307 @@
       "stageHeight": 544.71875,
       "stageBottom": 616.71875,
       "mode": "region",
-      "calls": 9,
-      "triangles": 394570,
+      "calls": 12,
+      "triangles": 284338,
       "memory": {
-        "geometries": 13,
-        "textures": 10
+        "geometries": 16,
+        "textures": 13
+      },
+      "controls": [
+        {
+          "id": "A",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 62,
+          "tool": false
+        },
+        {
+          "id": "settings-open",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 372,
+          "tool": false
+        },
+        {
+          "id": "zoom-in",
+          "width": 44,
+          "height": 44,
+          "bottom": 188,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "zoom-out",
+          "width": 44,
+          "height": 44,
+          "bottom": 240,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "camera-home",
+          "width": 44,
+          "height": 44,
+          "bottom": 292,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "grid-toggle",
+          "width": 44,
+          "height": 44,
+          "bottom": 344,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "orbit-return",
+          "width": 346,
+          "height": 44,
+          "bottom": 829,
+          "right": 368,
+          "tool": false
+        }
+      ]
+    },
+    {
+      "label": "coast-polished",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 544.71875,
+      "stageBottom": 616.71875,
+      "mode": "region",
+      "calls": 12,
+      "triangles": 284338,
+      "memory": {
+        "geometries": 16,
+        "textures": 13
+      },
+      "controls": [
+        {
+          "id": "A",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 62,
+          "tool": false
+        },
+        {
+          "id": "settings-open",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 372,
+          "tool": false
+        },
+        {
+          "id": "zoom-in",
+          "width": 44,
+          "height": 44,
+          "bottom": 188,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "zoom-out",
+          "width": 44,
+          "height": 44,
+          "bottom": 240,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "camera-home",
+          "width": 44,
+          "height": 44,
+          "bottom": 292,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "grid-toggle",
+          "width": 44,
+          "height": 44,
+          "bottom": 344,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "orbit-return",
+          "width": 346,
+          "height": 44,
+          "bottom": 829,
+          "right": 368,
+          "tool": false
+        }
+      ]
+    },
+    {
+      "label": "basin-polished",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 544.71875,
+      "stageBottom": 616.71875,
+      "mode": "region",
+      "calls": 11,
+      "triangles": 320464,
+      "memory": {
+        "geometries": 15,
+        "textures": 13
+      },
+      "controls": [
+        {
+          "id": "A",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 62,
+          "tool": false
+        },
+        {
+          "id": "settings-open",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 372,
+          "tool": false
+        },
+        {
+          "id": "zoom-in",
+          "width": 44,
+          "height": 44,
+          "bottom": 188,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "zoom-out",
+          "width": 44,
+          "height": 44,
+          "bottom": 240,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "camera-home",
+          "width": 44,
+          "height": 44,
+          "bottom": 292,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "grid-toggle",
+          "width": 44,
+          "height": 44,
+          "bottom": 344,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "orbit-return",
+          "width": 346,
+          "height": 44,
+          "bottom": 829,
+          "right": 368,
+          "tool": false
+        }
+      ]
+    },
+    {
+      "label": "upland-polished",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 544.71875,
+      "stageBottom": 616.71875,
+      "mode": "region",
+      "calls": 10,
+      "triangles": 331856,
+      "memory": {
+        "geometries": 14,
+        "textures": 16
+      },
+      "controls": [
+        {
+          "id": "A",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 62,
+          "tool": false
+        },
+        {
+          "id": "settings-open",
+          "width": 44,
+          "height": 44,
+          "bottom": 57.5,
+          "right": 372,
+          "tool": false
+        },
+        {
+          "id": "zoom-in",
+          "width": 44,
+          "height": 44,
+          "bottom": 188,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "zoom-out",
+          "width": 44,
+          "height": 44,
+          "bottom": 240,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "camera-home",
+          "width": 44,
+          "height": 44,
+          "bottom": 292,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "grid-toggle",
+          "width": 44,
+          "height": 44,
+          "bottom": 344,
+          "right": 376,
+          "tool": true
+        },
+        {
+          "id": "orbit-return",
+          "width": 346,
+          "height": 44,
+          "bottom": 829,
+          "right": 368,
+          "tool": false
+        }
+      ]
+    },
+    {
+      "label": "caldera-polished",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 544.71875,
+      "stageBottom": 616.71875,
+      "mode": "region",
+      "calls": 10,
+      "triangles": 261424,
+      "memory": {
+        "geometries": 15,
+        "textures": 19
       },
       "controls": [
         {
@@ -305,7 +602,7 @@
       "stageBottom": 616.71875,
       "mode": "region",
       "calls": 9,
-      "triangles": 210560,
+      "triangles": 247880,
       "memory": {
         "geometries": 10,
         "textures": 12
@@ -379,10 +676,10 @@
       "stageBottom": 458,
       "mode": "region",
       "calls": 10,
-      "triangles": 528464,
+      "triangles": 304176,
       "memory": {
-        "geometries": 14,
-        "textures": 18
+        "geometries": 15,
+        "textures": 21
       },
       "controls": [
         {
@@ -453,10 +750,10 @@
       "stageBottom": 387.71875,
       "mode": "region",
       "calls": 10,
-      "triangles": 528464,
+      "triangles": 304176,
       "memory": {
-        "geometries": 14,
-        "textures": 18
+        "geometries": 15,
+        "textures": 21
       },
       "controls": [
         {
@@ -529,8 +826,8 @@
       "calls": 3,
       "triangles": 18112,
       "memory": {
-        "geometries": 15,
-        "textures": 18
+        "geometries": 16,
+        "textures": 21
       },
       "controls": [
         {
@@ -593,10 +890,10 @@
       "stageBottom": 359,
       "mode": "region",
       "calls": 10,
-      "triangles": 528464,
+      "triangles": 304176,
       "memory": {
         "geometries": 14,
-        "textures": 18
+        "textures": 21
       },
       "controls": [
         {
@@ -667,10 +964,10 @@
       "stageBottom": 288.71875,
       "mode": "region",
       "calls": 10,
-      "triangles": 528464,
+      "triangles": 304176,
       "memory": {
         "geometries": 14,
-        "textures": 18
+        "textures": 21
       },
       "controls": [
         {
@@ -744,7 +1041,7 @@
       "triangles": 18112,
       "memory": {
         "geometries": 16,
-        "textures": 18
+        "textures": 21
       },
       "controls": [
         {
@@ -798,14 +1095,41 @@
       ]
     }
   ],
+  "groundings": [
+    {
+      "module": "coast",
+      "rocks": 48,
+      "points": 48732,
+      "maxGap": -0.09209172189980741
+    },
+    {
+      "module": "basin",
+      "rocks": 56,
+      "points": 62132,
+      "maxGap": -0.0980741168260586
+    },
+    {
+      "module": "upland",
+      "rocks": 60,
+      "points": 67614,
+      "maxGap": -0.10350314146280226
+    },
+    {
+      "module": "caldera",
+      "rocks": 56,
+      "points": 27176,
+      "maxGap": -0.08662943087890707
+    }
+  ],
   "assets": [
+    "/models/planets/boulder-02.glb",
+    "/models/planets/boulder-05.glb",
     "/models/planets/earth-clouds.jpg",
     "/models/planets/earth-day.jpg",
     "/models/planets/earth-night.jpg",
     "/models/planets/mars.jpg",
     "/models/planets/moon-rock.glb",
     "/models/planets/moon.jpg",
-    "/models/planets/namaqualand-cliff.glb",
     "/models/planets/regolith-arm.webp",
     "/models/planets/regolith-color.webp",
     "/models/planets/regolith-normal.webp",

@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PLANET_PRESETS, REGION_MODULES, planetRandom, planetSubseed, regionHeight, regionSite } from './planet-blueprint.js';
+import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite } from './planet-blueprint.js';
+
+import { rockFootprint, fitRockToGround } from './planet-rocks.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
 const point = (latitude, longitude, radius = 2.22) => {
@@ -57,6 +59,7 @@ export class PlanetPreviewScene {
       }
       this.controls.update();
       if (this.mode === 'orbit' && this.clouds && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.clouds.rotation.y += delta * .004; this.dirty = true; }
+      if (this.mode === 'region' && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
       if (this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; this.onFrame?.(); }
     }; this.frameId = requestAnimationFrame(this.animate);
     this.resize();
@@ -79,15 +82,15 @@ export class PlanetPreviewScene {
       gltf.scene.updateMatrixWorld(true); const meshes = [];
       gltf.scene.traverse(node => { if (node.isMesh) meshes.push(node); });
       if (!meshes.length) throw new Error(`Modell ${name} enthält keine Geometrie.`);
+      const bounds = new THREE.Box3();
+      for (const mesh of meshes) { mesh.geometry.applyMatrix4(mesh.matrixWorld); mesh.geometry.computeBoundingBox(); bounds.union(mesh.geometry.boundingBox); }
+      const center = bounds.getCenter(new THREE.Vector3()), size = bounds.getSize(new THREE.Vector3()), unit = 1 / Math.max(size.x, size.y, size.z);
       for (const mesh of meshes) {
-        mesh.geometry.applyMatrix4(mesh.matrixWorld); mesh.geometry.computeBoundingBox();
-        const box = mesh.geometry.boundingBox, center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
-        mesh.geometry.translate(-center.x, -box.min.y, -center.z);
-        mesh.geometry.scale(1 / Math.max(size.x, size.y, size.z), 1 / Math.max(size.x, size.y, size.z), 1 / Math.max(size.x, size.y, size.z));
-        mesh.material.envMapIntensity = .35;
+        mesh.geometry.translate(-center.x, -bounds.min.y, -center.z); mesh.geometry.scale(unit, unit, unit);
+        mesh.material.envMapIntensity = .15;
         if (mesh.material.map) mesh.material.map.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
       }
-      const result = meshes.map(m => ({ geometry: m.geometry, material: m.material }));
+      const result = meshes.map(m => ({ geometry: m.geometry, material: m.material, footprint: rockFootprint(m.geometry) }));
       if (this.disposed) this.disposeModels(result);
       return result;
     }));
@@ -97,7 +100,7 @@ export class PlanetPreviewScene {
   clearGroup(group) {
     const geometries = new Set(), materials = new Set();
     for (const child of group.children) child.traverse(node => {
-      if (!node.userData.shared && node.geometry) geometries.add(node.geometry);
+      if (!node.userData.shared && !node.userData.sharedGeometry && node.geometry) geometries.add(node.geometry);
       if (!node.userData.shared && node.material) for (const material of [].concat(node.material)) materials.add(material);
       if (node.isInstancedMesh) node.dispose();
     });
@@ -143,6 +146,7 @@ export class PlanetPreviewScene {
   showOrbit() {
     this.generation++; this.mode = 'orbit'; this.globe.visible = true; this.land.visible = false; this.stars.visible = true;
     this.scene.background = new THREE.Color(0x040a13); this.scene.fog = null;
+    this.renderer.toneMappingExposure = 1; this.sun.color.set(0xffe7bf); this.hemi.color.set(0xb8d5e5); this.hemi.groundColor.set(0x615446);
     this.sun.position.set(9, 5, 7); this.sun.target.position.set(0, 0, 0); this.sun.castShadow = false; this.sun.intensity = 3.4; this.hemi.intensity = .07;
     this.controls.target.set(0, 0, 0); this.controls.enablePan = false; this.controls.minDistance = 4.8; this.controls.maxDistance = 18; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI - .15;
     this.cameraDestination = null; this.camera.near = .05; this.camera.far = 1000; this.camera.updateProjectionMatrix();
@@ -164,8 +168,10 @@ export class PlanetPreviewScene {
     this.controls.enableDamping = false; this.controls.update(); this.controls.enableDamping = true;
     if (this.mode === 'orbit') { const r = this.focusedRegion ?? this.planet?.regions[0]; this.camera.position.copy(point((r?.latitude ?? 25) * .65, (r?.longitude ?? 15) - 12, 1)).multiplyScalar(this.globeDistance()); this.controls.target.set(0, 0, 0); }
     else {
-      this.controls.target.set(this.region?.module === 'coast' ? -24 : 0, 2, 0);
-      const offset = new THREE.Vector3(70, 90, 105).multiplyScalar(1 / Math.min(1, this.camera.aspect));
+      const x = this.region?.module === 'coast' ? -18 : 0;
+      this.controls.target.set(x, regionGroundHeight(this.region, x, 0) + 2, 0);
+      const offsets = { coast: [85, 74, 100], basin: [75, 65, 115], upland: [80, 95, 100], caldera: [84, 112, 90], regolith: [70, 85, 105] };
+      const offset = new THREE.Vector3(...offsets[this.region.module]).multiplyScalar(1 / Math.min(1, this.camera.aspect));
       offset.clampLength(100, 230); this.camera.position.copy(this.controls.target).add(offset);
     }
     this.controls.update(); this.dirty = true;
@@ -173,49 +179,70 @@ export class PlanetPreviewScene {
 
   async showRegion(region) {
     const generation = ++this.generation; this.region = region; this.mode = 'region';
-    this.clearGroup(this.land); this.grid = null; this.siteMark = null;
+    this.clearGroup(this.land); this.grid = null; this.siteMark = null; this.waterTime = null;
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], airless = region.module === 'regolith';
-    this.scene.background = new THREE.Color(airless ? 0x03070d : 0x889da7);
-    this.scene.fog = airless ? null : new THREE.FogExp2(module.water ? 0x82949d : 0xa79a83, .0025);
-    this.stars.visible = airless;
-    this.sun.position.set(-70, 75, -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 3.4 : 3; this.sun.castShadow = true; this.hemi.intensity = airless ? .08 : .9;
+    this.scene.background = new THREE.Color(module.sky);
+    this.scene.fog = airless ? null : new THREE.FogExp2(module.fog, region.module === 'caldera' ? .0018 : .0015);
+    this.stars.visible = airless; this.renderer.toneMappingExposure = .96;
+    const warm = region.module === 'basin';
+    this.sun.color.set(warm ? '#ffe0bb' : region.module === 'upland' ? '#e8f1ff' : '#fff0d8');
+    this.hemi.color.set(module.sky); this.hemi.groundColor.set(module.palette[0]);
+    this.sun.position.set(-70, 95, region.module === 'upland' ? 65 : -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 2.5 : 2.8; this.sun.castShadow = true; this.hemi.intensity = airless ? .06 : .55;
     this.controls.enablePan = true; this.controls.minDistance = 14; this.controls.maxDistance = 260; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI * .48;
     this.camera.near = .2; this.camera.far = 1800; this.camera.updateProjectionMatrix(); this.resetCamera();
     const [color, normal, arm] = await Promise.all([this.texture(`${module.ground}-color.webp`, { color: true, repeat: 18 }), this.texture(`${module.ground}-normal.webp`, { repeat: 18 }), module.ground === 'regolith' ? this.texture('regolith-arm.webp', { repeat: 18 }) : null]);
-    const assets = module.rock === 'lunar' ? await this.model('moon-rock.glb') : await this.model('namaqualand-cliff.glb');
+    const modelIds = [...new Set(region.rocks.map(r => r.model))];
+    const assetSets = await Promise.all(modelIds.map(id => this.model(ROCK_ASSETS[id])));
     if (generation !== this.generation || this.disposed) return;
     const geometry = new THREE.PlaneGeometry(region.size, region.size, 128, 128); geometry.rotateX(-Math.PI / 2);
     const position = geometry.attributes.position;
     for (let i = 0; i < position.count; i++) position.setY(i, regionHeight(region, position.getX(i), position.getZ(i)));
-    geometry.computeVertexNormals();
-    const ground = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, normalScale: new THREE.Vector2(.8, .8), roughness: 1, color: module.tint, envMapIntensity: .2 });
-    if (arm) { ground.roughnessMap = arm; ground.aoMap = arm; ground.aoMapIntensity = .65; geometry.setAttribute('uv1', geometry.attributes.uv); }
+    geometry.computeVertexNormals(); this.colorTerrain(geometry);
+    const ground = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, normalScale: new THREE.Vector2(module.ground === 'regolith' ? 1 : .65, module.ground === 'regolith' ? 1 : .65), vertexColors: true, roughness: 1, envMapIntensity: .12 });
+    if (arm) { ground.roughnessMap = arm; ground.aoMap = arm; ground.aoMapIntensity = .4; geometry.setAttribute('uv1', geometry.attributes.uv); }
     this.terrain = new THREE.Mesh(geometry, ground); this.terrain.receiveShadow = true; this.land.add(this.terrain);
     this.addTerrainSurroundings(ground);
     if (!airless) this.addSky();
     if (module.water) this.addWater();
-    for (const source of assets) {
-      const rocks = region.rocks.filter((_, i) => i % 2 === 0);
-      const batch = new THREE.InstancedMesh(source.geometry, source.material, rocks.length); batch.userData.shared = true; batch.castShadow = true; batch.receiveShadow = true;
-      const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3(), pos = new THREE.Vector3();
+    this.rockPlacements = [];
+    for (let type = 0; type < modelIds.length; type++) for (const source of assetSets[type]) {
+      const rocks = region.rocks.filter(r => r.model === modelIds[type]);
+      const material = source.material.clone(); material.color.multiply(new THREE.Color(module.rockTint)); material.roughness = 1; material.envMapIntensity = .12;
+      const batch = new THREE.InstancedMesh(source.geometry, material, rocks.length); batch.userData.sharedGeometry = true; batch.userData.rocks = true; batch.castShadow = true; batch.receiveShadow = true;
       rocks.forEach((rock, i) => {
-        rotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rock.rotation);
-        const width = rock.scale * (module.rock === 'lunar' ? 1.2 : 2.7);
-        scale.set(width, width * (.65 + rock.variant * .18), width);
-        pos.set(rock.x, regionHeight(region, rock.x, rock.z) - .15, rock.z);
-        matrix.compose(pos, rotation, scale); batch.setMatrixAt(i, matrix);
+        const pose = fitRockToGround(region, rock, source.footprint); batch.setMatrixAt(i, pose.matrix);
+        batch.setColorAt(i, new THREE.Color().setScalar(.86 + (rock.variant / 2) * .2));
+        this.rockPlacements.push({ id: rock.id, model: rock.model, matrix: pose.matrix, footprint: source.footprint });
       });
       batch.instanceMatrix.needsUpdate = true; batch.computeBoundingSphere(); this.land.add(batch);
     }
     this.addGrid(); this.addSiteMark(); this.dirty = true;
   }
 
+  colorTerrain(geometry) {
+    const module = REGION_MODULES[this.region.module], palette = module.palette.map(c => new THREE.Color(c));
+    const position = geometry.attributes.position, normal = geometry.attributes.normal, colors = new Float32Array(position.count * 3), c = new THREE.Color();
+    const floor = { coast: 3, basin: 2.5, upland: 12, caldera: 4, regolith: 3 }[this.region.module];
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i), z = position.getZ(i), y = position.getY(i), slope = 1 - normal.getY(i);
+      const altitude = THREE.MathUtils.clamp((y - floor) / 38, 0, 1);
+      c.copy(palette[0]).lerp(palette[1], altitude).lerp(palette[2], THREE.MathUtils.clamp(slope * 1.8, 0, .85));
+      if (this.region.module === 'coast' && y < 2) c.multiplyScalar(.72 + THREE.MathUtils.clamp(y / 2, 0, 1) * .28);
+      c.multiplyScalar(.96 + .05 * Math.sin(x * .12 + Math.sin(z * .15) + this.region.phase)); c.toArray(colors, i * 3);
+    }
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  }
+
   addSky() {
+    const module = REGION_MODULES[this.region.module];
     const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false,
-      uniforms: { top: { value: new THREE.Color(this.planet.preset === 'arid' ? '#544f4b' : '#234d68') }, bottom: { value: new THREE.Color('#b1b5ac') } },
+      uniforms: { top: { value: new THREE.Color(module.sky) }, bottom: { value: new THREE.Color(module.fog) } },
       vertexShader: 'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader: 'uniform vec3 top;uniform vec3 bottom;varying vec3 p;void main(){float h=clamp(normalize(p).y,0.,1.);gl_FragColor=vec4(mix(bottom,top,pow(h,.45)),1.);}'
+      fragmentShader: `uniform vec3 top;uniform vec3 bottom;varying vec3 p;void main(){float h=clamp(normalize(p).y,0.,1.);gl_FragColor=vec4(mix(bottom,top,pow(h,.45)),1.);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      }`
     })); this.land.add(sky);
   }
 
@@ -233,14 +260,45 @@ export class PlanetPreviewScene {
         const x = position.getX(i), z = position.getZ(i);
         position.setY(i, regionHeight(this.region, x, z)); uv.setXY(i, x / this.region.size + .5, .5 - z / this.region.size);
       }
-      geometry.computeVertexNormals(); if (material.aoMap) geometry.setAttribute('uv1', uv);
+      geometry.computeVertexNormals(); this.colorTerrain(geometry); if (material.aoMap) geometry.setAttribute('uv1', uv);
       const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
     }
   }
 
   addWater() {
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshPhysicalMaterial({ color: 0x1b6574, roughness: .27, metalness: .12, clearcoat: .8, clearcoatRoughness: .25, envMapIntensity: .7 }));
-    water.rotation.x = -Math.PI / 2; water.position.y = .1; water.receiveShadow = true; this.land.add(water);
+    this.waterTime = { value: 0 };
+    const material = new THREE.ShaderMaterial({
+      uniforms: { time: this.waterTime, phase: { value: this.region.phase }, deep: { value: new THREE.Color('#123e56') }, shallow: { value: new THREE.Color('#398d92') }, sky: { value: new THREE.Color(REGION_MODULES.coast.sky) } },
+      vertexShader: 'varying vec3 p;void main(){p=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(p,1.);}',
+      fragmentShader: `uniform float time;uniform float phase;uniform vec3 deep;uniform vec3 shallow;uniform vec3 sky;varying vec3 p;
+      void main(){
+        vec3 n=normalize(vec3(.035*sin(p.x*.7+p.z*.23+time*.8)+.018*sin(p.z*1.4-time),1.,.035*cos(p.z*.65+p.x*.2-time*.6)));
+        vec3 eye=normalize(cameraPosition-p);float fresnel=.03+.8*pow(1.-max(dot(n,eye),0.),4.);
+        float coast=-38.5+5.*sin(p.z*.044+phase)+2.*sin(p.z*.1+phase);
+        float depth=max(0.,coast-p.x);vec3 color=mix(shallow,deep,1.-exp(-depth*.06));
+        color=mix(color,sky,fresnel*.6);
+        float glint=pow(max(dot(reflect(-normalize(vec3(-70.,95.,-45.)),n),eye),0.),110.);
+        color+=vec3(.8,.78,.67)*glint*.65;gl_FragColor=vec4(color,1.);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`
+    });
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1800), material); water.rotation.x = -Math.PI / 2; water.position.y = .1; this.land.add(water);
+    const positions = [], uv = [], indices = [], segments = 240;
+    for (let i = 0; i <= segments; i++) {
+      const z = -480 + i * 4; let wet = -100, dry = 10;
+      for (let j = 0; j < 13; j++) { const mid = (wet + dry) / 2; if (regionHeight(this.region, mid, z) < .1) wet = mid; else dry = mid; }
+      positions.push(wet - 2.5, .12, z, wet + .25, .12, z); uv.push(0, z, 1, z);
+      if (i < segments) { const a = i * 2; indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    }
+    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geometry.setIndex(indices);
+    const foam = new THREE.Mesh(geometry, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      uniforms: { time: this.waterTime }, vertexShader: 'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: `uniform float time;varying vec2 v;void main(){float a=sin(v.x*3.14159)*(.1+.08*sin(v.y*.7-time*.6));gl_FragColor=vec4(vec3(.7,.85,.82),a);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      }`
+    })); this.land.add(foam);
   }
 
   addGrid() {

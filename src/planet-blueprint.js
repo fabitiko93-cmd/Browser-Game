@@ -2,19 +2,25 @@ import { worldSeed } from './world.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 1;
+export const PLANET_GENERATOR_VERSION = 2;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const PLANET_PRESETS = Object.freeze({
   temperate: { name: 'Bewohnbare Welt', globe: 'earth-day.jpg', atmosphere: '#6cb5ef', radiusKm: 6371, ocean: true },
   arid: { name: 'Trockene Welt', globe: 'mars.jpg', atmosphere: '#d4a984', radiusKm: 4300, ocean: false },
   lunar: { name: 'Luftlose Welt', globe: 'moon.jpg', atmosphere: null, radiusKm: 1737, ocean: false }
 });
-export const REGION_MODULES = Object.freeze({
-  coast: { name: 'Küstenebene', ground: 'sand', rock: 'namaqualand', water: true, relief: 1.5, tint: '#b7b297', description: 'Geschützte Küste mit einer zusammenhängenden Baufläche und Wasserzugang.' },
-  basin: { name: 'Trockenes Becken', ground: 'sand', rock: 'namaqualand', water: false, relief: 2.2, tint: '#c3ad88', description: 'Offenes Tal zwischen verwitterten Felsformationen. Viel Platz für weitläufige Anlagen.' },
-  upland: { name: 'Felsiges Hochland', ground: 'sand', rock: 'namaqualand', water: false, relief: 3.5, tint: '#aaa699', description: 'Höhenzüge und freiliegendes Gestein um eine flachere zentrale Hochebene.' },
-  regolith: { name: 'Regolithplateau', ground: 'regolith', rock: 'lunar', water: false, relief: 2.6, tint: '#aaa9a3', description: 'Luftlose, staubige Oberfläche mit scharfem Licht und vereinzelten Felsgruppen.' }
+export const ROCK_ASSETS = Object.freeze({
+  rounded: 'boulder-05.glb', layered: 'boulder-02.glb', lunar: 'moon-rock.glb'
 });
+export const REGION_MODULES = Object.freeze({
+  coast: { name: 'Küstenebene', ground: 'sand', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: true, relief: 1.5, tint: '#ffffff', palette: ['#a6a18a', '#d4cbb0', '#71817c'], sky: '#789eae', fog: '#94afb5', rockTint: '#cbd1c5', description: 'Helle Strandterrassen, blaues Meer und Felsgruppen entlang einer geschwungenen Küste.' },
+  basin: { name: 'Rotes Becken', ground: 'sand', rock: 'namaqualand', rockModels: ['layered', 'rounded'], water: false, relief: 2.2, tint: '#ffffff', palette: ['#b47e5b', '#e0ae7e', '#915d4a'], sky: '#9f826b', fog: '#baa18a', rockTint: '#b78769', description: 'Ein breites, trockenes Tal zwischen roten Steilstufen und verwitterten Felsterrassen.' },
+  upland: { name: 'Felsiges Hochland', ground: 'regolith', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 3.5, tint: '#ffffff', palette: ['#87968d', '#c6c9bd', '#687778'], sky: '#8ca9b4', fog: '#b4c4ca', rockTint: '#a3afa9', description: 'Kühle, helle Felsrücken, ein erhöhtes Plateau und dichteres Geröll an den Hängen.' },
+  caldera: { name: 'Vulkanisches Becken', ground: 'regolith', rock: 'lunar', rockModels: ['lunar', 'rounded'], water: false, relief: 2.8, tint: '#ffffff', palette: ['#383f41', '#727877', '#9b7459'], sky: '#7e807e', fog: '#949a97', rockTint: '#65706e', description: 'Dunkles Vulkangestein in einer weiten Caldera mit einem deutlich erhöhten Kraterrand.' },
+  regolith: { name: 'Kraterplateau', ground: 'regolith', rock: 'lunar', rockModels: ['lunar'], water: false, relief: 2.6, tint: '#ffffff', palette: ['#8a8a85', '#c0beb5', '#70716d'], sky: '#03070d', fog: '#03070d', rockTint: '#a9aca7', description: 'Luftloses Gelände mit Einschlagskratern, scharfem Licht und verstreuten Mondgesteinen.' }
+});
+const smooth = (a, b, value) => { const t = Math.max(0, Math.min(1, (value - a) / (b - a))); return t * t * (3 - 2 * t); };
+const gaussian = value => Math.exp(-value * value);
 
 export const planetSubseed = (seed, path) => worldSeed(`${PLANET_GENERATOR_VERSION}:${seed}:${path}`);
 export function planetRandom(seed) {
@@ -30,7 +36,7 @@ export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset =
   if (!Object.hasOwn(PLANET_PRESETS, preset)) throw new Error('Unbekannte Planetenvorlage.');
   if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
   const seed = worldSeed(seedValue), next = planetRandom(planetSubseed(seed, 'planet'));
-  const modules = preset === 'temperate' ? ['coast', 'basin', 'upland', 'coast', 'upland'] : preset === 'lunar' ? Array(5).fill('regolith') : ['basin', 'upland', 'basin', 'upland', 'basin'];
+  const modules = preset === 'temperate' ? ['coast', 'basin', 'upland', 'caldera', 'coast'] : preset === 'lunar' ? Array(5).fill('regolith') : ['basin', 'upland', 'caldera', 'basin', 'upland'];
   const regions = Array.from({ length: regionCount }, (_, i) => {
     const id = `region-${i}`, r = planetRandom(planetSubseed(seed, `${id}/identity`));
     const [lat, lon] = anchors[i];
@@ -45,30 +51,88 @@ export function createRegionBlueprint(planet, regionId) {
   if (!region || !REGION_MODULES[region.module]) throw new Error('Unbekannte Region.');
   const module = REGION_MODULES[region.module];
   const next = planetRandom(planetSubseed(region.seed, 'terrain'));
-  const ridges = Array.from({ length: 9 }, () => ({ x: (next() - .5) * 170, z: (next() - .5) * 170, radius: 14 + next() * 25, height: (3 + next() * 8) * module.relief }));
-  const rocks = Array.from({ length: 100 }, (_, i) => {
-    const r = planetRandom(planetSubseed(region.seed, `rock/${i}`));
-    return { id: `rock-${i}`, model: module.rock, x: (r() - .5) * 172, z: (r() - .5) * 172, scale: 1.5 + r() * 5.5, rotation: r() * Math.PI * 2, variant: Math.floor(r() * 3) };
-  }).filter(r => Math.hypot(r.x, r.z) > 24 && (!module.water || r.x > -48));
-  const resources = Array.from({ length: 4 }, (_, i) => {
+  const ridges = Array.from({ length: 9 }, () => ({ x: (next() - .5) * 180, z: (next() - .5) * 180, radius: 18 + next() * 30, height: 1 + next() * 4 }));
+  const phase = next() * Math.PI * 2;
+  const craters = Array.from({ length: 5 }, (_, i) => {
+    const r = planetRandom(planetSubseed(region.seed, `crater/${i}`)), angle = i / 5 * Math.PI * 2 + r() * .5, distance = 48 + r() * 26;
+    return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance, radius: 12 + r() * 15 };
+  });
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, module: region.module, size: 192, phase, ridges, craters, rocks: [], resources: [] };
+  const counts = { coast: 48, basin: 56, upland: 68, caldera: 60, regolith: 64 };
+  for (let i = 0; i < counts[region.module]; i++) {
+    const r = planetRandom(planetSubseed(region.seed, `rock/${i}`)), group = i % 8;
+    let x, z;
+    if (region.module === 'coast') { z = -77 + group * 22 + (r() - .5) * 20; x = -30 + r() * 18 + (group % 3 === 0 ? 52 : 0); }
+    else if (region.module === 'basin') { x = (group % 2 ? 1 : -1) * (group % 4 < 2 ? 12 + r() * 7 : 69 + r() * 9); z = (r() - .5) * 150; }
+    else { const angle = group / 8 * Math.PI * 2 + (r() - .5) * .5, radius = (region.module === 'caldera' ? group % 2 ? 87 : 34 : 50) + (r() - .5) * (region.module === 'caldera' ? 10 : 30); x = Math.cos(angle) * radius; z = Math.sin(angle) * radius; }
+    x = Math.max(-80, Math.min(80, x)); z = Math.max(-80, Math.min(80, z));
+    const width = region.module === 'caldera' || region.module === 'regolith' ? 3 + r() * 7 : region.module === 'upland' ? 5 + r() * 12 : 4 + r() * 10;
+    // Prefer a stable shelf near each cluster. Loose boulders should not lean
+    // out of near-vertical crater walls as though attached to the air.
+    let best = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const cx = attempt ? x + (r() - .5) * 30 : x, cz = attempt ? z + (r() - .5) * 30 : z;
+      if (Math.abs(cx) > 80 || Math.abs(cz) > 80 || Math.hypot(cx, cz) <= 24) continue;
+      const span = width * .55, dx = (regionGroundHeight(result, cx + span, cz) - regionGroundHeight(result, cx - span, cz)) / (span * 2), dz = (regionGroundHeight(result, cx, cz + span) - regionGroundHeight(result, cx, cz - span)) / (span * 2), slope = Math.hypot(dx, dz);
+      if (regionHeight(result, cx, cz) < .2) continue;
+      if (!best || slope < best.slope) best = { x: cx, z: cz, slope };
+      if (slope < .3) break;
+    }
+    if (!best || best.slope > .5) continue;
+    x = best.x; z = best.z;
+    if (Math.hypot(x, z) <= 24) continue;
+    result.rocks.push({ id: `rock-${i}`, model: module.rockModels[Math.floor(r() * module.rockModels.length)], x, z, scale: width, rotation: r() * Math.PI * 2, variant: Math.floor(r() * 3) });
+  }
+  result.resources = Array.from({ length: 4 }, (_, i) => {
     const r = planetRandom(planetSubseed(region.seed, `resource/${i}`));
     return { id: `deposit-${i}`, type: i === 3 ? 'geothermal' : 'ore', x: (r() - .5) * 46, z: (r() - .5) * 46, radius: 4 + r() * 3 };
   });
-  return { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, module: region.module, size: 192, ridges, rocks, resources };
+  return result;
 }
 
-// Broad relief is a deterministic layout. Fine surface detail and all rock
-// geometry come from the credited scans; no random primitive rock substitutes.
+// Different geology modules share the same coordinate/seed contract, not the
+// same Gaussian hills. Fine surface detail and rock meshes remain real scans.
 export function regionHeight(region, x, z) {
-  const config = REGION_MODULES[region.module];
-  const terrain = region.ridges.reduce((height, r) => height + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / (r.radius ** 2)), 0);
-  const flat = Math.min(1, Math.max(0, (Math.hypot(x, z) - 19) / 25));
-  const base = terrain * flat + .8;
-  return config.water ? base - Math.max(0, -x - 35) * .22 : base;
+  const erosion = region.ridges.reduce((h, r) => h + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / r.radius ** 2), 0);
+  const phase = region.phase, radius = Math.hypot(x, z), outer = smooth(22, 48, radius);
+  if (region.module === 'coast') {
+    const shore = -42 + 5 * Math.sin(z * .044 + phase) + 2 * Math.sin(z * .1 + phase);
+    return -3.5 + smooth(shore - 12, shore + 20, x) * (7 + erosion * .12) + outer * smooth(14, 65, x) * erosion * .9;
+  }
+  if (region.module === 'basin') {
+    const bend = Math.sin(z * .018 + phase) * 9;
+    const walls = smooth(22, 37, Math.abs(x - bend)) * 15 + smooth(41, 58, Math.abs(x - bend)) * 13;
+    return 2.5 + erosion * .07 + outer * (walls + erosion * .5);
+  }
+  if (region.module === 'upland') {
+    const ridge = 28 * gaussian((z + 55 + 8 * Math.sin(x * .04 + phase)) / 20) + 15 * gaussian((x - 57) / 18);
+    return 12 + erosion * .08 + outer * (ridge + erosion * 1.2 + 3 * Math.sin(x * .04 + z * .025 + phase) ** 2);
+  }
+  if (region.module === 'caldera') {
+    const d = Math.hypot(x + 7, z + 9), rim = 31 * gaussian((d - 64) / 13);
+    const breach = 1 - .68 * gaussian((x - 14) / 20) * smooth(15, 55, z);
+    return 4 + erosion * .1 + outer * (rim * breach + erosion * .3);
+  }
+  let height = 3 + erosion * .09;
+  for (const crater of region.craters) {
+    const d = Math.hypot(x - crater.x, z - crater.z), r = crater.radius;
+    height += outer * (r * .22 * gaussian((d - r) / (r * .17)) - r * .22 * Math.exp(-Math.pow(d / (r * .72), 4)));
+  }
+  return height;
+}
+
+// Match the actual triangles of the 128 x 128 central terrain mesh. Analytic
+// heights alone can leave a visible gap on a triangulated slope.
+export function regionGroundHeight(region, x, z) {
+  const step = region.size / 128, half = region.size / 2;
+  const ix = Math.min(127, Math.max(0, Math.floor((x + half) / step))), iz = Math.min(127, Math.max(0, Math.floor((z + half) / step)));
+  const x0 = ix * step - half, z0 = iz * step - half, u = (x - x0) / step, v = (z - z0) / step;
+  const a = regionHeight(region, x0, z0), b = regionHeight(region, x0 + step, z0), c = regionHeight(region, x0, z0 + step), d = regionHeight(region, x0 + step, z0 + step);
+  return u + v <= 1 ? a + u * (b - a) + v * (c - a) : d + (1 - v) * (b - d) + (1 - u) * (c - d);
 }
 
 export function regionSite(region, x, z) {
-  const height = regionHeight(region, x, z), step = 2;
+  const height = regionGroundHeight(region, x, z), step = 2;
   const slope = Math.hypot(regionHeight(region, x + step, z) - regionHeight(region, x - step, z), regionHeight(region, x, z + step) - regionHeight(region, x, z - step)) / (step * 2);
   const water = REGION_MODULES[region.module].water && height < .1;
   const deposits = region.resources.filter(d => Math.hypot(x - d.x, z - d.z) <= d.radius);

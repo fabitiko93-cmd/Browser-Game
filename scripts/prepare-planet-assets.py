@@ -1,6 +1,7 @@
-"""Prepare the credited planet/terrain scans without changing their geometry.
+"""Prepare the credited planet/terrain scans with optional mobile LOD preparation.
 
 Usage: python scripts/prepare-planet-assets.py /path/to/planet-assets-source
+Boulders: python scripts/prepare-planet-assets.py /path/to/model-mirror --boulders
 Only the explicitly listed CC0 models are read from the source mirrors.
 Other project files/code in those mirrors are not used by ORBIT.
 """
@@ -84,6 +85,20 @@ def model(path, name, lod):
     result = struct.pack('<III', 0x46546c67, 2, 28 + len(encoded) + len(chunks)) + struct.pack('<II', len(encoded), 0x4e4f534a) + encoded + struct.pack('<II', len(chunks), 0x004e4942) + chunks
     (out / name).write_bytes(result)
     return {'sourceSha256': sha(path), 'sha256': sha(out / name), 'bytes': len(result), 'triangles': triangles, 'sourceNode': selected['name']}
+
+if '--boulders' in sys.argv[2:]:
+    existing = json.loads((out / 'provenance.json').read_text())['assets']
+    for number in ['02', '05']:
+        asset = 'namaqualand_boulder_' + number
+        path = source / ('Assets/Models/Props/' + asset + '/' + asset + '.gltf')
+        name = 'boulder-' + number + '.glb'
+        prepared = model(path, name, 0)
+        simplified = json.loads(subprocess.check_output(['node', str(Path(__file__).with_name('simplify-planet-model.mjs')), str(out / name), '4000'], text=True))
+        item = {'file': name, 'collection': 'Namaqualand', 'creator': 'Poly Haven', 'source': 'https://polyhaven.com/a/' + asset, 'license': 'CC0-1.0', 'mirror': 'https://github.com/shadow-kernel/Vortex-Engine-OpenWorld-Template', 'mirrorCommit': subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(), 'changes': 'Source scan with attribute-aware mobile LOD (meshoptimizer 1.3.0), existing UVs/normals and 1024 px textures retained.', 'sourceSha256': sha(path), 'sha256': sha(out / name), 'bytes': (out / name).stat().st_size, **simplified}
+        existing = [r for r in existing if r['file'] != name] + [item]
+        print(name, item['bytes'], item['triangles'])
+    (out / 'provenance.json').write_text(json.dumps({'assets': existing}, indent=2) + '\n')
+    sys.exit(0)
 
 models = [
     ('lunar-source', 'public/moon_rock_01_1k.gltf', 'moon-rock.glb', 2, 'moon_rock_01', 'Lunar Landscape', 'https://github.com/bhushan0705/r3f-physics-world'),

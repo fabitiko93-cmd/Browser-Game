@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/state.js';
-import { createPlanetBlueprint, createRegionBlueprint, regionSite, planetSubseed } from '../src/planet-blueprint.js';
+import { createPlanetBlueprint, createRegionBlueprint, regionSite, regionHeight, planetSubseed } from '../src/planet-blueprint.js';
 
 test('planet recipes are reproducible, serializable and independently seeded', () => {
   const a = createPlanetBlueprint('NEREID-3077'), b = createPlanetBlueprint('NEREID-3077');
@@ -27,7 +27,7 @@ test('region modules preserve real constraints and a usable central area', () =>
       if (r.module === 'coast') {
         assert.equal(regionSite(region, -90, 0).water, true);
         assert.equal(regionSite(region, -90, 0).coastDistance, 0);
-        assert.ok(regionSite(region, 0, 0).coastDistance > 35);
+        assert.ok(regionSite(region, 0, 0).coastDistance > 20);
       }
       else assert.equal(regionSite(region, -90, 0).water, false);
       assert.equal(regionSite(region, 100, 0).buildable, false);
@@ -43,4 +43,14 @@ test('derived presentation recipes never modify a strategic save', () => {
   const recipe = createPlanetBlueprint(p.seed, { name: p.name });
   recipe.regions.forEach(r => createRegionBlueprint(recipe, r.id));
   assert.equal(JSON.stringify(game), before);
+});
+
+test('the four sample regions have distinct geological structures, not just different names', () => {
+  const planet = createPlanetBlueprint('NEREID-3077');
+  assert.equal(new Set(planet.regions.map(r => r.module)).size, 4);
+  const [coast, basin, upland, caldera] = planet.regions.map(r => createRegionBlueprint(planet, r.id));
+  assert.ok(regionHeight(coast, -90, 0) < 0 && regionHeight(coast, 60, 0) > 4);
+  assert.ok(regionHeight(basin, 60, 0) - regionHeight(basin, 0, 0) > 20);
+  assert.ok(regionHeight(upland, 0, -55) - regionHeight(upland, 0, 0) > 20);
+  assert.ok(regionHeight(caldera, 57, -9) - regionHeight(caldera, 0, 0) > 25);
 });

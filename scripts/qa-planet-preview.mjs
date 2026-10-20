@@ -21,7 +21,7 @@ await new Promise(done => server.listen(0, '127.0.0.1', done));
 const base = (process.env.ORBIT_QA_BASE_URL ?? `http://127.0.0.1:${server.address().port}`).replace(/\/$/, '');
 const executable = process.env.ORBIT_BROWSER_EXECUTABLE; if (executable) await chmod(executable, 0o755);
 const browser = await playwright.chromium.launch({ executablePath: executable, headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const errors = [], checks = [], inspections = [], requests = new Set();
+const errors = [], checks = [], inspections = [], groundings = [], requests = new Set();
 await mkdir(output, { recursive: true });
 const pass = message => { checks.push(message); console.log('PASS', message); };
 const original = JSON.stringify(createGame({ seed: 3077 }));
@@ -49,6 +49,23 @@ async function inspect(label) {
   inspections.push({ label, ...info }); console.log('INSPECT', JSON.stringify({ label, ...info })); return info;
 }
 async function snapshot(name) { await page.screenshot({ path: resolve(output, `${name}.png`), timeout: 60000 }); }
+async function auditGrounding() {
+  const audit = await page.evaluate(async () => {
+    const { regionGroundHeight } = await import('./build/planet-blueprint.js');
+    const view = ORBIT_PLANET_DEBUG.view, region = ORBIT_PLANET_DEBUG.region; let maxGap = -Infinity, points = 0;
+    for (const rock of view.rockPlacements) {
+      const m = rock.matrix.elements, p = rock.footprint.points;
+      for (let i = 0; i < p.length; i += 3) {
+        const x = m[0] * p[i] + m[4] * p[i + 1] + m[8] * p[i + 2] + m[12];
+        const y = m[1] * p[i] + m[5] * p[i + 1] + m[9] * p[i + 2] + m[13];
+        const z = m[2] * p[i] + m[6] * p[i + 1] + m[10] * p[i + 2] + m[14];
+        maxGap = Math.max(maxGap, y - regionGroundHeight(region, x, z)); points++;
+      }
+    }
+    return { module: region.module, rocks: view.rockPlacements.length, points, maxGap };
+  });
+  assert.ok(audit.rocks > 20 && audit.points > 1000 && audit.maxGap <= -.05, JSON.stringify(audit)); groundings.push(audit);
+}
 async function generate(seed, preset = 'temperate', regions = '4') {
   await page.locator('#settings-open').click(); await page.locator('#seed-input').fill(seed); await page.locator('#planet-preset').selectOption(preset); await page.locator('#region-count').selectOption(regions); await page.locator('#seed-form button[type=submit]').click(); await loaded();
 }
@@ -64,7 +81,7 @@ try {
   pass('Region selection focuses the rotating globe; entering terrain is an explicit action');
   await page.locator('#regions button').first().click(); await loaded(); await page.locator('#region-enter').click(); await loaded();
   await snapshot('coast-390'); const initial = await inspect('coast-390');
-  assert.ok(requests.has('/models/planets/namaqualand-cliff.glb')); assert.ok(requests.has('/models/planets/sand-normal.webp'));
+  assert.ok(requests.has('/models/planets/boulder-05.glb')); assert.ok(requests.has('/models/planets/boulder-02.glb')); assert.ok(requests.has('/models/planets/sand-normal.webp'));
   const regionRecipe = await page.evaluate(() => ORBIT_PLANET_DEBUG.region);
   const cdp = await context.newCDPSession(page), before = await camera();
   const bounds = await page.locator('#planet-canvas').boundingBox(), x = Math.round(bounds.width * .45), y = Math.round(bounds.y + bounds.height * .48);
@@ -86,6 +103,17 @@ try {
   for (let i = 0; i < 2; i++) { await page.locator('#regions button').nth(1).click(); await loaded(); await page.locator('#regions button').first().click(); await loaded(); }
   assert.deepEqual(await page.evaluate(() => ORBIT_PLANET_DEBUG.region), regionRecipe);
   const repeated = await inspect('repeated-regions'); assert.ok(repeated.memory.geometries <= initial.memory.geometries && repeated.memory.textures === initial.memory.textures);
+  for (let i = 0; i < 4; i++) {
+    await page.locator('#regions button').nth(i).click(); await loaded(); await page.locator('#camera-home').click();
+    const type = await page.evaluate(() => ORBIT_PLANET_DEBUG.region.module); await auditGrounding(); await inspect(type + '-polished'); await snapshot(type + '-390');
+  }
+  assert.equal(new Set(groundings.map(g => g.module)).size, 4);
+  await page.locator('#regions button').first().click(); await loaded(); await page.locator('#zoom-in').click();
+  for (let angle = 0; angle < 4; angle++) {
+    await page.evaluate(angle => { const v = ORBIT_PLANET_DEBUG.view, r = 95, a = angle * Math.PI / 2; v.camera.position.copy(v.controls.target).add({ x: Math.cos(a) * r, y: 42, z: Math.sin(a) * r }); v.controls.update(); v.dirty = true; }, angle);
+    await loaded(); await snapshot(`rocks-angle-${angle}`);
+  }
+  pass('Four distinct regional landscapes have buried mesh footprints; scanned boulders render from all four camera directions');
   await page.locator('#orbit-return').click(); await loaded();
   await generate('NEREID-3077'); assert.deepEqual(await page.evaluate(() => ORBIT_PLANET_DEBUG.planet), recipe);
   await page.reload({ waitUntil: 'domcontentloaded' }); await loaded(); assert.deepEqual(await page.evaluate(() => ORBIT_PLANET_DEBUG.planet), recipe);
@@ -109,6 +137,6 @@ try {
   assert.equal(JSON.parse(await saved()).day, JSON.parse(original).day);
   pass('The game entry opens a preview based on the actual home planet seed and safely returns to the saved game');
   assert.deepEqual(errors, []);
-  await writeFile(resolve(output, 'browser-inspection.json'), JSON.stringify({ checks, inspections, assets: [...requests].sort(), errors }, null, 2) + '\n');
+  await writeFile(resolve(output, 'browser-inspection.json'), JSON.stringify({ checks, inspections, groundings, assets: [...requests].sort(), errors }, null, 2) + '\n');
   console.log(JSON.stringify({ checks: checks.length, errors }));
 } finally { await context.close(); await browser.close(); server.close(); }

@@ -141,6 +141,38 @@
       "sourceSha256": "3801dd88a9e4cad92098599adcf8224d7cc9380a503f53900a1a074c2ac61edd",
       "sha256": "6b02f2295826050a7a3be8454ae09b719d137f413eee520838b2f2d7c14d0f98",
       "bytes": 25060
+    },
+    {
+      "file": "boulder-02.glb",
+      "collection": "Namaqualand",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/namaqualand_boulder_02",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/shadow-kernel/Vortex-Engine-OpenWorld-Template",
+      "mirrorCommit": "5257e1e54fd2cc4b8a0a5b144ab838be35299f97",
+      "changes": "Source scan with attribute-aware mobile LOD (meshoptimizer 1.3.0), existing UVs/normals and 1024 px textures retained.",
+      "sourceSha256": "3c41b5946cd5b208673ec481a3969047665688b2fab1de99b57a7b4eedde099b",
+      "sha256": "a32cf9dd01d3c555d1d2b5471ebe86629c00238df0ecfa7905aa3680cf2e5023",
+      "bytes": 1318428,
+      "originalTriangles": 97964,
+      "triangles": 4000,
+      "relativeError": 0.007024856749922037
+    },
+    {
+      "file": "boulder-05.glb",
+      "collection": "Namaqualand",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/namaqualand_boulder_05",
+      "license": "CC0-1.0",
+      "mirror": "https://github.com/shadow-kernel/Vortex-Engine-OpenWorld-Template",
+      "mirrorCommit": "5257e1e54fd2cc4b8a0a5b144ab838be35299f97",
+      "changes": "Source scan with attribute-aware mobile LOD (meshoptimizer 1.3.0), existing UVs/normals and 1024 px textures retained.",
+      "sourceSha256": "f8e5fd8fd981e889d621ba4e53170a52c47cd3053b8748ee7025ed1083f36a5f",
+      "sha256": "63905d43e123712a072c562f5f3899f2b18e00e2cdc63ae50f53169d1fad2d5b",
+      "bytes": 1250412,
+      "originalTriangles": 89618,
+      "triangles": 4000,
+      "relativeError": 0.0066206748597323895
     }
   ]
 }
