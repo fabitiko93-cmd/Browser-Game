@@ -2,10 +2,12 @@ import { worldSeed } from './world.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 2;
+export const PLANET_GENERATOR_VERSION = 3;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
+export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
+export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, extent: 10 });
 export const PLANET_PRESETS = Object.freeze({
-  temperate: { name: 'Bewohnbare Welt', globe: 'earth-day.jpg', atmosphere: '#6cb5ef', radiusKm: 6371, ocean: true },
+  temperate: { name: 'Erdähnliche Welt', globe: 'earth-day.jpg', atmosphere: '#6cb5ef', radiusKm: 6371, ocean: true },
   arid: { name: 'Trockene Welt', globe: 'mars.jpg', atmosphere: '#d4a984', radiusKm: 4300, ocean: false },
   lunar: { name: 'Luftlose Welt', globe: 'moon.jpg', atmosphere: null, radiusKm: 1737, ocean: false }
 });
@@ -57,7 +59,12 @@ export function createRegionBlueprint(planet, regionId) {
     const r = planetRandom(planetSubseed(region.seed, `crater/${i}`)), angle = i / 5 * Math.PI * 2 + r() * .5, distance = 48 + r() * 26;
     return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance, radius: 12 + r() * 15 };
   });
-  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, module: region.module, size: 192, phase, ridges, craters, rocks: [], resources: [] };
+  const distant = planetRandom(planetSubseed(region.seed, 'surrounding-relief'));
+  const surroundings = Array.from({ length: 24 }, (_, i) => {
+    const angle = i / 24 * Math.PI * 2 + distant() * .3, distance = 150 + distant() * 450;
+    return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance, radius: 32 + distant() * 80, height: 8 + distant() * 36 };
+  });
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, size: 192, phase, ridges, craters, surroundings, rocks: [], resources: [] };
   const counts = { coast: 48, basin: 56, upland: 68, caldera: 60, regolith: 64 };
   for (let i = 0; i < counts[region.module]; i++) {
     const r = planetRandom(planetSubseed(region.seed, `rock/${i}`)), group = i % 8;
@@ -95,40 +102,66 @@ export function createRegionBlueprint(planet, regionId) {
 export function regionHeight(region, x, z) {
   const erosion = region.ridges.reduce((h, r) => h + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / r.radius ** 2), 0);
   const phase = region.phase, radius = Math.hypot(x, z), outer = smooth(22, 48, radius);
+  const distant = smooth(90, 150, radius) * region.surroundings.reduce((h, r) => h + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / r.radius ** 2), 0);
   if (region.module === 'coast') {
     const shore = -42 + 5 * Math.sin(z * .044 + phase) + 2 * Math.sin(z * .1 + phase);
-    return -3.5 + smooth(shore - 12, shore + 20, x) * (7 + erosion * .12) + outer * smooth(14, 65, x) * erosion * .9;
+    return -3.5 + smooth(shore - 12, shore + 20, x) * (7 + erosion * .12) + outer * smooth(14, 65, x) * erosion * .9 + distant * smooth(0, 80, x);
   }
   if (region.module === 'basin') {
     const bend = Math.sin(z * .018 + phase) * 9;
     const walls = smooth(22, 37, Math.abs(x - bend)) * 15 + smooth(41, 58, Math.abs(x - bend)) * 13;
-    return 2.5 + erosion * .07 + outer * (walls + erosion * .5);
+    return 2.5 + erosion * .07 + outer * (walls + erosion * .5) + distant;
   }
   if (region.module === 'upland') {
     const ridge = 28 * gaussian((z + 55 + 8 * Math.sin(x * .04 + phase)) / 20) + 15 * gaussian((x - 57) / 18);
-    return 12 + erosion * .08 + outer * (ridge + erosion * 1.2 + 3 * Math.sin(x * .04 + z * .025 + phase) ** 2);
+    return 12 + erosion * .08 + outer * (ridge + erosion * 1.2 + 3 * Math.sin(x * .04 + z * .025 + phase) ** 2) + distant;
   }
   if (region.module === 'caldera') {
     const d = Math.hypot(x + 7, z + 9), rim = 31 * gaussian((d - 64) / 13);
     const breach = 1 - .68 * gaussian((x - 14) / 20) * smooth(15, 55, z);
-    return 4 + erosion * .1 + outer * (rim * breach + erosion * .3);
+    return 4 + erosion * .1 + outer * (rim * breach + erosion * .3) + distant * .65;
   }
   let height = 3 + erosion * .09;
   for (const crater of region.craters) {
     const d = Math.hypot(x - crater.x, z - crater.z), r = crater.radius;
     height += outer * (r * .22 * gaussian((d - r) / (r * .17)) - r * .22 * Math.exp(-Math.pow(d / (r * .72), 4)));
   }
-  return height;
+  return height + distant * .4;
 }
 
-// Match the actual triangles of the 128 x 128 central terrain mesh. Analytic
-// heights alone can leave a visible gap on a triangulated slope.
+// The renderer and every placement/camera query share the same nine patches.
+// Outside the work area, query the surrounding mesh instead of extrapolating
+// a triangle from the edge of the central patch.
+export function regionTerrainPatches(region) {
+  const half = region.size / 2, edges = [-half * REGION_TERRAIN.extent, -half, half, half * REGION_TERRAIN.extent];
+  const patches = [];
+  for (let iz = 0; iz < 3; iz++) for (let ix = 0; ix < 3; ix++) patches.push({
+    minX: edges[ix], maxX: edges[ix + 1], minZ: edges[iz], maxZ: edges[iz + 1],
+    segmentsX: ix === 1 ? REGION_TERRAIN.segments : REGION_TERRAIN.outerSegments,
+    segmentsZ: iz === 1 ? REGION_TERRAIN.segments : REGION_TERRAIN.outerSegments, central: ix === 1 && iz === 1
+  });
+  return patches;
+}
 export function regionGroundHeight(region, x, z) {
-  const step = region.size / 128, half = region.size / 2;
-  const ix = Math.min(127, Math.max(0, Math.floor((x + half) / step))), iz = Math.min(127, Math.max(0, Math.floor((z + half) / step)));
-  const x0 = ix * step - half, z0 = iz * step - half, u = (x - x0) / step, v = (z - z0) / step;
-  const a = regionHeight(region, x0, z0), b = regionHeight(region, x0 + step, z0), c = regionHeight(region, x0, z0 + step), d = regionHeight(region, x0 + step, z0 + step);
+  const half = region.size / 2, edge = half * REGION_TERRAIN.extent;
+  const axis = value => {
+    value = Math.max(-edge, Math.min(edge, value));
+    const min = value < -half ? -edge : value > half ? half : -half;
+    const span = Math.abs(value) > half ? edge - half : region.size;
+    const segments = Math.abs(value) > half ? REGION_TERRAIN.outerSegments : REGION_TERRAIN.segments;
+    const step = span / segments, i = Math.min(segments - 1, Math.floor((value - min) / step));
+    return [min + i * step, step, (value - min - i * step) / step];
+  };
+  const [x0, sx, u] = axis(x), [z0, sz, v] = axis(z);
+  const a = regionHeight(region, x0, z0), b = regionHeight(region, x0 + sx, z0), c = regionHeight(region, x0, z0 + sz), d = regionHeight(region, x0 + sx, z0 + sz);
   return u + v <= 1 ? a + u * (b - a) + v * (c - a) : d + (1 - v) * (b - d) + (1 - u) * (c - d);
+}
+
+export function regionBuildCell(x, z) {
+  const { halfExtent: half, cellSize: cell } = REGION_BUILD_GRID;
+  if (!Number.isFinite(x) || !Number.isFinite(z) || x < -half || x >= half || z < -half || z >= half) return null;
+  const column = Math.floor((x + half) / cell), row = Math.floor((z + half) / cell);
+  return { column, row, x: -half + (column + .5) * cell, z: -half + (row + .5) * cell };
 }
 
 export function regionSite(region, x, z) {
@@ -148,5 +181,6 @@ export function regionSite(region, x, z) {
     }
     if (!Number.isFinite(coastDistance)) coastDistance = null;
   }
-  return { x, z, height, slope, water, buildable: Math.abs(x) <= region.size / 2 && Math.abs(z) <= region.size / 2 && !water && slope < .35, deposits: deposits.map(d => d.type), coastDistance };
+  const inBuildArea = regionBuildCell(x, z) !== null;
+  return { x, z, height, slope, water, inBuildArea, buildable: inBuildArea && !water && slope < .35, deposits: deposits.map(d => d.type), coastDistance };
 }

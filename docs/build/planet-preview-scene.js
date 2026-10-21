@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite } from './planet-blueprint.js';
-
+import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches } from './planet-blueprint.js';
+import { createRegionEnvironment, regionCover } from './planet-environment.js';
+import { constrainRegionCamera } from './planet-camera.js';
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
@@ -58,6 +59,7 @@ export class PlanetPreviewScene {
         this.dirty = true;
       }
       this.controls.update();
+      this.keepCameraAboveGround();
       if (this.mode === 'orbit' && this.clouds && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.clouds.rotation.y += delta * .004; this.dirty = true; }
       if (this.mode === 'region' && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
       if (this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; this.onFrame?.(); }
@@ -97,6 +99,28 @@ export class PlanetPreviewScene {
     return this.models.get(name);
   }
 
+  environmentLODs() {
+    if (!this.lods) this.lods = fetch(new URL('rock-lods.json', ASSETS)).then(response => {
+      if (!response.ok) throw new Error('Umgebungsmodelle konnten nicht geladen werden.');
+      return response.json();
+    }).then(({ models }) => Object.fromEntries(Object.entries(models).map(([id, source]) => {
+      const geometry = new THREE.BufferGeometry();
+      for (const [name, width] of [['position', 3], ['normal', 3], ['uv', 2]]) geometry.setAttribute(name, new THREE.Float32BufferAttribute(source[name], width));
+      geometry.setIndex(source.index); const result = { geometry, footprint: rockFootprint(geometry) };
+      if (this.disposed) geometry.dispose(); return [id, result];
+    })));
+    return this.lods;
+  }
+
+  keepCameraAboveGround() {
+    if (this.mode !== 'region' || !this.region) return;
+    const eye = this.camera.position, target = this.controls.target, pose = [...eye.toArray(), ...target.toArray()];
+    if (this.groundedRegion === this.region && this.groundedPose?.every((v, i) => Math.abs(v - pose[i]) < 1e-8)) return;
+    constrainRegionCamera(this.region, eye, target);
+    this.camera.lookAt(target); this.camera.updateMatrixWorld();
+    this.groundedRegion = this.region; this.groundedPose = [...eye.toArray(), ...target.toArray()]; this.dirty = true;
+  }
+
   clearGroup(group) {
     const geometries = new Set(), materials = new Set();
     for (const child of group.children) child.traverse(node => {
@@ -109,7 +133,7 @@ export class PlanetPreviewScene {
 
   async setPlanet(planet) {
     const generation = ++this.generation; this.planet = planet; this.mode = 'orbit'; this.region = null;
-    this.clearGroup(this.globe); this.clearGroup(this.land); this.terrain = null; this.grid = null; this.siteMark = null; this.clouds = null;
+    this.clearGroup(this.globe); this.clearGroup(this.land); this.terrain = null; this.grid = null; this.siteMark = null; this.clouds = null; this.environmentRecipe = null;
     const preset = PLANET_PRESETS[planet.preset];
     const map = await this.texture(preset.globe, { color: true });
     const layers = planet.preset === 'temperate' ? await Promise.all([this.texture('earth-night.jpg', { color: true }), this.texture('earth-clouds.jpg')]) : null;
@@ -174,12 +198,13 @@ export class PlanetPreviewScene {
       const offset = new THREE.Vector3(...offsets[this.region.module]).multiplyScalar(1 / Math.min(1, this.camera.aspect));
       offset.clampLength(100, 230); this.camera.position.copy(this.controls.target).add(offset);
     }
-    this.controls.update(); this.dirty = true;
+    this.controls.update(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
   async showRegion(region) {
     const generation = ++this.generation; this.region = region; this.mode = 'region';
-    this.clearGroup(this.land); this.grid = null; this.siteMark = null; this.waterTime = null;
+    this.clearGroup(this.land); this.terrain = null; this.grid = null; this.siteMark = null; this.waterTime = null;
+    this.environmentRecipe = createRegionEnvironment(region);
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], airless = region.module === 'regolith';
     this.scene.background = new THREE.Color(module.sky);
@@ -192,10 +217,10 @@ export class PlanetPreviewScene {
     this.controls.enablePan = true; this.controls.minDistance = 14; this.controls.maxDistance = 260; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI * .48;
     this.camera.near = .2; this.camera.far = 1800; this.camera.updateProjectionMatrix(); this.resetCamera();
     const [color, normal, arm] = await Promise.all([this.texture(`${module.ground}-color.webp`, { color: true, repeat: 18 }), this.texture(`${module.ground}-normal.webp`, { repeat: 18 }), module.ground === 'regolith' ? this.texture('regolith-arm.webp', { repeat: 18 }) : null]);
-    const modelIds = [...new Set(region.rocks.map(r => r.model))];
-    const assetSets = await Promise.all(modelIds.map(id => this.model(ROCK_ASSETS[id])));
+    const modelIds = [...new Set([...region.rocks, ...this.environmentRecipe.rocks].map(r => r.model))];
+    const [assetSets, lods] = await Promise.all([Promise.all(modelIds.map(id => this.model(ROCK_ASSETS[id]))), this.environmentLODs()]);
     if (generation !== this.generation || this.disposed) return;
-    const geometry = new THREE.PlaneGeometry(region.size, region.size, 128, 128); geometry.rotateX(-Math.PI / 2);
+    const geometry = new THREE.PlaneGeometry(region.size, region.size, REGION_TERRAIN.segments, REGION_TERRAIN.segments); geometry.rotateX(-Math.PI / 2);
     const position = geometry.attributes.position;
     for (let i = 0; i < position.count; i++) position.setY(i, regionHeight(region, position.getX(i), position.getZ(i)));
     geometry.computeVertexNormals(); this.colorTerrain(geometry);
@@ -216,12 +241,24 @@ export class PlanetPreviewScene {
         this.rockPlacements.push({ id: rock.id, model: rock.model, matrix: pose.matrix, footprint: source.footprint });
       });
       batch.instanceMatrix.needsUpdate = true; batch.computeBoundingSphere(); this.land.add(batch);
+      const distant = this.environmentRecipe.rocks.filter(r => r.model === modelIds[type]), low = lods[modelIds[type]];
+      if (distant.length) {
+        const environment = new THREE.InstancedMesh(low.geometry, material, distant.length);
+        environment.userData.sharedGeometry = true; environment.userData.rocks = true; environment.receiveShadow = true;
+        distant.forEach((rock, i) => {
+          const pose = fitRockToGround(region, rock, low.footprint); environment.setMatrixAt(i, pose.matrix);
+          environment.setColorAt(i, new THREE.Color().setScalar(.8 + rock.variant * .1));
+          this.rockPlacements.push({ id: rock.id, model: rock.model, matrix: pose.matrix, footprint: low.footprint });
+        });
+        environment.instanceMatrix.needsUpdate = true; environment.computeBoundingSphere(); this.land.add(environment);
+      }
     }
-    this.addGrid(); this.addSiteMark(); this.dirty = true;
+    this.addGroundCover(); this.addGrid(); this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
   colorTerrain(geometry) {
     const module = REGION_MODULES[this.region.module], palette = module.palette.map(c => new THREE.Color(c));
+    const coverColor = new THREE.Color(this.region.module === 'basin' ? '#726548' : '#657754');
     const position = geometry.attributes.position, normal = geometry.attributes.normal, colors = new Float32Array(position.count * 3), c = new THREE.Color();
     const floor = { coast: 3, basin: 2.5, upland: 12, caldera: 4, regolith: 3 }[this.region.module];
     for (let i = 0; i < position.count; i++) {
@@ -229,6 +266,8 @@ export class PlanetPreviewScene {
       const altitude = THREE.MathUtils.clamp((y - floor) / 38, 0, 1);
       c.copy(palette[0]).lerp(palette[1], altitude).lerp(palette[2], THREE.MathUtils.clamp(slope * 1.8, 0, .85));
       if (this.region.module === 'coast' && y < 2) c.multiplyScalar(.72 + THREE.MathUtils.clamp(y / 2, 0, 1) * .28);
+      const cover = regionCover(this.region, x, z, y, slope * 2);
+      c.lerp(coverColor, cover * .55);
       c.multiplyScalar(.96 + .05 * Math.sin(x * .12 + Math.sin(z * .15) + this.region.phase)); c.toArray(colors, i * 3);
     }
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -249,12 +288,10 @@ export class PlanetPreviewScene {
   addTerrainSurroundings(material) {
     // Continue the same surface outside the selectable area. A region is a
     // camera/work area on a planet, not a floating square with a visible edge.
-    const half = this.region.size / 2, edges = [-half * 10, -half, half, half * 10];
-    for (let iz = 0; iz < 3; iz++) for (let ix = 0; ix < 3; ix++) {
-      if (ix === 1 && iz === 1) continue;
-      const width = edges[ix + 1] - edges[ix], depth = edges[iz + 1] - edges[iz];
-      const geometry = new THREE.PlaneGeometry(width, depth, ix === 1 ? 128 : 48, iz === 1 ? 128 : 48);
-      geometry.rotateX(-Math.PI / 2); geometry.translate((edges[ix] + edges[ix + 1]) / 2, 0, (edges[iz] + edges[iz + 1]) / 2);
+    for (const patch of regionTerrainPatches(this.region)) {
+      if (patch.central) continue;
+      const geometry = new THREE.PlaneGeometry(patch.maxX - patch.minX, patch.maxZ - patch.minZ, patch.segmentsX, patch.segmentsZ);
+      geometry.rotateX(-Math.PI / 2); geometry.translate((patch.minX + patch.maxX) / 2, 0, (patch.minZ + patch.maxZ) / 2);
       const position = geometry.attributes.position, uv = geometry.attributes.uv;
       for (let i = 0; i < position.count; i++) {
         const x = position.getX(i), z = position.getZ(i);
@@ -263,6 +300,30 @@ export class PlanetPreviewScene {
       geometry.computeVertexNormals(); this.colorTerrain(geometry); if (material.aoMap) geometry.setAttribute('uv1', uv);
       const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
     }
+  }
+
+  addGroundCover() {
+    const plants = this.environmentRecipe.plants;
+    if (!plants.length) return;
+    const positions = [], colors = [], indices = [];
+    for (let blade = 0; blade < 5; blade++) {
+      const angle = blade * 2.4, dx = Math.cos(angle), dz = Math.sin(angle), height = .7 + (blade % 3) * .18;
+      const start = positions.length / 3;
+      for (let level = 0; level <= 3; level++) {
+        const t = level / 3, width = .09 * (1 - t), bend = .32 * t * t;
+        for (const side of [-1, 1]) { positions.push(dx * bend - dz * width * side, height * t, dz * bend + dx * width * side); colors.push(.65 + t * .35, .68 + t * .32, .5 + t * .5); }
+        if (level < 3) { const a = start + level * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      }
+    }
+    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ color: '#b7c88e', vertexColors: true, side: THREE.DoubleSide, roughness: 1, envMapIntensity: .1 });
+    const mesh = new THREE.InstancedMesh(geometry, material, plants.length), dummy = new THREE.Object3D();
+    const green = new THREE.Color('#657348'), dry = new THREE.Color('#b5a575');
+    plants.forEach((plant, i) => {
+      dummy.position.set(plant.x, plant.y, plant.z); dummy.rotation.y = plant.rotation; dummy.scale.set(plant.size, plant.size, plant.size); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, green.clone().lerp(dry, plant.tint * .7));
+    });
+    mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); mesh.receiveShadow = true; this.land.add(mesh);
   }
 
   addWater() {
@@ -302,30 +363,40 @@ export class PlanetPreviewScene {
   }
 
   addGrid() {
-    const lines = [], size = 64, cell = 2, half = size * cell / 2;
-    const line = (x1, z1, x2, z2) => {
+    const lines = [], boundary = [], { cells: size, cellSize: cell, halfExtent: half } = REGION_BUILD_GRID;
+    const line = (output, x1, z1, x2, z2) => {
       for (let i = 0; i < size; i++) { const a = i / size, b = (i + 1) / size, ax = x1 + (x2 - x1) * a, az = z1 + (z2 - z1) * a, bx = x1 + (x2 - x1) * b, bz = z1 + (z2 - z1) * b;
-        lines.push(ax, Math.max(.14, regionHeight(this.region, ax, az)) + .05, az, bx, Math.max(.14, regionHeight(this.region, bx, bz)) + .05, bz);
+        output.push(ax, Math.max(.14, regionGroundHeight(this.region, ax, az)) + .07, az, bx, Math.max(.14, regionGroundHeight(this.region, bx, bz)) + .07, bz);
       }
     };
-    for (let i = 0; i <= size; i++) { const p = -half + i * cell; line(-half, p, half, p); line(p, -half, p, half); }
+    for (let i = 0; i <= size; i++) { const p = -half + i * cell, output = i === 0 || i === size ? boundary : lines; line(output, -half, p, half, p); line(output, p, -half, p, half); }
     this.grid = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lines, 3)), new THREE.LineBasicMaterial({ color: 0xd4dcb7, transparent: true, opacity: .21, depthWrite: false }));
     this.grid.visible = this.gridVisible; this.land.add(this.grid);
+    this.buildBoundary = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(boundary, 3)), new THREE.LineBasicMaterial({ color: 0xd4dcb7, transparent: true, opacity: .55, depthWrite: false })); this.land.add(this.buildBoundary);
   }
 
   addSiteMark() {
-    const geo = new THREE.RingGeometry(1.5, 1.65, 40); geo.rotateX(-Math.PI / 2);
-    this.siteMark = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xf5cc7c, transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide }));
+    const geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(16 * 3), 3));
+    this.siteMark = new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: 0xf5cc7c, transparent: true, opacity: .95, depthWrite: false }));
     this.siteMark.visible = false; this.land.add(this.siteMark);
   }
 
   pick(event) {
     if (!this.terrain || !this.region) return;
+    this.keepCameraAboveGround();
     const bounds = this.canvas.getBoundingClientRect(); this.pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
-    this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0]; if (!hit) return;
-    const x = Math.round(hit.point.x / 2) * 2, z = Math.round(hit.point.z / 2) * 2;
+    this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0];
+    const cell = hit && regionBuildCell(hit.point.x, hit.point.z);
+    if (!cell) { this.siteMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
+    const { x, z } = cell;
     const site = regionSite(this.region, x, z);
-    this.siteMark.position.set(x, Math.max(.1, site.height) + .1, z); this.siteMark.visible = true; this.siteMark.material.color.set(site.buildable ? '#e9c580' : '#ed927b');
+    const position = this.siteMark.geometry.attributes.position, half = REGION_BUILD_GRID.cellSize / 2;
+    for (let side = 0; side < 4; side++) for (let i = 0; i < 4; i++) {
+      const t = i / 4, corners = [[-half, -half], [half, -half], [half, half], [-half, half]], a = corners[side], b = corners[(side + 1) % 4];
+      const px = x + a[0] + (b[0] - a[0]) * t, pz = z + a[1] + (b[1] - a[1]) * t;
+      position.setXYZ(side * 4 + i, px, Math.max(.1, regionGroundHeight(this.region, px, pz)) + .12, pz);
+    }
+    position.needsUpdate = true; this.siteMark.geometry.computeBoundingSphere(); this.siteMark.visible = true; this.siteMark.material.color.set(site.buildable ? '#e9c580' : '#ed927b');
     this.onSite?.(site); this.dirty = true;
   }
 
@@ -337,7 +408,7 @@ export class PlanetPreviewScene {
     return { x: (p.x + 1) * this.width / 2, y: (1 - p.y) * this.height / 2 };
   }
   setGrid(visible) { this.gridVisible = visible; if (this.grid) this.grid.visible = visible; this.dirty = true; }
-  zoom(factor) { const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(factor); offset.setLength(THREE.MathUtils.clamp(offset.length(), this.controls.minDistance, this.controls.maxDistance)); this.camera.position.copy(this.controls.target).add(offset); this.cameraDestination = null; this.controls.update(); this.dirty = true; }
+  zoom(factor) { const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(factor); offset.setLength(THREE.MathUtils.clamp(offset.length(), this.controls.minDistance, this.controls.maxDistance)); this.camera.position.copy(this.controls.target).add(offset); this.cameraDestination = null; this.controls.update(); this.keepCameraAboveGround(); this.dirty = true; }
   resize() { const r = this.canvas.parentElement.getBoundingClientRect(); if (!r.width || !r.height) return; this.width = r.width; this.height = r.height; this.renderer.setSize(r.width, r.height, false); this.camera.aspect = r.width / r.height; this.camera.updateProjectionMatrix(); this.dirty = true; }
   disposeModels(models) { for (const { geometry, material } of models) { geometry.dispose(); for (const value of Object.values(material)) if (value?.isTexture) value.dispose(); material.dispose(); } }
   dispose() {
@@ -348,6 +419,7 @@ export class PlanetPreviewScene {
     if (this.stars) { this.stars.geometry.dispose(); this.stars.material.dispose(); }
     for (const promise of this.textures.values()) promise.then(t => t.dispose()).catch(() => {});
     for (const promise of this.models.values()) promise.then(m => this.disposeModels(m)).catch(() => {});
+    this.lods?.then(models => Object.values(models).forEach(m => m.geometry.dispose())).catch(() => {});
     this.sun.shadow.map?.dispose(); this.environment.dispose(); this.renderer.dispose();
   }
 }

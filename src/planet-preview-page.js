@@ -34,9 +34,10 @@ function updateRegion() {
   for (const [id, button] of markerButtons) { button.classList.toggle('selected', selected.id === id); button.setAttribute('aria-pressed', String(selected.id === id)); }
   $('view-description').textContent = mode === 'orbit' ? `${planet.regions.length} Regionen · vollständig erschlossen` : `${selected.name} · ${config.name}`;
   $('view-caption').textContent = mode === 'orbit' ? 'ORBITALE ÜBERSICHT' : 'REGIONALE ANSICHT';
-  $('gesture-hint').textContent = mode === 'orbit' ? 'Ziehen zum Drehen · Region antippen' : 'Ziehen zum Drehen · Boden antippen';
+  $('gesture-hint').textContent = mode === 'orbit' ? 'Ziehen zum Drehen · Region antippen' : 'Ziehen zum Drehen · Baugebiet antippen';
 }
 function siteInfo(site) {
+  if (!site) { selectedSite = null; $('site-info').hidden = true; return; }
   selectedSite = site; const info = $('site-info'); info.hidden = false; info.replaceChildren();
   const heading = document.createElement('strong'); heading.textContent = site.water ? 'Wasserfläche' : site.buildable ? 'Geeignete Baufläche' : 'Starker Geländehang'; info.append(heading, document.createElement('br'));
   const resource = site.deposits.includes('geothermal') ? 'Wärmequelle' : site.deposits.includes('ore') ? 'Erzvorkommen' : 'Kein erfasstes Vorkommen';

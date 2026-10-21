@@ -10,4 +10,6 @@ Individual source pages, public retrieval mirrors, source commit IDs, checksums 
 
 Broad terrain relief and placement are ORBIT's separate, versioned layout; the global planet maps are fixed reference maps, not newly generated continents. The open cliff scan is retained as a credited source asset but is no longer used as a freestanding rock. Complete rounded and lunar scans are used instead; the layered boulder's open scan underside is buried below the terrain.
 
+`rock-lods.json` contains geometry-only distant variants of the credited `boulder-02.glb`, `boulder-05.glb` and `moon-rock.glb` scans (CC0). `scripts/prepare-planet-environment-lods.mjs` prepares them offline with meshoptimizer 1.3.0, retaining UVs and normals and recording measured errors. The renderer shares the existing original textures/materials; no extra decoder is used. Grass blades are ORBIT procedural geometry, not attributed to either scanned asset collection.
+
 The first planet preview does not contain KitBash3D Minerva building models. Access to those source files still requires the creator's account/download flow. There are no invented replacement building models presented as Minerva assets.

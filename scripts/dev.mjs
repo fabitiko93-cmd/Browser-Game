@@ -21,5 +21,6 @@ const server = createServer(async (req, res) => {
     res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
   } catch { res.writeHead(404); res.end('Not found'); }
 });
-const port = Number(process.env.ORBIT_PORT ?? 4174);
+const portArgument = process.argv.indexOf('--port');
+const port = Number(process.env.ORBIT_PORT ?? (portArgument >= 0 ? process.argv[portArgument + 1] : 4174));
 server.listen(port, '0.0.0.0', () => console.log(`ORBIT 3077: http://127.0.0.1:${port}/`));

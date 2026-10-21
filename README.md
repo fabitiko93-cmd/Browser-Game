@@ -4,6 +4,10 @@ Eine eigenständige planetare Aufbau- und Kriegssimulation für den **iPhone-Bro
 Fiktive Welt im Jahr 3077, mit lokalen Produktionsketten, fremden Spezies und interstellarer Politik.
 Arbeitstitel: ORBIT 3077.
 
+## Erdähnlicher Musterplanet · 21.10.2026
+
+[Planetenprobe öffnen](https://fabitiko93-cmd.github.io/Browser-Game/planet-preview.html). Die Standortauswahl bleibt im sichtbaren Bauraster; eine Außenlinie und kachelgenaue Markierung verdeutlichen das Baugebiet. Die Kamera folgt dem Gelände und berücksichtigt Canyonwände. Zusätzliche Höhenzüge, Geröll und habitatabhängige Gräsergruppen entstehen reproduzierbar aus dem Seed. Entfernte Felsen verwenden sparsame Varianten der vorhandenen Scans. [Umfang und Prüfgrenzen](PLANET_PREVIEW.md): 368 automatisierte Tests bestanden; eine aktuelle visuelle Browser-/iPhone-Abnahme ist noch offen.
+
 ## Harbinger-Grafikprobe · 0.13.0
 
 [Spielbare Probe](https://fabitiko93-cmd.github.io/Browser-Game/harbinger.html) oder Flotte → Probeschlacht öffnen. Detaillierter Harbinger mit Originalmaterialien, Touchkamera, tatsächlicher 3D-Raumübersicht und getrennten Auto-/Angriffsaufträgen. Rund 27,7 MB Modell werden beim ersten Aufruf geladen. Dein Reich wird vor dem Wechsel gespeichert und pausiert.

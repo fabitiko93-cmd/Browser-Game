@@ -173,6 +173,38 @@
       "originalTriangles": 89618,
       "triangles": 4000,
       "relativeError": 0.0066206748597323895
+    },
+    {
+      "file": "rock-lods.json",
+      "collection": "Namaqualand / Lunar Landscape",
+      "creator": "Poly Haven; derived by ORBIT",
+      "license": "CC0-1.0",
+      "sources": [
+        "boulder-02.glb",
+        "boulder-05.glb",
+        "moon-rock.glb"
+      ],
+      "changes": "Geometry-only distant LODs from the already credited local scans; offline meshoptimizer 1.3.0 with retained normals/UVs, normalized like the source renderer; original textures and materials shared at runtime.",
+      "preparationScript": "scripts/prepare-planet-environment-lods.mjs",
+      "sha256": "5eb7d989c58ea7237f40e4e2d523403f57f53e7beaeafe003cbc1af049640058",
+      "bytes": 139593,
+      "models": {
+        "rounded": {
+          "source": "boulder-05.glb",
+          "triangles": 420,
+          "relativeError": 0.02129521034657955
+        },
+        "layered": {
+          "source": "boulder-02.glb",
+          "triangles": 776,
+          "relativeError": 0.08447862416505814
+        },
+        "lunar": {
+          "source": "moon-rock.glb",
+          "triangles": 420,
+          "relativeError": 0.010209770873188972
+        }
+      }
     }
   ]
 }
