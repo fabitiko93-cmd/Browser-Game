@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, Raycaster, Vector2, Vector3 } from 'three';
 import { createPlanetBlueprint, createRegionBlueprint, regionBuildCell, regionGroundHeight, regionHeight, regionSite, regionTerrainPatches, REGION_BUILD_GRID } from '../src/planet-blueprint.js';
 import { createRegionEnvironment } from '../src/planet-environment.js';
-import { constrainRegionCamera } from '../src/planet-camera.js';
+import { constrainRegionCamera, stepRegionFocus } from '../src/planet-camera.js';
 import { fitRockToGround, rockFootprint } from '../src/planet-rocks.js';
 import { PlanetPreviewScene } from '../src/planet-preview-scene.js';
 
@@ -34,7 +34,7 @@ test('actual ray picking clears outside taps and outlines only the selected rast
   view.region = region; view.mode = 'region'; view.terrain = new Mesh(geometry, new MeshBasicMaterial()); view.terrain.updateMatrixWorld();
   view.canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 390, height: 844 }) };
   view.camera = new PerspectiveCamera(60, 390 / 844, .2, 1800); view.camera.position.set(0, 250, 0); view.camera.up.set(0, 0, -1);
-  view.controls = { target: new Vector3(0, 0, 0) }; view.ray = new Raycaster(); view.pointer = new Vector2();
+  view.controls = { target: new Vector3(0, 0, 0), update() {} }; view.ray = new Raycaster(); view.pointer = new Vector2();
   view.siteMark = new LineLoop(new BufferGeometry().setAttribute('position', new Float32BufferAttribute(new Float32Array(48), 3)), new LineBasicMaterial());
   let selected; view.onSite = site => { selected = site; }; view.keepCameraAboveGround();
   const pick = (x, z) => {
@@ -44,6 +44,7 @@ test('actual ray picking clears outside taps and outlines only the selected rast
   for (const [x, z] of [[.25, .25], [-63.99, 3], [63.99, -4.25], [3, 63.99], [4.25, -63.99]]) {
     pick(x, z); assert.ok(selected); assert.equal(view.siteMark.visible, true);
     const cell = regionBuildCell(x, z); assert.equal(selected.x, cell.x); assert.equal(selected.z, cell.z);
+    assert.equal(view.siteFocus.x, cell.x); assert.equal(view.siteFocus.z, cell.z);
     const mark = view.siteMark.geometry.attributes.position;
     for (let i = 0; i < mark.count; i++) {
       assert.ok(Math.abs(mark.getX(i) - cell.x) <= 1 && Math.abs(mark.getZ(i) - cell.z) <= 1);
@@ -52,9 +53,26 @@ test('actual ray picking clears outside taps and outlines only the selected rast
   }
   for (const [x, z] of [[64.01, 0], [-64.01, 0], [0, 64.01], [0, -64.01], [90, 90]]) {
     pick(0, 0); assert.ok(selected); pick(x, z);
-    assert.equal(selected, null); assert.equal(view.siteMark.visible, false);
+    assert.equal(selected, null); assert.equal(view.siteMark.visible, false); assert.equal(view.siteFocus, null);
   }
   geometry.dispose(); view.terrain.material.dispose(); view.siteMark.geometry.dispose(); view.siteMark.material.dispose();
+});
+
+test('soft tile focus is time based, keeps the viewing offset and leaves the tile centred in portrait', () => {
+  for (const width of [320, 375, 390]) {
+    const camera = new PerspectiveCamera(43, width / 568, .2, 1800), target = new Vector3(-18, 5, 0);
+    camera.position.set(67, 95, 105); const offset = camera.position.clone().sub(target);
+    const focus = { startX: target.x, startZ: target.z, x: 43, z: -35, elapsed: 0, duration: .65 };
+    assert.equal(stepRegionFocus(focus, camera.position, target, .325), false);
+    assert.equal(target.x, 12.5); assert.equal(target.z, -17.5); assert.deepEqual(camera.position.clone().sub(target), offset);
+    assert.equal(stepRegionFocus(focus, camera.position, target, .325), true);
+    assert.equal(target.x, 43); assert.equal(target.z, -35); assert.deepEqual(camera.position.clone().sub(target), offset);
+    camera.lookAt(target); camera.updateMatrixWorld(); const screen = target.clone().project(camera);
+    assert.ok(Math.abs(screen.x) < 1e-10 && Math.abs(screen.y) < 1e-10);
+    const split = { startX: -18, startZ: 0, x: 43, z: -35, elapsed: 0, duration: .65 }, eye = new Vector3(67, 95, 105), t = new Vector3(-18, 5, 0);
+    for (let frame = 0; frame < 65; frame++) stepRegionFocus(split, eye, t, .01);
+    assert.ok(t.distanceTo(target) < 1e-9 && eye.distanceTo(camera.position) < 1e-9);
+  }
 });
 
 test('surrounding surface heights match actual terrain triangles on every patch and seam', () => {

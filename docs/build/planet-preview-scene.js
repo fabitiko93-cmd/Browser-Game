@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches } from './planet-blueprint.js';
 import { createRegionEnvironment, regionCover } from './planet-environment.js';
-import { constrainRegionCamera } from './planet-camera.js';
+import { constrainRegionCamera, stepRegionFocus } from './planet-camera.js';
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
@@ -28,6 +28,8 @@ export class PlanetPreviewScene {
     this.controls.enableDamping = true; this.controls.dampingFactor = .09;
     this.controls.enablePan = false; this.controls.rotateSpeed = .55;
     this.controls.addEventListener('change', () => { this.dirty = true; });
+    this.controlStart = () => { this.siteFocus = null; };
+    this.controls.addEventListener('start', this.controlStart);
     this.hemi = new THREE.HemisphereLight(0xb8d5e5, 0x615446, .5); this.scene.add(this.hemi);
     this.sun = new THREE.DirectionalLight(0xffe7bf, 3.2); this.scene.add(this.sun); this.scene.add(this.sun.target);
     this.sun.position.set(9, 5, 7);
@@ -42,7 +44,7 @@ export class PlanetPreviewScene {
     this.ray = new THREE.Raycaster(); this.pointer = new THREE.Vector2(); this.mode = 'orbit'; this.generation = 0; this.dirty = true; this.gridVisible = false;
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas.parentElement);
     this.pointers = new Set(); this.dragged = false;
-    this.down = e => { this.pointers.add(e.pointerId); this.start = { x: e.clientX, y: e.clientY }; this.dragged = this.pointers.size > 1; };
+    this.down = e => { this.siteFocus = null; this.pointers.add(e.pointerId); this.start = { x: e.clientX, y: e.clientY }; this.dragged = this.pointers.size > 1; };
     this.move = e => { if (this.start && Math.hypot(e.clientX - this.start.x, e.clientY - this.start.y) > 7) this.dragged = true; };
     this.up = e => { const click = !this.dragged && this.pointers.size === 1; this.pointers.delete(e.pointerId); if (click && this.mode === 'region') this.pick(e); if (!this.pointers.size) this.start = null; };
     this.cancel = e => { this.pointers.delete(e.pointerId); this.dragged = true; this.start = null; };
@@ -59,6 +61,7 @@ export class PlanetPreviewScene {
         this.dirty = true;
       }
       this.controls.update();
+      this.advanceSiteFocus(delta);
       this.keepCameraAboveGround();
       if (this.mode === 'orbit' && this.clouds && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.clouds.rotation.y += delta * .004; this.dirty = true; }
       if (this.mode === 'region' && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
@@ -121,6 +124,21 @@ export class PlanetPreviewScene {
     this.groundedRegion = this.region; this.groundedPose = [...eye.toArray(), ...target.toArray()]; this.dirty = true;
   }
 
+  focusSite(site) {
+    if (this.mode !== 'region' || !this.region) return;
+    const damping = this.controls.enableDamping;
+    this.controls.enableDamping = false; this.controls.update(); this.controls.enableDamping = damping;
+    this.siteFocus = { startX: this.controls.target.x, startZ: this.controls.target.z, x: site.x, z: site.z, elapsed: 0, duration: .65 };
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) this.advanceSiteFocus(.65);
+    this.dirty = true;
+  }
+
+  advanceSiteFocus(delta) {
+    if (!this.siteFocus || this.mode !== 'region' || !this.region) return;
+    if (stepRegionFocus(this.siteFocus, this.camera.position, this.controls.target, delta)) this.siteFocus = null;
+    this.keepCameraAboveGround(); this.dirty = true;
+  }
+
   clearGroup(group) {
     const geometries = new Set(), materials = new Set();
     for (const child of group.children) child.traverse(node => {
@@ -132,7 +150,7 @@ export class PlanetPreviewScene {
   }
 
   async setPlanet(planet) {
-    const generation = ++this.generation; this.planet = planet; this.mode = 'orbit'; this.region = null;
+    const generation = ++this.generation; this.planet = planet; this.mode = 'orbit'; this.region = null; this.siteFocus = null;
     this.clearGroup(this.globe); this.clearGroup(this.land); this.terrain = null; this.grid = null; this.siteMark = null; this.clouds = null; this.environmentRecipe = null;
     const preset = PLANET_PRESETS[planet.preset];
     const map = await this.texture(preset.globe, { color: true });
@@ -168,7 +186,7 @@ export class PlanetPreviewScene {
   }
 
   showOrbit() {
-    this.generation++; this.mode = 'orbit'; this.globe.visible = true; this.land.visible = false; this.stars.visible = true;
+    this.generation++; this.mode = 'orbit'; this.siteFocus = null; this.globe.visible = true; this.land.visible = false; this.stars.visible = true;
     this.scene.background = new THREE.Color(0x040a13); this.scene.fog = null;
     this.renderer.toneMappingExposure = 1; this.sun.color.set(0xffe7bf); this.hemi.color.set(0xb8d5e5); this.hemi.groundColor.set(0x615446);
     this.sun.position.set(9, 5, 7); this.sun.target.position.set(0, 0, 0); this.sun.castShadow = false; this.sun.intensity = 3.4; this.hemi.intensity = .07;
@@ -187,7 +205,7 @@ export class PlanetPreviewScene {
 
   globeDistance() { return 2.2 / Math.sin(THREE.MathUtils.degToRad(this.camera.fov / 2)) / Math.min(1, this.camera.aspect) * 1.2; }
   resetCamera() {
-    this.cameraDestination = null;
+    this.cameraDestination = null; this.siteFocus = null;
     // Flush residual touch damping before restoring the same reference view.
     this.controls.enableDamping = false; this.controls.update(); this.controls.enableDamping = true;
     if (this.mode === 'orbit') { const r = this.focusedRegion ?? this.planet?.regions[0]; this.camera.position.copy(point((r?.latitude ?? 25) * .65, (r?.longitude ?? 15) - 12, 1)).multiplyScalar(this.globeDistance()); this.controls.target.set(0, 0, 0); }
@@ -202,7 +220,7 @@ export class PlanetPreviewScene {
   }
 
   async showRegion(region) {
-    const generation = ++this.generation; this.region = region; this.mode = 'region';
+    const generation = ++this.generation; this.region = region; this.mode = 'region'; this.siteFocus = null;
     this.clearGroup(this.land); this.terrain = null; this.grid = null; this.siteMark = null; this.waterTime = null;
     this.environmentRecipe = createRegionEnvironment(region);
     this.globe.visible = false; this.land.visible = true;
@@ -387,7 +405,7 @@ export class PlanetPreviewScene {
     const bounds = this.canvas.getBoundingClientRect(); this.pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
     this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0];
     const cell = hit && regionBuildCell(hit.point.x, hit.point.z);
-    if (!cell) { this.siteMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
+    if (!cell) { this.siteFocus = null; this.siteMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
     const { x, z } = cell;
     const site = regionSite(this.region, x, z);
     const position = this.siteMark.geometry.attributes.position, half = REGION_BUILD_GRID.cellSize / 2;
@@ -397,7 +415,7 @@ export class PlanetPreviewScene {
       position.setXYZ(side * 4 + i, px, Math.max(.1, regionGroundHeight(this.region, px, pz)) + .12, pz);
     }
     position.needsUpdate = true; this.siteMark.geometry.computeBoundingSphere(); this.siteMark.visible = true; this.siteMark.material.color.set(site.buildable ? '#e9c580' : '#ed927b');
-    this.onSite?.(site); this.dirty = true;
+    this.onSite?.(site); this.focusSite(site); this.dirty = true;
   }
 
   markerPosition(region) {
@@ -408,12 +426,12 @@ export class PlanetPreviewScene {
     return { x: (p.x + 1) * this.width / 2, y: (1 - p.y) * this.height / 2 };
   }
   setGrid(visible) { this.gridVisible = visible; if (this.grid) this.grid.visible = visible; this.dirty = true; }
-  zoom(factor) { const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(factor); offset.setLength(THREE.MathUtils.clamp(offset.length(), this.controls.minDistance, this.controls.maxDistance)); this.camera.position.copy(this.controls.target).add(offset); this.cameraDestination = null; this.controls.update(); this.keepCameraAboveGround(); this.dirty = true; }
+  zoom(factor) { this.siteFocus = null; const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(factor); offset.setLength(THREE.MathUtils.clamp(offset.length(), this.controls.minDistance, this.controls.maxDistance)); this.camera.position.copy(this.controls.target).add(offset); this.cameraDestination = null; this.controls.update(); this.keepCameraAboveGround(); this.dirty = true; }
   resize() { const r = this.canvas.parentElement.getBoundingClientRect(); if (!r.width || !r.height) return; this.width = r.width; this.height = r.height; this.renderer.setSize(r.width, r.height, false); this.camera.aspect = r.width / r.height; this.camera.updateProjectionMatrix(); this.dirty = true; }
   disposeModels(models) { for (const { geometry, material } of models) { geometry.dispose(); for (const value of Object.values(material)) if (value?.isTexture) value.dispose(); material.dispose(); } }
   dispose() {
     if (this.disposed) return; this.disposed = true; this.generation++; cancelAnimationFrame(this.frameId); this.resizeObserver.disconnect();
-    this.controls.dispose();
+    this.siteFocus = null; this.controls.removeEventListener('start', this.controlStart); this.controls.dispose();
     for (const [name, handler] of [['pointerdown', this.down], ['pointermove', this.move], ['pointerup', this.up], ['pointercancel', this.cancel], ['webglcontextlost', this.contextLost]]) this.canvas.removeEventListener(name, handler);
     this.clearGroup(this.globe); this.clearGroup(this.land);
     if (this.stars) { this.stars.geometry.dispose(); this.stars.material.dispose(); }

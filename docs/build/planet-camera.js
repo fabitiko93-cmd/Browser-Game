@@ -6,6 +6,16 @@ const heightAround = (region, x, z) => Math.max(
   regionGroundHeight(region, x - 1.5, z + 1.5), regionGroundHeight(region, x + 1.5, z + 1.5)
 );
 
+// Move eye and orbit target together: selecting a tile is a pan, preserving
+// the user's zoom and viewing angle. Ground clearance is applied separately.
+export function stepRegionFocus(focus, eye, target, delta) {
+  focus.elapsed = Math.min(focus.duration, focus.elapsed + Math.max(0, delta));
+  const t = focus.elapsed / focus.duration, eased = t * t * (3 - 2 * t);
+  const x = focus.startX + (focus.x - focus.startX) * eased, z = focus.startZ + (focus.z - focus.startZ) * eased;
+  eye.x += x - target.x; eye.z += z - target.z; target.x = x; target.z = z;
+  return t >= 1;
+}
+
 // Follow the rendered surface while panning. Then raise the eye enough that
 // both its near-plane footprint and the sightline clear intervening ridges.
 // This also runs after zoom/reset and before picking, not only on drag events.
