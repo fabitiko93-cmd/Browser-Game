@@ -19,7 +19,8 @@ function loading(value, label = 'Region wird aufgebaut') {
   if (value) $('planet-error').hidden = true;
 }
 function drawMarkers() {
-  if (!view || !planet || mode !== 'orbit') return;
+  if (!view || !planet) return;
+  if (mode === 'region') { $('north-arrow').style.transform = `rotate(${view.northBearing()}rad)`; return; }
   for (const r of planet.regions) {
     const el = markerButtons.get(r.id), p = view.markerPosition(r);
     el.hidden = !p;
@@ -27,13 +28,17 @@ function drawMarkers() {
   }
 }
 function updateRegion() {
-  const config = regionBiome({ preset: planet.preset, module: selected.module }) ?? REGION_MODULES[selected.module];
+  const config = regionBiome({ preset: planet.preset, module: selected.module, climate: selected.climate }) ?? REGION_MODULES[selected.module];
   $('region-name').textContent = selected.name; $('region-kind').textContent = config.name;
   $('region-description').textContent = config.description;
-  $('region-status').textContent = mode === 'orbit' ? 'Erschlossen' : 'Baugebiet · Ansicht';
+  const coordinate = (value, positive, negative) => `${Math.abs(value).toLocaleString('de-DE', { maximumFractionDigits: 1 })}° ${value >= 0 ? positive : negative}`;
+  $('region-context').textContent = `${coordinate(selected.latitude, 'N', 'S')} · ${coordinate(selected.longitude, 'O', 'W')}${selected.climate ? ` · ${Math.round(selected.climate.elevationM).toLocaleString('de-DE')} m Höhe` : ''}`;
+  $('region-context').title = region?.colony?.description ?? '';
+  $('region-status').textContent = mode === 'orbit' ? 'Erschlossen' : region?.colony?.name ?? 'Baugebiet · Ansicht';
   for (const button of $('regions').children) button.setAttribute('aria-pressed', String(button.dataset.region === selected.id));
   for (const [id, button] of markerButtons) { button.classList.toggle('selected', selected.id === id); button.setAttribute('aria-pressed', String(selected.id === id)); }
   $('view-description').textContent = mode === 'orbit' ? `${planet.regions.length} Regionen · vollständig erschlossen` : `${selected.name} · ${config.name}`;
+  $('region-north').hidden = mode !== 'region';
   $('view-caption').textContent = mode === 'orbit' ? 'ORBITALE ÜBERSICHT' : 'REGIONALE ANSICHT';
   $('gesture-hint').textContent = mode === 'orbit' ? 'Ziehen zum Drehen · Region antippen' : 'Ziehen zum Drehen · Baugebiet antippen';
 }
@@ -60,7 +65,7 @@ async function enterRegion() {
 function orbit() {
   request++; mode = 'orbit'; region = null; app.dataset.mode = mode;
   $('markers').hidden = false; $('grid-toggle').hidden = true; $('region-enter').hidden = false; $('orbit-return').hidden = true; $('site-info').hidden = true;
-  view.showOrbit(); view.focusRegion(selected); updateRegion(); loading(false); $('asset-state').textContent = 'Solar System Scope';
+  view.showOrbit(); view.focusRegion(selected); updateRegion(); loading(false); $('asset-state').textContent = planet.geography ? 'Seedbasierte Planetengeografie' : 'Solar System Scope';
 }
 async function generate(seed, preset, regionCount) {
   const currentRequest = ++request;
@@ -79,7 +84,7 @@ async function generate(seed, preset, regionCount) {
   updateRegion();
   try {
     await view.setPlanet(planet); if (currentRequest !== request) return;
-    view.focusRegion(selected); loading(false); $('asset-state').textContent = 'Solar System Scope';
+    view.focusRegion(selected); loading(false); $('asset-state').textContent = planet.geography ? 'Seedbasierte Planetengeografie' : 'Solar System Scope';
     const url = new URL(location.href); url.searchParams.set('seed', String(seed)); url.searchParams.set('preset', preset); url.searchParams.set('regions', String(regionCount)); history.replaceState(null, '', url);
   } catch (error) { if (currentRequest === request) fail(error); }
 }

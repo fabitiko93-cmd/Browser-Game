@@ -1,5 +1,6 @@
 import { regionBiome } from './planet-biomes.js';
-import { planetRandom, planetSubseed, regionGroundHeight, regionNoise, regionCreek, REGION_MODULES } from './planet-blueprint.js';
+import { colonyClearance } from './planet-colony.js';
+import { planetRandom, planetSubseed, regionGroundHeight, regionNoise, regionCreek, regionLake, REGION_MODULES } from './planet-blueprint.js';
 
 const clamp = value => Math.max(0, Math.min(1, value));
 const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -9,20 +10,26 @@ export const FLORA_ASSETS = Object.freeze({ pine: 'woodland-pine.glb', oak: 'woo
 // Meadow clearings are irregular gaps in woodland, never a circular prop ring.
 export function regionHabitat(region, x, z, height, slope = 0) {
   const biome = regionBiome(region);
-  if (!biome) return { cover: 0, forest: 0, moisture: 0 };
-  const moisture = .25 + regionNoise(region.seed, x / 120, z / 120, 31) * .5 + regionNoise(region.seed, x / 38, z / 38, 32) * .25;
+  if (!biome) return { cover: 0, forest: 0, moisture: 0, snow: 0 };
+  const creek = regionCreek(region, z), lake = regionLake(region);
+  const wetDistance = creek ? Math.abs(x - creek.x) : lake ? Math.abs(Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) - 1) * 40 : 200;
+  const moisture = clamp((biome.moisture ?? .65) * .7 + regionNoise(region.seed, x / 90, z / 90, 31) * .3 + Math.exp(-wetDistance / 20) * .3);
   const shore = region.module === 'coast' ? smooth(.65, 2.4, height) : 1;
-  const creek = regionCreek(region, z);
-  const bank = creek ? smooth(creek.width * 1.05, creek.width + 3, Math.abs(x - creek.x)) : 1;
-  const cover = shore * bank * (1 - smooth(.4, .95, slope));
-  const woodland = regionNoise(region.seed, x / 88 + 3.7, z / 88 - 8.1, 41) * .65
+  const bank = creek ? smooth(creek.width, creek.width + 4, Math.abs(x - creek.x)) : 1;
+  const lakeBank = lake && height < lake.level + .15 && Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) < 1.25 ? 0 : 1;
+  const basalt = region.module === 'caldera' ? smooth(.34, .66, regionNoise(region.seed, x / 57, z / 57, 91)) * .96 : 0;
+  const rock = region.module === 'upland' ? smooth(.13, .6, slope) * .8 : basalt;
+  const snow = region.module === 'upland' ? smooth((biome.snowLine ?? 110) - 12, (biome.snowLine ?? 110) + 12, height) * (1 - smooth(.6, 1.1, slope)) : 0;
+  const clearance = colonyClearance(region, x, z);
+  const cover = shore * bank * lakeBank * (1 - smooth(.32, .85, slope)) * (1 - rock) * (1 - snow);
+  const woodland = regionNoise(region.seed, x / (region.module === 'coast' ? 62 : 88) + 3.7, z / 88 - 8.1, 41) * .65
     + regionNoise(region.seed, x / 32, z / 32, 42) * .35;
-  // Small irregular glades, rather than a huge, empty strip through every
-  // region. Vegetation can later be cleared for individual building footprints.
-  const gladeX = x + (regionNoise(region.seed, 0, z / 75, 43) - .5) * 22;
-  const glade = (1 - smooth(12, 33, Math.abs(gladeX))) * (1 - smooth(15, 45, Math.abs(z)));
-  const forest = smooth(.28, .64, woodland + (biome.forest - .55) * .42 - glade * .48) * cover;
-  return { cover, forest, moisture };
+  const riparian = creek ? Math.exp(-Math.pow((wetDistance - 20) / 20, 2)) * .22 : 0;
+  const treeline = region.module === 'upland' ? 1 - smooth((biome.treeLine ?? 65) - 12, (biome.treeLine ?? 65) + 12, height) : 1;
+  const canopy = region.module === 'coast' ? smooth(.36, .62, woodland) * .72 : smooth(.28, .7, woodland + (biome.forest - .55) * .8 + riparian);
+  const forest = canopy * cover * treeline * smooth(4, 11, clearance);
+
+  return { cover, forest, moisture, snow };
 }
 export function regionCover(region, x, z, height, slope = 0) { return regionHabitat(region, x, z, height, slope).cover; }
 
@@ -36,7 +43,7 @@ export function createRegionEnvironment(region) {
     const y = regionGroundHeight(region, x, z), slope = slopeAt(x, z), h = regionHabitat(region, x, z, y, slope);
     if (h.forest < .06 || next() > h.forest * .66 || y < 1.5 || slope > .38 || Math.hypot(x, z) > 350) continue;
     const model = biome.trees[Math.floor(next() * biome.trees.length)], young = next() < .18;
-    const size = (model === 'pine' ? 10 + next() * 8 : model === 'aspen' ? 9 + next() * 7 : 8 + next() * 6) * (young ? .5 : 1);
+    const size = biome.treeScale * (model === 'pine' ? 10 + next() * 8 : model === 'aspen' ? 9 + next() * 7 : 8 + next() * 6) * (young ? .5 : 1);
     let overlap = false;
     for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
       const other = occupied.get(`${gx + dx}/${gz + dz}`);
@@ -50,7 +57,7 @@ export function createRegionEnvironment(region) {
     const next = planetRandom(planetSubseed(region.seed, `understory/${gx}/${gz}`));
     const px = (gx + next() - .5) * 8, pz = (gz + next() - .5) * 8;
     const py = regionGroundHeight(region, px, pz), ph = regionHabitat(region, px, pz, py, slopeAt(px, pz));
-    if (py < 1.4 || ph.cover < .5 || Math.hypot(px, pz) > 180) continue;
+    if (py < 1.4 || colonyClearance(region, px, pz) < 3 || ph.cover < .5 || Math.hypot(px, pz) > 180) continue;
     if (ph.forest > .3 && next() < .08) plants.push({ x: px, y: py - .025, z: pz, size: .9 + next() * 1.2, width: 1, model: 'shrub', variant: Math.floor(next() * 2), rotation: next() * Math.PI * 2, tint: .9 + next() * .15 });
     // Meadows use dense, small grass clumps. Shade shifts toward ferns, with
     // a little green understory remaining beneath the mature tree crowns.
@@ -58,8 +65,8 @@ export function createRegionEnvironment(region) {
     for (let i = 0; i < count; i++) {
       const x = px + (next() - .5) * 8, z = pz + (next() - .5) * 8;
       const y = regionGroundHeight(region, x, z), h = regionHabitat(region, x, z, y, slopeAt(x, z));
-      if (y < 1.4 || next() > h.cover * (.9 - h.forest * .35)) continue;
-      const fern = h.forest > .25 && h.moisture > .4 && next() < h.forest * .6;
+      if (y < 1.4 || colonyClearance(region, x, z) < 2.8 || next() > h.cover * (.9 - h.forest * .35)) continue;
+      const fern = region.module !== 'caldera' && region.module !== 'upland' && h.forest > .25 && h.moisture > .4 && next() < h.forest * .6;
       plants.push({ x, y: y - .025, z, model: fern ? 'fern' : 'grass', size: fern ? .45 + next() * .6 : biome.grassHeight * (.5 + next() * .75), width: .9 + next() * .3, rotation: next() * Math.PI * 2, variant: fern ? 0 : next() < .92 ? 1 : 0, tint: .9 + next() * .18 });
     }
   }
@@ -69,7 +76,7 @@ export function createRegionEnvironment(region) {
     const exposure = regionNoise(region.seed, cx / 85, cz / 85, 73);
     for (let i = 0; i < 3; i++) {
       const x = cx + (next() - .5) * 17, z = cz + (next() - .5) * 17;
-      if (Math.hypot(x, z) < 95 || Math.hypot(x, z) > 360 || next() > .35 + exposure * .48) continue;
+      if (colonyClearance(region, x, z) < 5 || Math.hypot(x, z) < 95 || Math.hypot(x, z) > 360 || next() > .35 + exposure * .48) continue;
       if (regionGroundHeight(region, x, z) < .6 || slopeAt(x, z, 5) > .38) continue;
       rocks.push({ id: `environment-${gx}-${gz}-${i}`, x, z, scale: i === 0 ? 2 + next() * 5 : .65 + next() * 1.8, rotation: next() * Math.PI * 2, variant: Math.floor(next() * 3), model: module.rockModels[Math.floor(next() * module.rockModels.length)] });
     }

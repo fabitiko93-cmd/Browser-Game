@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { Group, Vector3, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial } from 'three';
 import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, regionSite, regionCreek } from '../src/planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
+import { colonyClearance } from '../src/planet-colony.js';
 import { addFloraBatches, floraMatrix } from '../src/planet-flora.js';
 
 // A 16 m building footprint must rest on a terrace rather than cross a rim.
@@ -27,23 +28,26 @@ test('building terraces stay gentle over multi-cell footprints across seeds', ()
   }
 });
 
-test('woodland follows habitat, stays rooted, and leaves a meadow through the colony', () => {
+test('regional woodland follows its climate and preserves rooted trees and site clearings', () => {
   for (const seed of [0, 42, 'NEREID-3077']) {
     const planet = createPlanetBlueprint(seed);
     for (const r of planet.regions) {
       const region = createRegionBlueprint(planet, r.id), e = createRegionEnvironment(region);
-      assert.ok(e.trees.length > 200 && e.trees.length < 2200);
-      assert.ok(e.plants.length > 3000 && e.plants.length < 16000);
+      assert.ok(e.trees.length > 15 && e.trees.length < 2200, `${seed}/${r.module}: ${e.trees.length}`);
+      if (r.module === 'coast' || r.module === 'caldera') assert.ok(e.trees.length < 500);
+      if (r.module === 'basin') assert.ok(e.trees.length > 600);
+      assert.ok(e.plants.length > 1000 && e.plants.length < 16000);
       for (const tree of e.trees) {
         const ground = regionGroundHeight(region, tree.x, tree.z), habitat = regionHabitat(region, tree.x, tree.z, ground);
         assert.ok(habitat.forest > .01 && ground > 1.4);
         assert.ok(Math.abs(tree.y - ground + .08) < 1e-9);
         assert.ok(['oak', 'aspen', 'pine'].includes(tree.model));
-        assert.ok(tree.size >= 4 && tree.size <= 18);
+        assert.ok(tree.size >= 1.8 && tree.size <= 18);
         const up = new Vector3(0, 1, 0).transformDirection(floraMatrix(tree));
         assert.ok(up.distanceTo(new Vector3(0, 1, 0)) < 1e-9, 'trunks must stay upright');
       }
-      assert.ok(e.trees.filter(t => Math.abs(t.x) < 10 && Math.abs(t.z) < 10).length <= 2);
+      assert.ok(e.trees.every(t => colonyClearance(region, t.x, t.z) > 4));
+      assert.ok(e.plants.every(t => colonyClearance(region, t.x, t.z) >= 2.8));
       for (const fern of e.plants.filter(p => p.model === 'fern')) {
         const h = regionHabitat(region, fern.x, fern.z, fern.y + .025);
         assert.ok(h.moisture > .35 && h.forest > .19);
@@ -83,9 +87,9 @@ test('complete near trees are instanced in cullable chunks and preserve fixed ro
   geometry.dispose(); material.dispose();
 });
 
-test('valley creek stays outside every build footprint and excludes plants from its wet bed', () => {
+test('continuous valley river stays beyond build footprints and excludes plants from its wet bed', () => {
   const planet = createPlanetBlueprint('NEREID-3077'), region = createRegionBlueprint(planet, planet.regions[1].id);
-  for (let z = -64; z <= 64; z++) assert.equal(regionCreek(region, z), null);
+  for (let z = -960; z <= 960; z += 8) { const c = regionCreek(region, z); assert.ok(c.x + c.width < -64); }
   for (let z = -430; z <= -140; z += 10) {
     const c = regionCreek(region, z); assert.ok(c && c.width > 0);
     assert.equal(regionSite(region, c.x, z).water, true);

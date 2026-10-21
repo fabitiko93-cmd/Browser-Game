@@ -1,9 +1,16 @@
-// Temperate art direction is separate from geology: a rock palette must never
-// turn a living valley into a desert. Values are shared by ground and plants.
+const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
+// Landscape identity includes soil, canopy structure and climate, not just tint.
 export const TEMPERATE_BIOMES = Object.freeze({
-  coast: { name: 'Küstenwiesen', meadow: '#71964a', moss: '#416c3d', dry: '#91a25a', forest: .45, trees: ['oak', 'pine', 'oak', 'aspen'], grassHeight: .62, sky: '#8db9d5', fog: '#c3d6dc', description: 'Grüne Küstenwiesen mit schmalem Sandstrand, lichten Eichenhainen und Kiefern auf den höheren Uferterrassen.' },
-  basin: { name: 'Wald- und Wiesental', meadow: '#548941', moss: '#355f36', dry: '#84934d', forest: .72, trees: ['oak', 'oak', 'aspen', 'aspen', 'pine'], grassHeight: .8, sky: '#a3c3d6', fog: '#c7d7d9', description: 'Ein weicher Talboden mit saftigen Wiesen, dichten Laubwaldgruppen und einem geschwungenen Bach in der Umgebung.' },
-  upland: { name: 'Bewaldetes Hochland', meadow: '#759456', moss: '#446849', dry: '#9b9f65', forest: .64, trees: ['pine', 'pine', 'pine', 'aspen'], grassHeight: .46, sky: '#92b3cd', fog: '#c5d4dc', description: 'Offene Bergwiesen zwischen dicht stehenden Nadelbäumen, kühlen Felsaufschlüssen und sanft ansteigenden Hängen.' },
-  caldera: { name: 'Grünes Vulkanbecken', meadow: '#56854c', moss: '#315a3c', dry: '#7e9252', forest: .86, trees: ['oak', 'oak', 'pine', 'aspen'], grassHeight: .65, sky: '#9bb9c5', fog: '#c3d4d6', description: 'Ein längst begrünter Vulkanboden mit dunklem Gestein, dichtem Mischwald, Moospolstern und Farnen in den Lichtungen.' }
+  coast: { name: 'Warme Küstenbucht', meadow: '#74884f', moss: '#506b39', dry: '#a4a06a', forest: .24, trees: ['oak', 'oak', 'pine'], treeScale: .67, grassHeight: .55, sky: '#8ebbd7', fog: '#cbd9d8', description: 'Warme Küstenwiesen, niedrige Eichenhaine und felsige Landzungen an einer geschwungenen Bucht.' },
+  basin: { name: 'Laubwald-Flusstal', meadow: '#579347', moss: '#335d38', dry: '#8d9b59', forest: .78, trees: ['oak', 'oak', 'aspen', 'aspen', 'oak'], treeScale: 1, grassHeight: .86, sky: '#a1c1d3', fog: '#cadbd7', description: 'Ein durchgehender Fluss mit feuchter Aue und dichtem Laubwald; die Kolonie liegt auf der trockenen Flussterrasse.' },
+  upland: { name: 'Kühles Bergplateau', meadow: '#8a9a6c', moss: '#536b55', dry: '#a4a57b', forest: .63, trees: ['pine', 'pine', 'pine', 'aspen'], treeScale: .87, grassHeight: .35, sky: '#88aac8', fog: '#cbd7de', description: 'Nadelwald an den unteren Hängen, offene Bergwiesen oberhalb der Baumgrenze und schneebedeckte Höhen.' },
+  caldera: { name: 'Vulkanisches Moosland', meadow: '#899759', moss: '#526e48', dry: '#9ba178', forest: .19, trees: ['aspen', 'aspen', 'pine'], treeScale: .48, grassHeight: .29, sky: '#9aaeb8', fog: '#c9d2d2', description: 'Ein kalter Kratersee zwischen dunklen Basaltrücken, hellen Moospolstern und einzelnen niedrigen Baumgruppen.' }
 });
-export function regionBiome(region) { return region.preset === 'temperate' ? TEMPERATE_BIOMES[region.module] ?? null : null; }
+export function regionBiome(region) {
+  if (region.preset !== 'temperate') return null;
+  const base = TEMPERATE_BIOMES[region.module];
+  if (!base) return null;
+  const c = region.climate;
+  if (!c) return base;
+  return { ...base, forest: clamp(base.forest + (c.moisture - .65) * .35, .12, .88), moisture: c.moisture, treeLine: 52 + clamp(c.temperatureC - 5, -2, 7) * 6, snowLine: 91 + clamp(c.temperatureC - 5, -3, 9) * 5 };
+}

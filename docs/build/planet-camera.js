@@ -33,3 +33,15 @@ export function constrainRegionCamera(region, eye, target) {
   }
   eye.y = safeY;
 }
+
+// One shared portrait overview for the runtime and the independent scene review.
+export function regionOverviewPose(region) {
+  const centers = { coast: [-8, -20], basin: [-10, -15], upland: [0, -35], caldera: [-10, -55], regolith: [0, 0] };
+  const offsets = { coast: [-160, 145, 230], basin: [170, 150, 220], upland: [160, 85, 260], caldera: [160, 190, 210], regolith: [70, 85, 105] };
+  const [x, z] = centers[region.module], offset = offsets[region.module];
+  const factor = Math.min(1, (region.preset === 'temperate' ? 340 : 230) / Math.hypot(...offset));
+  const target = { x, y: regionGroundHeight(region, x, z) + 3.5, z };
+  const eye = { x: x + offset[0] * factor, y: target.y + offset[1] * factor, z: z + offset[2] * factor };
+  constrainRegionCamera(region, eye, target);
+  return { eye, target, fov: region.preset === 'temperate' && region.module === 'upland' ? 60 : 43 };
+}

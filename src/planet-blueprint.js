@@ -1,11 +1,13 @@
 import { worldSeed } from './world.js';
+import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface } from './planet-geography.js';
+import { createColonySite, colonyClearance } from './planet-colony.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 5;
+export const PLANET_GENERATOR_VERSION = 6;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
-export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, extent: 10 });
+export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, nearSegments: 120, farSegments: 48, nearExtent: 3.5, extent: 10 });
 export const PLANET_PRESETS = Object.freeze({
   temperate: { name: 'Erdähnliche Welt', globe: 'earth-day.jpg', atmosphere: '#6cb5ef', radiusKm: 6371, ocean: true },
   arid: { name: 'Trockene Welt', globe: 'mars.jpg', atmosphere: '#d4a984', radiusKm: 4300, ocean: false },
@@ -29,8 +31,7 @@ export function planetRandom(seed) {
   let n = seed >>> 0;
   return () => { n = (n + 0x6d2b79f5) >>> 0; let t = Math.imul(n ^ n >>> 15, n | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
-// Reference locations deliberately stay on the source Earth map. Keep the
-// selectable regions separated enough for a portrait touch display.
+// Dry and airless planets retain their reference-map locations.
 const anchors = [[37, 15], [22, 39], [-28, 19], [61, -17], [8, -8]];
 const names = ['Meridian', 'Helion', 'Aster', 'Vesper', 'Eos'];
 
@@ -39,12 +40,16 @@ export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset =
   if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
   const seed = worldSeed(seedValue), next = planetRandom(planetSubseed(seed, 'planet'));
   const modules = preset === 'temperate' ? ['coast', 'basin', 'upland', 'caldera', 'coast'] : preset === 'lunar' ? Array(5).fill('regolith') : ['basin', 'upland', 'caldera', 'basin', 'upland'];
+  const geography = preset === 'temperate' ? createPlanetGeography(planetSubseed(seed, 'geography')) : null;
+  const locations = geography ? choosePlanetLocations(geography, regionCount) : null;
   const regions = Array.from({ length: regionCount }, (_, i) => {
     const id = `region-${i}`, r = planetRandom(planetSubseed(seed, `${id}/identity`));
-    const [lat, lon] = anchors[i];
-    return { id, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, rotation: Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
+    const location = locations?.[i], [lat, lon] = location ? [location.latitude, location.longitude] : anchors[i];
+    const climate = location ? { elevationM: location.elevationM, temperatureC: location.temperatureC, moisture: location.moisture, volcanism: location.volcanism, land: location.land } : null;
+    const gradient = geography ? [samplePlanetSurface(geography, lat + .1, lon).land - samplePlanetSurface(geography, lat - .1, lon).land, samplePlanetSurface(geography, lat, lon + .1).land - samplePlanetSurface(geography, lat, lon - .1).land] : null;
+    return { id, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, climate, rotation: gradient ? Math.atan2(gradient[0], gradient[1] / Math.max(.1, Math.cos(lat * Math.PI / 180))) : Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
   });
-  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, regions };
+  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
 }
 
 export function createRegionBlueprint(planet, regionId) {
@@ -58,13 +63,14 @@ export function createRegionBlueprint(planet, regionId) {
     const r = planetRandom(planetSubseed(region.seed, `crater/${i}`));
     return { x: (r() - .5) * 560, z: -130 - r() * 350, radius: 20 + r() * 48 };
   });
-  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, size: 192, phase, craters, rocks: [], resources: [] };
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
+  if (result.colony && result.module === 'coast') result.colony.roads[1][0][0] = Math.max(-56, Math.min(8, regionShore(result, 25) + 25));
   // Scattered outcrops follow the same broad geological field. A few modest
   // boulders remain near the colony; no ring of oversized props around it.
   for (let i = 0; i < 100; i++) {
     const r = planetRandom(planetSubseed(region.seed, `rock/${i}`));
     const x = (r() - .5) * 180, z = (r() - .5) * 180;
-    if (Math.hypot(x, z) < 24 || regionHeight(result, x, z) < .5) continue;
+    if (Math.hypot(x, z) < 24 || colonyClearance(result, x, z) < 5 || regionHeight(result, x, z) < .5) continue;
     const exposure = regionNoise(result.seed, x / 43, z / 43, 73);
     if (r() > .16 + exposure * .3) continue;
     result.rocks.push({ id: `rock-${i}`, model: module.rockModels[Math.floor(r() * module.rockModels.length)], x, z, scale: 1.1 + r() ** 2 * 4.2, rotation: r() * Math.PI * 2, variant: Math.floor(r() * 3) });
@@ -90,16 +96,18 @@ export function regionNoise(seed, x, z, channel = 0) {
 }
 
 export function regionShore(region, z) {
-  return -52 + (regionNoise(region.seed, 0, z / 160, 9) - .5) * 22 + 3 * Math.sin(z * .014 + region.phase);
+  return -58 + 24 * gaussian((z + 25) / 80) - 13 * gaussian((z + 180) / 60) + (regionNoise(region.seed, 0, z / 160, 9) - .5) * 22 + 3 * Math.sin(z * .014 + region.phase);
 }
 
-// A small scenic creek follows the valley beyond the selectable colony grid.
-// The same bed/width definition is used by terrain, plants and surface water.
+// The valley river and volcanic tarn are shared terrain/water/plant features.
+// Both remain beyond the colony's multi-cell building footprints.
 export function regionCreek(region, z) {
-  if (region.preset !== 'temperate' || region.module !== 'basin' || z > -104 || z < -470) return null;
-  const fade = smooth(-104, -128, z) * smooth(-470, -440, z);
-  const x = 10 + (regionNoise(region.seed, 0, z / 135, 81) - .5) * 78 + 10 * Math.sin(z * .012 + region.phase);
-  return { x, width: 3.8 * fade, depth: .7 * fade };
+  if (region.preset !== 'temperate' || region.module !== 'basin') return null;
+  const x = -100 - 13 * Math.sin(z * .018 + region.phase) - (regionNoise(region.seed, 0, z / 190, 81) - .5) * 10;
+  return { x, width: 6.5, depth: 2.6 };
+}
+export function regionLake(region) {
+  return region.preset === 'temperate' && region.module === 'caldera' ? { x: -60, z: -153, rx: 68, rz: 46, level: 2.2 } : null;
 }
 
 export function regionHeight(region, x, z) {
@@ -117,19 +125,26 @@ export function regionHeight(region, x, z) {
   if (region.module === 'basin') {
     const valley = Math.abs(x - bend);
     const creek = regionCreek(region, z);
-    const bed = creek ? creek.depth * gaussian((x - creek.x) / (creek.width + 2)) : 0;
-    return floor + smooth(95, 290, valley) * (23 + broad * 28 + rolling * 7)
-      + smooth(220, 500, -z) * (12 + broad * 14) - bed;
+    const bed = creek ? creek.depth * gaussian((x - creek.x) / (creek.width + 8)) * smooth(-72, -82, x) : 0;
+    return floor + smooth(95, 260, valley) * (52 + broad * 32 + rolling * 10)
+      + smooth(180, 480, -z) * (25 + broad * 20) - bed;
   }
   if (region.module === 'upland') {
-    return floor + 8 + smooth(95, 320, -z + bend * .3) * (42 + broad * 32 + rolling * 12)
-      + smooth(160, 420, x + bend) * (17 + broad * 18);
+    const ridge = smooth(100, 340, -z + bend * .3) * gaussian((z + 340 + bend) / 230) * (90 + broad * 46 + rolling * 20);
+    return floor + 8 + ridge + smooth(115, 350, x + bend) * (48 + broad * 24)
+      + smooth(110, 220, Math.hypot(x, z)) * Math.pow(Math.max(0, n(65, 17) + .5), 3) * 35
+      + smooth(130, 330, -z) * Math.pow(1 - Math.abs(n(80, 18) * 2), 2) * 48;
   }
   if (region.module === 'caldera') {
     // Eroded remnants of a much wider rim, outside the colony terrace.
-    const d = Math.hypot((x + 115) * .92, z + 70), rim = 30 * gaussian((d - 350 - broad * 40) / 95);
+    const d = Math.hypot((x + 115) * .92, z + 70), rim = 64 * gaussian((d - 280 - broad * 35) / 65);
     const breach = .3 + .7 * smooth(-90, 180, -z + x * .4);
-    return floor - 1 + rim * breach + smooth(110, 260, -z) * rolling * 8;
+    const lake = regionLake(region);
+    const l = lake ? Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) : 99;
+    const bowl = lake ? (1 - smooth(.7, 1.15, l)) * 8 : 0;
+    const basalt = Math.max(0, regionNoise(region.seed, x / 57, z / 57, 91) - .4);
+    const ribs = basalt * (7 + n(18, 92) * 4) * smooth(92, 130, Math.hypot(x, z));
+    return floor - 1 + ribs + rim * breach * smooth(100, 170, Math.hypot(x, z)) + smooth(110, 260, -z) * rolling * 8 - bowl;
   }
   let height = floor - 1.5;
   for (const crater of region.craters) {
@@ -139,26 +154,27 @@ export function regionHeight(region, x, z) {
   return height + smooth(120, 420, Math.hypot(x, z)) * (broad * 12 + rolling * 4);
 }
 
-// The renderer and every placement/camera query share the same nine patches.
-// Outside the work area, query the surrounding mesh instead of extrapolating
-// a triangle from the edge of the central patch.
+// Rendering, placement and the camera use the same adaptive surface patches.
+// A fine surrounding band resolves riverbanks, lake shores and nearby ridges.
 export function regionTerrainPatches(region) {
-  const half = region.size / 2, edges = [-half * REGION_TERRAIN.extent, -half, half, half * REGION_TERRAIN.extent];
-  const patches = [];
-  for (let iz = 0; iz < 3; iz++) for (let ix = 0; ix < 3; ix++) patches.push({
+  const half = region.size / 2, edge = half * REGION_TERRAIN.extent, near = half * REGION_TERRAIN.nearExtent, living = region.preset === 'temperate';
+  const edges = living ? [-edge, -near, -half, half, near, edge] : [-edge, -half, half, edge];
+  const segments = living ? [REGION_TERRAIN.farSegments, REGION_TERRAIN.nearSegments, REGION_TERRAIN.segments, REGION_TERRAIN.nearSegments, REGION_TERRAIN.farSegments] : [REGION_TERRAIN.outerSegments, REGION_TERRAIN.segments, REGION_TERRAIN.outerSegments];
+  const center = living ? 2 : 1, patches = [];
+  for (let iz = 0; iz < segments.length; iz++) for (let ix = 0; ix < segments.length; ix++) patches.push({
     minX: edges[ix], maxX: edges[ix + 1], minZ: edges[iz], maxZ: edges[iz + 1],
-    segmentsX: ix === 1 ? REGION_TERRAIN.segments : REGION_TERRAIN.outerSegments,
-    segmentsZ: iz === 1 ? REGION_TERRAIN.segments : REGION_TERRAIN.outerSegments, central: ix === 1 && iz === 1
+    segmentsX: segments[ix], segmentsZ: segments[iz], central: ix === center && iz === center
   });
   return patches;
 }
 export function regionGroundHeight(region, x, z) {
-  const half = region.size / 2, edge = half * REGION_TERRAIN.extent;
+  const half = region.size / 2, edge = half * REGION_TERRAIN.extent, near = half * REGION_TERRAIN.nearExtent, living = region.preset === 'temperate';
   const axis = value => {
     value = Math.max(-edge, Math.min(edge, value));
-    const min = value < -half ? -edge : value > half ? half : -half;
-    const span = Math.abs(value) > half ? edge - half : region.size;
-    const segments = Math.abs(value) > half ? REGION_TERRAIN.outerSegments : REGION_TERRAIN.segments;
+    const a = Math.abs(value), inner = a <= half, middle = living && a <= near;
+    const min = inner ? -half : middle ? value < 0 ? -near : half : value < 0 ? -edge : living ? near : half;
+    const span = inner ? region.size : middle ? near - half : edge - (living ? near : half);
+    const segments = inner ? REGION_TERRAIN.segments : middle ? REGION_TERRAIN.nearSegments : living ? REGION_TERRAIN.farSegments : REGION_TERRAIN.outerSegments;
     const step = span / segments, i = Math.min(segments - 1, Math.floor((value - min) / step));
     return [min + i * step, step, (value - min - i * step) / step];
   };
@@ -178,7 +194,8 @@ export function regionSite(region, x, z) {
   const height = regionGroundHeight(region, x, z), step = 2;
   const slope = Math.hypot(regionHeight(region, x + step, z) - regionHeight(region, x - step, z), regionHeight(region, x, z + step) - regionHeight(region, x, z - step)) / (step * 2);
   const creek = regionCreek(region, z);
-  const water = (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width * 1.05);
+  const lake = regionLake(region);
+  const water = (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width) || !!(lake && Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) < 1.25 && height < lake.level);
   const deposits = region.resources.filter(d => Math.hypot(x - d.x, z - d.z) <= d.radius);
   // Measure against the generated shoreline, not the nominal coast module edge.
   let coastDistance = null;
