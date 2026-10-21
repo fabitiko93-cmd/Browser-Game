@@ -11,7 +11,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 scene=bpy.context.scene
 scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=20;scene.cycles.use_denoising=True
 scene.render.threads_mode='FIXED';scene.render.threads=4
-scene.render.resolution_x=480;scene.render.resolution_y=620;scene.render.resolution_percentage=100
+scene.render.resolution_x=600;scene.render.resolution_y=800;scene.render.resolution_percentage=100
 scene.view_settings.view_transform='AgX';scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=0
 scene.world=bpy.data.worlds.new('Sky');scene.world.use_nodes=True
 scene.world.node_tree.nodes.get('Background').inputs[0].default_value=(.58,.69,.75,1);scene.world.node_tree.nodes.get('Background').inputs[1].default_value=.6
@@ -38,11 +38,19 @@ for file,scale in [('meadow-color.webp',1/2.4),(r['module']['ground']+'-color.we
 cover=attr
 blend=nodes.new('ShaderNodeMixRGB');links.new(cover.outputs['Alpha'],blend.inputs[0]);links.new(details[1].outputs[0],blend.inputs[1]);links.new(details[0].outputs[0],blend.inputs[2])
 mod=nodes.new('ShaderNodeMixRGB');mod.blend_type='MULTIPLY';mod.inputs[0].default_value=1;links.new(attr.outputs['Color'],mod.inputs[1]);links.new(blend.outputs[0],mod.inputs[2]);links.new(mod.outputs[0],p.inputs['Base Color'])
+if r['region'].get('valley'):
+ macro=[]
+ for scale in [1/18,1/43]:
+  tex=nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(os.path.join(assets,'meadow-color.webp'));tex.extension='REPEAT';uv=nodes.new('ShaderNodeVectorMath');uv.operation='SCALE';uv.inputs[3].default_value=scale;links.new(geom.outputs['Position'],uv.inputs[0]);links.new(uv.outputs[0],tex.inputs['Vector']);macro.append(tex)
+ mx=nodes.new('ShaderNodeMixRGB');mx.inputs[0].default_value=.4;links.new(macro[0].outputs['Color'],mx.inputs[1]);links.new(macro[1].outputs['Color'],mx.inputs[2]);bw=nodes.new('ShaderNodeRGBToBW');links.new(mx.outputs[0],bw.inputs[0]);gain=nodes.new('ShaderNodeMath');gain.operation='MULTIPLY_ADD';gain.inputs[1].default_value=3.4;gain.inputs[2].default_value=.55;links.new(bw.outputs[0],gain.inputs[0]);final=nodes.new('ShaderNodeMixRGB');final.blend_type='MULTIPLY';final.inputs[0].default_value=1;links.new(mod.outputs[0],final.inputs[1]);links.new(gain.outputs[0],final.inputs[2]);links.new(final.outputs[0],p.inputs['Base Color'])
 bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.2;bump.inputs['Distance'].default_value=.025;links.new(blend.outputs[0],bump.inputs['Height']);links.new(bump.outputs['Normal'],p.inputs['Normal'])
 for i,t in enumerate(r['terrain']):
  obj=mesh(f'Terrain-{i}',t['positions'],t['indices'],mat);a=obj.data.color_attributes.new(name='habitatColor',type='FLOAT_COLOR',domain='POINT')
  for j in range(len(t['positions'])//3):
-  cover,forest,moisture,snow=t['habitat'][j*4:j*4+4];c=mix(dry,meadow,.58+moisture*.42);c=tuple(v*(.85+moisture*.3) for v in c);c=mix(c,tuple(v*.98 for v in moss),forest*.72);c=mix(base,c,cover);c=mix(c,(.72,.79,.82),snow);a.data[j].color=(*c,cover)
+  cover,forest,moisture,snow=t['habitat'][j*4:j*4+4];c=mix(dry,meadow,.58+moisture*.42);c=tuple(v*(.85+moisture*.3) for v in c);c=mix(c,tuple(v*.98 for v in moss),forest*.72);c=mix(base,c,cover);c=mix(c,(.72,.79,.82),snow)
+  if r['region'].get('valley'):
+   sediment,variation=t['substrate'][j*2:j*2+2];patch=variation*.8+moisture*.2;c=tuple(v*(.80+patch*.38) for v in c);gravel=mix((.26,.25,.21),(.43,.40,.32),moisture*.3+patch*.35);c=mix(c,gravel,sediment)
+  a.data[j].color=(*c,cover)
  for poly in obj.data.polygons:poly.use_smooth=True
 
 # Import the same prepared GLB variants, preserving texture cutouts and source
@@ -66,8 +74,25 @@ for model,file in {'oak':'woodland-oak.glb','aspen':'woodland-aspen.glb','pine':
   data=o.data.copy();data.transform(o.matrix_world);variants.setdefault(variant,[]).append(data)
  for o in list(new):bpy.data.objects.remove(o,do_unlink=True)
  models[model]=variants
+lods=json.load(open(os.path.join(assets,'tree-lods.json')))['models'];lodmodels={}
+for model,variants in lods.items():
+ lodmodels[model]={}
+ for variant,levels in enumerate(variants):
+  lodmodels[model][variant]=[]
+  for level in levels:
+   parts=[]
+   for k,part in enumerate(level):
+    data=bpy.data.meshes.new(f'{model}-lod');data.from_pydata([xyz(part['position'][i:i+3]) for i in range(0,len(part['position']),3)],[],[part['index'][i:i+3] for i in range(0,len(part['index']),3)]);data.materials.append(models[model][variant][0].materials[k]);uv=data.uv_layers.new()
+    for poly in data.polygons:
+     poly.use_smooth=True
+     for loop in poly.loop_indices:
+      v=data.loops[loop].vertex_index;uv.data[loop].uv=(part['uv'][v*2],1-part['uv'][v*2+1])
+    parts.append(data)
+   lodmodels[model][variant].append(parts)
 for plant in r['environment']['trees']+r['environment']['plants']:
+ if plant.get('renderLod',0)<0:continue
  variant=models[plant['model']].get(plant.get('variant',0),next(iter(models[plant['model']].values())))
+ if plant.get('renderLod',0)>0:variant=lodmodels[plant['model']][plant.get('variant',0)][plant['renderLod']-1]
  for data in variant:
   obj=bpy.data.objects.new(plant['model'],data);scene.collection.objects.link(obj);obj.location=xyz([plant['x'],plant['y'],plant['z']]);obj.rotation_euler.z=plant['rotation'];obj.scale=(plant['size']*plant.get('width',1),plant['size']*plant.get('width',1),plant['size'])
 
@@ -88,7 +113,7 @@ conv=Matrix(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
 for rock in r['rocks']:
  o=bpy.data.objects.new('Rock',rockdata[rock['model']]);scene.collection.objects.link(o);a=rock['matrix'];m=Matrix(tuple(tuple(a[c*4+j] for c in range(4)) for j in range(4)));o.matrix_world=conv@m@conv.inverted()
 
-water=material('Water','#376d7d',.2,.12)
+water=material('Water','#496f65',.2,.12)
 if r['region']['module']=='coast':mesh('Ocean',[-960,.1,-960,960,.1,-960,960,.1,960,-960,.1,960],[0,2,1,0,3,2],water)
 if r['creek']:
  positions=[];indices=[]
@@ -102,7 +127,8 @@ if r['lake']:
  for i in range(96):indices.extend([0,i+2,i+1])
  mesh('Crater lake',positions,indices,water)
 road=material('Prepared site',r['region']['colony']['tint']);road.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(*mix(color(r['region']['colony']['tint']),meadow,.35),1)
-for path in r['roads']:
+road.node_tree.nodes.get('Principled BSDF').inputs['Alpha'].default_value=.55
+for path in ([] if r['region'].get('valley') else r['roads']):
  for a,b in zip(path,path[1:]):
   dx,dz=b[0]-a[0],b[2]-a[2];length=math.hypot(dx,dz);nx,nz=-dz/length*1.8,dx/length*1.8
   mesh('Access road',[a[0]+nx,a[1],a[2]+nz,a[0]-nx,a[1],a[2]-nz,b[0]+nx,b[1],b[2]+nz,b[0]-nx,b[1],b[2]-nz],[0,1,2,1,3,2],road)

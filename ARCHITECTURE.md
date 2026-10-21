@@ -6,13 +6,14 @@
 | `src/world.js` / `src/world-save.js` | Seedbasierte Weltgeneration, dynamische Systeme, Sternanker, Fördergrenzen und Weltschema |
 | `src/planet-blueprint.js` | Versionierte, serialisierbare Planeten- und Regionsrezepte mit unabhängigen Teil-Seeds und austauschbaren Landschaftsmodulen |
 | `src/planet-preview-page.js` / `src/planet-preview-scene.js` | Separate Planetenprobe: drehbarer Globus, expliziter Regionswechsel, echte Pack-Assets, Touchkamera und unverbindliche Bauflächenprüfung |
+| `src/planet-valley.js` / `src/planet-valley-data.js` | Drei offline vorbereitete Flusstäler: gemeinsame Höhen, Flussprofile, Ökologiemasken, Kameras und Standortentwürfe |
 | `src/planet-rocks.js` | Neigungsangepasste Felsplatzierung mit tatsächlicher Modellauflage und Höhen der gerenderten Geländedreiecke |
 | `src/planet-camera.js` | Bodenfolgender, begrenzter Regionsblickpunkt und Kamerafreiheit über Boden und dazwischenliegenden Höhenzügen |
 | `src/planet-geography.js` | Gemeinsame sphärische Kontinente, Höhen-/Klimafelder, geeignete Regionskoordinaten und Globusfarben |
 | `src/planet-colony.js` | Unterschiedliche Erschließungswege und vorbereitete Bauflächen je Landschaft; gemeinsame Freihaltung im Bewuchs |
 | `src/planet-biomes.js` | Klimabezogene Vegetation, Bodenfarben, Baum-/Schneegrenzen und Atmosphäre der vier Landschaften |
 | `src/planet-environment.js` | Gemeinsame Feuchte-/Wald-/Wiesenfelder, unabhängig gesäte Felsen, Bäume und Unterwuchs |
-| `src/planet-flora.js` | Vollständige 3D-Baumkronen, instanzierter Unterwuchs und räumliche Gruppen für Frustum-Culling |
+| `src/planet-flora.js` | Vollständige 3D-Baumkronen, zwei kamerabezogene Detailstufen, instanzierter Unterwuchs und räumliche Gruppen für Frustum-Culling |
 | `src/planet-ground-material.js` | Wiese, Wald, offener Basalt und Schnee mit gescannten Details und gemeinsamen Habitatfeldern |
 | `src/ruins.js` / `src/ruins-ui.js` | Bezahlte Bergung und Wiederherstellung, physische Expeditionsfracht und laufender Orbitalbetrieb |
 | `src/trade-board.js` / `src/trade-board-ui.js` | Öffentliche Spielerangebote, geschützte Exporte und real reservierte Importbudgets |

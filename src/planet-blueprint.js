@@ -1,10 +1,11 @@
+import { valleyDefinition, valleyHeight, valleyRiver, valleySite } from './planet-valley.js';
 import { worldSeed } from './world.js';
 import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface } from './planet-geography.js';
 import { createColonySite, colonyClearance } from './planet-colony.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 6;
+export const PLANET_GENERATOR_VERSION = 7;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
 export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, nearSegments: 120, farSegments: 48, nearExtent: 3.5, extent: 10 });
@@ -26,7 +27,9 @@ export const REGION_MODULES = Object.freeze({
 const smooth = (a, b, value) => { const t = Math.max(0, Math.min(1, (value - a) / (b - a))); return t * t * (3 - 2 * t); };
 const gaussian = value => Math.exp(-value * value);
 
-export const planetSubseed = (seed, path) => worldSeed(`${PLANET_GENERATOR_VERSION}:${seed}:${path}`);
+// Keep established planet positions and untouched biome recipes stable. The
+// recipe version advances independently of this existing random namespace.
+export const planetSubseed = (seed, path) => worldSeed(`6:${seed}:${path}`);
 export function planetRandom(seed) {
   let n = seed >>> 0;
   return () => { n = (n + 0x6d2b79f5) >>> 0; let t = Math.imul(n ^ n >>> 15, n | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -35,7 +38,7 @@ export function planetRandom(seed) {
 const anchors = [[37, 15], [22, 39], [-28, 19], [61, -17], [8, -8]];
 const names = ['Meridian', 'Helion', 'Aster', 'Vesper', 'Eos'];
 
-export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid' } = {}) {
+export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', valley = null } = {}) {
   if (!Object.hasOwn(PLANET_PRESETS, preset)) throw new Error('Unbekannte Planetenvorlage.');
   if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
   const seed = worldSeed(seedValue), next = planetRandom(planetSubseed(seed, 'planet'));
@@ -47,7 +50,7 @@ export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset =
     const location = locations?.[i], [lat, lon] = location ? [location.latitude, location.longitude] : anchors[i];
     const climate = location ? { elevationM: location.elevationM, temperatureC: location.temperatureC, moisture: location.moisture, volcanism: location.volcanism, land: location.land } : null;
     const gradient = geography ? [samplePlanetSurface(geography, lat + .1, lon).land - samplePlanetSurface(geography, lat - .1, lon).land, samplePlanetSurface(geography, lat, lon + .1).land - samplePlanetSurface(geography, lat, lon - .1).land] : null;
-    return { id, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, climate, rotation: gradient ? Math.atan2(gradient[0], gradient[1] / Math.max(.1, Math.cos(lat * Math.PI / 180))) : Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
+    return { id, valley: modules[i] === 'basin' && preset === 'temperate' ? (['meadow', 'meander', 'woodland'].includes(valley) ? valley : ['meadow', 'meander', 'woodland'][planetSubseed(seed, id) % 3]) : null, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, climate, rotation: gradient ? Math.atan2(gradient[0], gradient[1] / Math.max(.1, Math.cos(lat * Math.PI / 180))) : Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
   });
   return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
 }
@@ -63,13 +66,15 @@ export function createRegionBlueprint(planet, regionId) {
     const r = planetRandom(planetSubseed(region.seed, `crater/${i}`));
     return { x: (r() - .5) * 560, z: -130 - r() * 350, radius: 20 + r() * 48 };
   });
-  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, valley: region.valley, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
+  if (valleyDefinition(result)) result.colony = valleySite(result);
   if (result.colony && result.module === 'coast') result.colony.roads[1][0][0] = Math.max(-56, Math.min(8, regionShore(result, 25) + 25));
   // Scattered outcrops follow the same broad geological field. A few modest
   // boulders remain near the colony; no ring of oversized props around it.
   for (let i = 0; i < 100; i++) {
     const r = planetRandom(planetSubseed(region.seed, `rock/${i}`));
     const x = (r() - .5) * 180, z = (r() - .5) * 180;
+    if (valleyDefinition(result) && x > -70) continue;
     if (Math.hypot(x, z) < 24 || colonyClearance(result, x, z) < 5 || regionHeight(result, x, z) < .5) continue;
     const exposure = regionNoise(result.seed, x / 43, z / 43, 73);
     if (r() > .16 + exposure * .3) continue;
@@ -102,15 +107,14 @@ export function regionShore(region, z) {
 // The valley river and volcanic tarn are shared terrain/water/plant features.
 // Both remain beyond the colony's multi-cell building footprints.
 export function regionCreek(region, z) {
-  if (region.preset !== 'temperate' || region.module !== 'basin') return null;
-  const x = -100 - 13 * Math.sin(z * .018 + region.phase) - (regionNoise(region.seed, 0, z / 190, 81) - .5) * 10;
-  return { x, width: 6.5, depth: 2.6 };
+  return valleyDefinition(region) ? valleyRiver(region, z) : null;
 }
 export function regionLake(region) {
   return region.preset === 'temperate' && region.module === 'caldera' ? { x: -60, z: -153, rx: 68, rz: 46, level: 2.2 } : null;
 }
 
 export function regionHeight(region, x, z) {
+  if (valleyDefinition(region)) return valleyHeight(region, x, z);
   const n = (scale, channel) => regionNoise(region.seed, x / scale, z / scale, channel) - .5;
   const broad = n(260, 1), rolling = n(110, 2), detail = n(36, 3);
   const floor = 4.5 + x * .006 + z * .003 + broad * 1.8 + rolling * .45 + detail * .08;

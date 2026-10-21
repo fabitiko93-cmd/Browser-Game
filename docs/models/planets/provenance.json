@@ -399,6 +399,48 @@
       ],
       "bytes": 898772,
       "sha256": "4b12c4488a43517b2b6585ef65b7ebd9acb78eae8c9b114657b05dc40c544fe4"
+    },
+    {
+      "file": "tree-lods.json",
+      "creator": "Daniel Greenheck / EZ-Tree; ORBIT LOD preparation",
+      "license": "MIT; original bark textures CC0-1.0",
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "preparationScript": "scripts/prepare-planet-tree-lods.mjs",
+      "changes": "Three-dimensional leaf-card selection in the existing spatial canopy, coverage-preserving card scaling, meshoptimizer branch reduction; original UVs, normals, roots and shared source textures retained. No whole-tree billboard.",
+      "trianglesPerVariant": {
+        "oak": [
+          [
+            1420,
+            516
+          ],
+          [
+            1441,
+            522
+          ]
+        ],
+        "aspen": [
+          [
+            1027,
+            556
+          ],
+          [
+            1027,
+            546
+          ]
+        ],
+        "pine": [
+          [
+            1448,
+            553
+          ],
+          [
+            1427,
+            540
+          ]
+        ]
+      },
+      "bytes": 1206608,
+      "sha256": "8c2a13aaf6b33d1b891f18f5f7829a3f40a7773864167033b058b9e2390755b0"
     }
   ]
 }

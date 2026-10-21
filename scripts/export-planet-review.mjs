@@ -2,36 +2,48 @@
 // This is deliberately not a browser screenshot or a shader/performance test.
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { PlaneGeometry, BufferGeometry, Float32BufferAttribute } from 'three';
+import { PlaneGeometry, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three';
 import { createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight, regionGroundHeight, regionCreek, regionLake, ROCK_ASSETS, REGION_MODULES } from '../src/planet-blueprint.js';
-import { regionOverviewPose } from '../src/planet-camera.js';
+import { regionOverviewPose, constrainRegionCamera } from '../src/planet-camera.js';
+import { floraChunkKey, floraChunkCenter, floraLodLevel, TREE_CHUNK_SIZE } from '../src/planet-flora.js';
 import { regionBiome } from '../src/planet-biomes.js';
 import { planetSurfacePixels } from '../src/planet-geography.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
 import { rockFootprint, fitRockToGround } from '../src/planet-rocks.js';
 const output = resolve(process.argv[2] ?? 'artifacts/landscapes'), seed = process.argv[3] ?? 'NEREID-3077';
 await mkdir(output, { recursive: true });
-const planet = createPlanetBlueprint(seed), pixels = planetSurfacePixels(planet.geography);
+const planet = createPlanetBlueprint(seed, { valley: process.argv[4] }), pixels = planetSurfacePixels(planet.geography);
 await writeFile(resolve(output, 'globe.rgba'), pixels.data);
 await writeFile(resolve(output, 'planet.json'), JSON.stringify(planet));
 const { models: lods } = JSON.parse(await readFile('web/models/planets/rock-lods.json', 'utf8'));
-for (const r of planet.regions) {
+for (const r of planet.regions.filter(r => !process.argv.includes('--valley-only') || r.module === 'basin')) {
   const region = createRegionBlueprint(planet, r.id), environment = createRegionEnvironment(region), biome = regionBiome(region), terrain = [];
   for (const p of regionTerrainPatches(region)) {
     const g = new PlaneGeometry(p.maxX - p.minX, p.maxZ - p.minZ, p.segmentsX, p.segmentsZ); g.rotateX(-Math.PI / 2); g.translate((p.minX + p.maxX) / 2, 0, (p.minZ + p.maxZ) / 2);
     const pos = g.attributes.position;
     for (let i = 0; i < pos.count; i++) pos.setY(i, regionHeight(region, pos.getX(i), pos.getZ(i)));
     g.computeVertexNormals();
-    const habitat = [];
+    const habitat = [], substrate = [];
     for (let i = 0; i < pos.count; i++) {
       const ny = Math.max(.05, g.attributes.normal.getY(i)), slope = Math.sqrt(Math.max(0, 1 - ny * ny)) / ny;
       const h = regionHabitat(region, pos.getX(i), pos.getZ(i), pos.getY(i), slope);
-      habitat.push(h.cover, h.forest, h.moisture, h.snow);
+      habitat.push(h.cover, h.forest, h.moisture, h.snow); substrate.push(h.sediment ?? 0, h.variation ?? .5);
     }
-    terrain.push({ positions: Array.from(pos.array), indices: Array.from(g.index.array), habitat });g.dispose();
+    terrain.push({ positions: Array.from(pos.array), indices: Array.from(g.index.array), habitat, substrate });g.dispose();
   }
-  const creek = region.module === 'basin' ? Array.from({ length: 641 }, (_, i) => { const z = -960 + i * 3, c = regionCreek(region, z); return [c.x, regionGroundHeight(region, c.x, z) + c.depth * .48, z, c.width * 1.18]; }) : null;
-  const pose = regionOverviewPose(region), target = [pose.target.x, pose.target.y, pose.target.z], camera = [pose.eye.x, pose.eye.y, pose.eye.z];
+  const creek = region.preset === 'temperate' && region.module === 'basin' ? Array.from({ length: 641 }, (_, i) => { const z = -960 + i * 3, c = regionCreek(region, z); return [c.x, c.level ?? regionGroundHeight(region, c.x, z) + c.depth * .48, z, c.width * 1.06]; }) : null;
+  const pose = process.argv.includes('--close') ? { eye:{x:-25,y:42,z:95}, target:{x:-82,y:regionGroundHeight(region,-82,-10)+3.5,z:-10}, fov:43 } : regionOverviewPose(region);
+  constrainRegionCamera(region,pose.eye,pose.target);
+  const target = [pose.target.x, pose.target.y, pose.target.z], camera = [pose.eye.x, pose.eye.y, pose.eye.z];
+  const chunks = new Map();
+  for (const t of [...environment.trees, ...environment.plants]) {
+    const tree = ['oak','aspen','pine'].includes(t.model), key = `${t.model}/${floraChunkKey(t, t.model === 'fern' ? 1 : 2, tree ? TREE_CHUNK_SIZE : 64)}`;
+    if (!chunks.has(key)) chunks.set(key, []); chunks.get(key).push(t);
+  }
+  for (const plants of chunks.values()) {
+    const d = floraChunkCenter(plants).distanceTo(new Vector3(...camera));
+    for (const t of plants) t.renderLod = ['oak','aspen','pine'].includes(t.model) ? floraLodLevel(d) : d < 260 ? 0 : -1;
+  }
   const rockModels = lods;
   const rocks = [...region.rocks, ...environment.rocks].map(rock => {
     const m = lods[rock.model], g = new BufferGeometry();

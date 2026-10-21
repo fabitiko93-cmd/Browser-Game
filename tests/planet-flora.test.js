@@ -33,9 +33,9 @@ test('regional woodland follows its climate and preserves rooted trees and site 
     const planet = createPlanetBlueprint(seed);
     for (const r of planet.regions) {
       const region = createRegionBlueprint(planet, r.id), e = createRegionEnvironment(region);
-      assert.ok(e.trees.length > 15 && e.trees.length < 2200, `${seed}/${r.module}: ${e.trees.length}`);
+      assert.ok(e.trees.length > 15 && e.trees.length < (r.module === 'basin' ? 6000 : 2200), `${seed}/${r.module}: ${e.trees.length}`);
       if (r.module === 'coast' || r.module === 'caldera') assert.ok(e.trees.length < 500);
-      if (r.module === 'basin') assert.ok(e.trees.length > 600);
+      if (r.module === 'basin') assert.ok(e.trees.length > 2800);
       assert.ok(e.plants.length > 1000 && e.plants.length < 16000);
       for (const tree of e.trees) {
         const ground = regionGroundHeight(region, tree.x, tree.z), habitat = regionHabitat(region, tree.x, tree.z, ground);

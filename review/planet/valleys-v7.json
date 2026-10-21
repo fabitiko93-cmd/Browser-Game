@@ -1,0 +1,91 @@
+{
+  "generatorVersion": 7,
+  "seed": "NEREID-3077",
+  "date": "2026-10-21",
+  "validation": {
+    "tests": 383,
+    "passed": 383,
+    "browser": "Cloud Chrome: Error creating WebGL context.",
+    "visual": "Separate Blender 4.5.9 CPU renders using terrain triangles, ecology, source materials, rock poses and camera-dependent tree LODs. Materials and lighting are not pixel-identical to WebGL.",
+    "iphonePerformance": "Not measured",
+    "buildHash": "2fdc0ba5f7330299"
+  },
+  "variants": [
+    {
+      "variant": "meadow",
+      "name": "Weites Wiesental",
+      "trees": 4893,
+      "plants": 14172,
+      "rocks": 620,
+      "camera": [
+        185,
+        245.2908,
+        280
+      ],
+      "target": [
+        -35,
+        10.290799999999999,
+        -50
+      ],
+      "fov": 55,
+      "lodCounts": {
+        "0": 0,
+        "1": 186,
+        "2": 4707
+      },
+      "imageSha256": "09ae7f59956658675899604893604c524ddf87a11606225338eb78f0cb9e9ecc"
+    },
+    {
+      "variant": "meander",
+      "name": "Große Flussschleife",
+      "trees": 4088,
+      "plants": 14894,
+      "rocks": 794,
+      "camera": [
+        175,
+        260.368,
+        285
+      ],
+      "target": [
+        -55,
+        10.368000000000002,
+        -55
+      ],
+      "fov": 55,
+      "lodCounts": {
+        "0": 0,
+        "1": 0,
+        "2": 4088
+      },
+      "imageSha256": "81fa7b3799e6c38a8a70bb73a7d7d75d493c40308f15053c61f6470ff06b1bed"
+    },
+    {
+      "variant": "woodland",
+      "name": "Bewaldete Flussterrassen",
+      "trees": 5624,
+      "plants": 7102,
+      "rocks": 580,
+      "camera": [
+        190,
+        240.40986666666666,
+        275
+      ],
+      "target": [
+        -30,
+        10.409866666666666,
+        -55
+      ],
+      "fov": 55,
+      "lodCounts": {
+        "0": 0,
+        "1": 233,
+        "2": 5391
+      },
+      "imageSha256": "8f730a2ba3f737a1b7eb9ea20be75e11fdf0d385d52fcaceec455b0b6fac1b0e"
+    }
+  ],
+  "references": [
+    "https://www.nps.gov/articles/meandering-stream.htm",
+    "https://lgrbwissen.lgrb-bw.de/unser-land/schwarzwald"
+  ]
+}
