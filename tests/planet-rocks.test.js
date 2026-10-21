@@ -69,12 +69,12 @@ test('grounding samples match real rendered triangles rather than only analytic 
     const position = geometry.attributes.position;
     for (let i = 0; i < position.count; i++) position.setY(i, regionHeight(region, position.getX(i), position.getZ(i)));
     const mesh = new Mesh(geometry, material); mesh.updateMatrixWorld(true);
-    for (const [x, z] of [[38.25, -42.6], [65.4, -60.8], [-48.6, 32.2], [13.13, 19.71], [47.81, 53.28]]) {
+    for (const [x, z] of [[38.25, -42.6], [65.4, -60.8], [-48.6, 32.2], [13.13, 19.71], [47.81, 53.28], [-69.2, -50.13], [-89.7, 10.32]]) {
       ray.set(new Vector3(x, 200, z), new Vector3(0, -1, 0)); const hit = ray.intersectObject(mesh)[0]; assert.ok(hit);
       assert.ok(Math.abs(hit.point.y - regionGroundHeight(region, x, z)) < 1e-4);
       analyticDifference = Math.max(analyticDifference, Math.abs(hit.point.y - regionHeight(region, x, z)));
     }
     geometry.dispose();
   }
-  assert.ok(analyticDifference > .001); material.dispose();
+  assert.ok(analyticDifference > .0001); material.dispose();
 });

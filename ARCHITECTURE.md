@@ -8,7 +8,9 @@
 | `src/planet-preview-page.js` / `src/planet-preview-scene.js` | Separate Planetenprobe: drehbarer Globus, expliziter Regionswechsel, echte Pack-Assets, Touchkamera und unverbindliche Bauflächenprüfung |
 | `src/planet-rocks.js` | Neigungsangepasste Felsplatzierung mit tatsächlicher Modellauflage und Höhen der gerenderten Geländedreiecke |
 | `src/planet-camera.js` | Bodenfolgender, begrenzter Regionsblickpunkt und Kamerafreiheit über Boden und dazwischenliegenden Höhenzügen |
-| `src/planet-environment.js` | Unabhängig gesäte Umgebungszellen, Fels-/Geröllgruppen und habitatabhängige Vegetationsfelder |
+| `src/planet-environment.js` | Gemeinsame Feuchte-/Wald-/Wiesenfelder, unabhängig gesäte Felsen, Bäume und Unterwuchs |
+| `src/planet-flora.js` | Instanzierte 3D-Jungpflanzen, blickrichtungsabhängige Fernwaldansichten und gemeinsame Pflanzenwurzeln |
+| `src/planet-ground-material.js` | Maßhaltige Gras-/Waldboden-Texturübergänge anhand derselben Habitatfelder |
 | `src/ruins.js` / `src/ruins-ui.js` | Bezahlte Bergung und Wiederherstellung, physische Expeditionsfracht und laufender Orbitalbetrieb |
 | `src/trade-board.js` / `src/trade-board-ui.js` | Öffentliche Spielerangebote, geschützte Exporte und real reservierte Importbudgets |
 | `src/power.js` / `src/power-ui.js` / `src/power-save.js` | Verbindliche Machtblöcke, physische Verpflichtungen, Kriegsziele, Friedensbedingungen und Vorherrschaft |

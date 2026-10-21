@@ -205,6 +205,136 @@
           "relativeError": 0.010209770873188972
         }
       }
+    },
+    {
+      "file": "pine-young.glb",
+      "collection": "Pine Forest",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/pine_sapling_small",
+      "license": "CC0-1.0",
+      "sourceNodes": [
+        "pine_sapling_small_b",
+        "pine_sapling_small_a"
+      ],
+      "sourceSha256": "f358c01926861dd082f32dba60f7c9fba232b585a985cf38c0d2229eecf4bc48",
+      "changes": "Selected source variants, height normalization, attribute-aware mobile geometry, 512 px color/normal textures; original separate alpha restored as PNG with alpha testing.",
+      "preparationScript": "scripts/prepare-planet-flora.py",
+      "sha256": "4715873042ff7441bbc7e95573d485be8a7a3a4d1fd6a53fcb25a3eeb4997736",
+      "bytes": 2880884,
+      "originalTriangles": 264741,
+      "triangles": 36976,
+      "relativeError": 0.0018591671250760555
+    },
+    {
+      "file": "fir-young.glb",
+      "collection": "Pine Forest",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/fir_sapling",
+      "license": "CC0-1.0",
+      "sourceNodes": [
+        "fir_sapling_a"
+      ],
+      "sourceSha256": "a9466ca9d8c5b9b2eeeeafd3ce426f8912dcbd98a7281bad8c734833eb35b186",
+      "changes": "Selected source variants, height normalization, attribute-aware mobile geometry, 512 px color/normal textures; original separate alpha restored as PNG with alpha testing.",
+      "preparationScript": "scripts/prepare-planet-flora.py",
+      "sha256": "e5c9f68da74553799f9543bdc6e7fa32cdba8c00a24010efd7447fd702e831b0",
+      "bytes": 1935136,
+      "originalTriangles": 157402,
+      "triangles": 18348,
+      "relativeError": 0.0015440211864188313
+    },
+    {
+      "file": "fern.glb",
+      "collection": "Pine Forest",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/fern_02",
+      "license": "CC0-1.0",
+      "sourceNodes": [
+        "fern_02_a"
+      ],
+      "sourceSha256": "33974295ee19670af4877705fc7d91f33f42d6302f0d44a625e072271223031f",
+      "changes": "Selected source variants, height normalization, attribute-aware mobile geometry, 512 px color/normal textures; original separate alpha restored as PNG with alpha testing.",
+      "preparationScript": "scripts/prepare-planet-flora.py",
+      "sha256": "33630f4cccedcd3c9489764796ed718158518ad5d1bc66c047816497bfed16d5",
+      "bytes": 350020,
+      "originalTriangles": 784,
+      "triangles": 450,
+      "relativeError": 0.008473770692944527
+    },
+    {
+      "file": "meadow-grass.glb",
+      "collection": "Pine Forest",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/grass_medium_01",
+      "license": "CC0-1.0",
+      "sourceNodes": [
+        "grass_medium_01_tall_b_LOD0",
+        "grass_medium_01_tiny_b_LOD0"
+      ],
+      "sourceSha256": "3e5e2a314c94e16de54fd7c28e41709731fbd2b1613ab539f1544f622ddb6a85",
+      "changes": "Selected source variants, height normalization, attribute-aware mobile geometry, 512 px color/normal textures; original separate alpha restored as PNG with alpha testing.",
+      "preparationScript": "scripts/prepare-planet-flora.py",
+      "sha256": "5e482fef86b226df39acb1822146c0f13c00d9b51f4847e5a5ae6b9e4e1a2a13",
+      "bytes": 462192,
+      "originalTriangles": 338,
+      "triangles": 338,
+      "relativeError": 0
+    },
+    {
+      "file": "meadow-color.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "license": "CC0-1.0",
+      "sourceSha256": "cfa40bc9d9417d1852db8753a8d5917f110c40101179f63543c382e39bc05e4a",
+      "changes": "1k WebP conversion.",
+      "sha256": "eb206ff7fbcf53ad06383aa8ced521a2d7f32d294a6ed8d4cb6f5daaeb1f1de1",
+      "bytes": 436504
+    },
+    {
+      "file": "meadow-normal.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "license": "CC0-1.0",
+      "sourceSha256": "832328216adc0a7e1f70a31d5ee48c9ab7f2152d83816122736cf42ac4b2ebd6",
+      "changes": "1k WebP conversion.",
+      "sha256": "a73c9afae932d9146094e5fede13e863d6f64ecc9293ced49716cc5f886fe837",
+      "bytes": 561312
+    },
+    {
+      "file": "forest-floor-color.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/forest_leaves_04",
+      "license": "CC0-1.0",
+      "sourceSha256": "a898e6ef0668a40faaf1bcbc6b024f6ef437ec424a10fa47aa6d35d013c9dade",
+      "changes": "1k WebP conversion.",
+      "sha256": "82e69c02f330a6d23d7f9547a4fe0d8d285f36bf82a52e2eaaf3c237fcf8ebbf",
+      "bytes": 460306
+    },
+    {
+      "file": "forest-floor-normal.webp",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/forest_leaves_04",
+      "license": "CC0-1.0",
+      "sourceSha256": "6b7c4086fc28b7b1f11f4d04aedcc27772ce3bb894cfc00835b4637092c1bb0c",
+      "changes": "1k WebP conversion.",
+      "sha256": "1b69cfe1709935713c903a87788dcff9e436d42ae6583c7628232b963a98f6ec",
+      "bytes": 594114
+    },
+    {
+      "file": "pine-forest-atlas.webp",
+      "collection": "Pine Forest",
+      "creator": "Poly Haven; offline views by ORBIT",
+      "source": "https://polyhaven.com/a/pine_tree_01",
+      "license": "CC0-1.0",
+      "sourceNodes": [
+        "pine_tree_01_a_LOD2",
+        "pine_tree_01_b_LOD2"
+      ],
+      "sourceSha256": "db517cc486475860f308b8064673b841fee6f9ad2986446d8e02d1b81b22284d",
+      "changes": "Eight neutral-light orthographic views per source tree, 256x512 px per view, RGBA WebP atlas for distant forest. Nearby saplings retain 3D geometry.",
+      "preparationScript": "scripts/bake-planet-forest.py; scripts/prepare-planet-flora.py",
+      "sha256": "575ca355cdb433df08a4be5da3826bebd4f51751caced5af3f752ffbb324d8ba",
+      "bytes": 516088
     }
   ]
 }

@@ -134,11 +134,11 @@ test('environment is reproducible, extends beyond the colony, and respects the p
       const region = createRegionBlueprint(planet, r.id), environment = createRegionEnvironment(region);
       assert.deepEqual(environment, createRegionEnvironment(region));
       assert.deepEqual(JSON.parse(JSON.stringify(environment)), environment);
-      assert.ok(environment.rocks.length > 40 && environment.rocks.length < 350);
+      assert.ok(environment.rocks.length > 40 && environment.rocks.length < 450);
       assert.ok(environment.rocks.some(rock => Math.hypot(rock.x, rock.z) > 250));
       assert.ok(environment.rocks.every(rock => Math.hypot(rock.x, rock.z) >= 90));
-      assert.ok(environment.plants.every(p => Math.hypot(p.x, p.z) > 24 && p.y > .9));
-      if (preset !== 'temperate') assert.equal(environment.plants.length, 0);
+      assert.ok(environment.plants.every(p => p.y > 1.3 && Math.abs(p.y - regionGroundHeight(region, p.x, p.z) + .025) < 1e-8));
+      if (preset !== 'temperate') { assert.equal(environment.plants.length, 0); assert.equal(environment.trees.length, 0); }
       else if (r.module === 'coast' || r.module === 'upland') assert.ok(environment.plants.length > 100);
     }
   }

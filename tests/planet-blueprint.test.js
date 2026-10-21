@@ -45,12 +45,12 @@ test('derived presentation recipes never modify a strategic save', () => {
   assert.equal(JSON.stringify(game), before);
 });
 
-test('the four sample regions have distinct geological structures, not just different names', () => {
+test('regions retain distinct distant geology beyond their gentle building terraces', () => {
   const planet = createPlanetBlueprint('NEREID-3077');
   assert.equal(new Set(planet.regions.map(r => r.module)).size, 4);
   const [coast, basin, upland, caldera] = planet.regions.map(r => createRegionBlueprint(planet, r.id));
   assert.ok(regionHeight(coast, -90, 0) < 0 && regionHeight(coast, 60, 0) > 4);
-  assert.ok(regionHeight(basin, 60, 0) - regionHeight(basin, 0, 0) > 20);
-  assert.ok(regionHeight(upland, 0, -55) - regionHeight(upland, 0, 0) > 20);
-  assert.ok(regionHeight(caldera, 57, -9) - regionHeight(caldera, 0, 0) > 25);
+  assert.ok(regionHeight(basin, 260, 0) - regionHeight(basin, 0, 0) > 20);
+  assert.ok(regionHeight(upland, 0, -310) - regionHeight(upland, 0, 0) > 20);
+  assert.ok(regionHeight(caldera, 30, -390) - regionHeight(caldera, 0, 0) > 12);
 });

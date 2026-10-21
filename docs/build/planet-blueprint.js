@@ -2,7 +2,7 @@ import { worldSeed } from './world.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 3;
+export const PLANET_GENERATOR_VERSION = 4;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
 export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, extent: 10 });
@@ -16,9 +16,9 @@ export const ROCK_ASSETS = Object.freeze({
 });
 export const REGION_MODULES = Object.freeze({
   coast: { name: 'Küstenebene', ground: 'sand', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: true, relief: 1.5, tint: '#ffffff', palette: ['#a6a18a', '#d4cbb0', '#71817c'], sky: '#789eae', fog: '#94afb5', rockTint: '#cbd1c5', description: 'Helle Strandterrassen, blaues Meer und Felsgruppen entlang einer geschwungenen Küste.' },
-  basin: { name: 'Rotes Becken', ground: 'sand', rock: 'namaqualand', rockModels: ['layered', 'rounded'], water: false, relief: 2.2, tint: '#ffffff', palette: ['#b47e5b', '#e0ae7e', '#915d4a'], sky: '#9f826b', fog: '#baa18a', rockTint: '#b78769', description: 'Ein breites, trockenes Tal zwischen roten Steilstufen und verwitterten Felsterrassen.' },
-  upland: { name: 'Felsiges Hochland', ground: 'regolith', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 3.5, tint: '#ffffff', palette: ['#87968d', '#c6c9bd', '#687778'], sky: '#8ca9b4', fog: '#b4c4ca', rockTint: '#a3afa9', description: 'Kühle, helle Felsrücken, ein erhöhtes Plateau und dichteres Geröll an den Hängen.' },
-  caldera: { name: 'Vulkanisches Becken', ground: 'regolith', rock: 'lunar', rockModels: ['lunar', 'rounded'], water: false, relief: 2.8, tint: '#ffffff', palette: ['#383f41', '#727877', '#9b7459'], sky: '#7e807e', fog: '#949a97', rockTint: '#65706e', description: 'Dunkles Vulkangestein in einer weiten Caldera mit einem deutlich erhöhten Kraterrand.' },
+  basin: { name: 'Rotes Becken', ground: 'sand', rock: 'namaqualand', rockModels: ['layered', 'rounded'], water: false, relief: 2.2, tint: '#ffffff', palette: ['#b47e5b', '#e0ae7e', '#915d4a'], sky: '#9f826b', fog: '#baa18a', rockTint: '#b78769', description: 'Ein breiter Talboden zwischen verwitterten Hängen. Auf erdähnlichen Welten wachsen Wiesen und lichte Kieferngruppen.' },
+  upland: { name: 'Felsiges Hochland', ground: 'regolith', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 3.5, tint: '#ffffff', palette: ['#87968d', '#c6c9bd', '#687778'], sky: '#8ca9b4', fog: '#b4c4ca', rockTint: '#a3afa9', description: 'Sanfte Hochlandterrassen vor entfernten Bergrücken; auf erdähnlichen Welten mit Wiesen und lockerem Nadelwald.' },
+  caldera: { name: 'Vulkanisches Becken', ground: 'regolith', rock: 'lunar', rockModels: ['lunar', 'rounded'], water: false, relief: 2.8, tint: '#ffffff', palette: ['#383f41', '#727877', '#9b7459'], sky: '#7e807e', fog: '#949a97', rockTint: '#65706e', description: 'Eine alte Vulkanebene mit flachem Beckenboden und fernem, aufgebrochenem Rand; auf erdähnlichen Welten kehrt Vegetation zurück.' },
   regolith: { name: 'Kraterplateau', ground: 'regolith', rock: 'lunar', rockModels: ['lunar'], water: false, relief: 2.6, tint: '#ffffff', palette: ['#8a8a85', '#c0beb5', '#70716d'], sky: '#03070d', fog: '#03070d', rockTint: '#a9aca7', description: 'Luftloses Gelände mit Einschlagskratern, scharfem Licht und verstreuten Mondgesteinen.' }
 });
 const smooth = (a, b, value) => { const t = Math.max(0, Math.min(1, (value - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -53,42 +53,21 @@ export function createRegionBlueprint(planet, regionId) {
   if (!region || !REGION_MODULES[region.module]) throw new Error('Unbekannte Region.');
   const module = REGION_MODULES[region.module];
   const next = planetRandom(planetSubseed(region.seed, 'terrain'));
-  const ridges = Array.from({ length: 9 }, () => ({ x: (next() - .5) * 180, z: (next() - .5) * 180, radius: 18 + next() * 30, height: 1 + next() * 4 }));
   const phase = next() * Math.PI * 2;
-  const craters = Array.from({ length: 5 }, (_, i) => {
-    const r = planetRandom(planetSubseed(region.seed, `crater/${i}`)), angle = i / 5 * Math.PI * 2 + r() * .5, distance = 48 + r() * 26;
-    return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance, radius: 12 + r() * 15 };
+  const craters = Array.from({ length: 7 }, (_, i) => {
+    const r = planetRandom(planetSubseed(region.seed, `crater/${i}`));
+    return { x: (r() - .5) * 560, z: -130 - r() * 350, radius: 20 + r() * 48 };
   });
-  const distant = planetRandom(planetSubseed(region.seed, 'surrounding-relief'));
-  const surroundings = Array.from({ length: 24 }, (_, i) => {
-    const angle = i / 24 * Math.PI * 2 + distant() * .3, distance = 150 + distant() * 450;
-    return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance, radius: 32 + distant() * 80, height: 8 + distant() * 36 };
-  });
-  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, size: 192, phase, ridges, craters, surroundings, rocks: [], resources: [] };
-  const counts = { coast: 48, basin: 56, upland: 68, caldera: 60, regolith: 64 };
-  for (let i = 0; i < counts[region.module]; i++) {
-    const r = planetRandom(planetSubseed(region.seed, `rock/${i}`)), group = i % 8;
-    let x, z;
-    if (region.module === 'coast') { z = -77 + group * 22 + (r() - .5) * 20; x = -30 + r() * 18 + (group % 3 === 0 ? 52 : 0); }
-    else if (region.module === 'basin') { x = (group % 2 ? 1 : -1) * (group % 4 < 2 ? 12 + r() * 7 : 69 + r() * 9); z = (r() - .5) * 150; }
-    else { const angle = group / 8 * Math.PI * 2 + (r() - .5) * .5, radius = (region.module === 'caldera' ? group % 2 ? 87 : 34 : 50) + (r() - .5) * (region.module === 'caldera' ? 10 : 30); x = Math.cos(angle) * radius; z = Math.sin(angle) * radius; }
-    x = Math.max(-80, Math.min(80, x)); z = Math.max(-80, Math.min(80, z));
-    const width = region.module === 'caldera' || region.module === 'regolith' ? 3 + r() * 7 : region.module === 'upland' ? 5 + r() * 12 : 4 + r() * 10;
-    // Prefer a stable shelf near each cluster. Loose boulders should not lean
-    // out of near-vertical crater walls as though attached to the air.
-    let best = null;
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const cx = attempt ? x + (r() - .5) * 30 : x, cz = attempt ? z + (r() - .5) * 30 : z;
-      if (Math.abs(cx) > 80 || Math.abs(cz) > 80 || Math.hypot(cx, cz) <= 24) continue;
-      const span = width * .55, dx = (regionGroundHeight(result, cx + span, cz) - regionGroundHeight(result, cx - span, cz)) / (span * 2), dz = (regionGroundHeight(result, cx, cz + span) - regionGroundHeight(result, cx, cz - span)) / (span * 2), slope = Math.hypot(dx, dz);
-      if (regionHeight(result, cx, cz) < .2) continue;
-      if (!best || slope < best.slope) best = { x: cx, z: cz, slope };
-      if (slope < .3) break;
-    }
-    if (!best || best.slope > .5) continue;
-    x = best.x; z = best.z;
-    if (Math.hypot(x, z) <= 24) continue;
-    result.rocks.push({ id: `rock-${i}`, model: module.rockModels[Math.floor(r() * module.rockModels.length)], x, z, scale: width, rotation: r() * Math.PI * 2, variant: Math.floor(r() * 3) });
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, module: region.module, size: 192, phase, craters, rocks: [], resources: [] };
+  // Scattered outcrops follow the same broad geological field. A few modest
+  // boulders remain near the colony; no ring of oversized props around it.
+  for (let i = 0; i < 100; i++) {
+    const r = planetRandom(planetSubseed(region.seed, `rock/${i}`));
+    const x = (r() - .5) * 180, z = (r() - .5) * 180;
+    if (Math.hypot(x, z) < 24 || regionHeight(result, x, z) < .5) continue;
+    const exposure = regionNoise(result.seed, x / 43, z / 43, 73);
+    if (r() > .16 + exposure * .3) continue;
+    result.rocks.push({ id: `rock-${i}`, model: module.rockModels[Math.floor(r() * module.rockModels.length)], x, z, scale: 1.1 + r() ** 2 * 4.2, rotation: r() * Math.PI * 2, variant: Math.floor(r() * 3) });
   }
   result.resources = Array.from({ length: 4 }, (_, i) => {
     const r = planetRandom(planetSubseed(region.seed, `resource/${i}`));
@@ -97,36 +76,56 @@ export function createRegionBlueprint(planet, regionId) {
   return result;
 }
 
-// Different geology modules share the same coordinate/seed contract, not the
-// same Gaussian hills. Fine surface detail and rock meshes remain real scans.
+// Smooth seeded value noise: neighbouring positions share geology and habitat.
+// Unlike independent Gaussian peaks, this makes continuous ridges and valleys.
+export function regionNoise(seed, x, z, channel = 0) {
+  const ix = Math.floor(x), iz = Math.floor(z), u = smooth(0, 1, x - ix), v = smooth(0, 1, z - iz);
+  const hash = (a, b) => {
+    let h = seed ^ Math.imul(a, 374761393) ^ Math.imul(b, 668265263) ^ Math.imul(channel, 1274126177);
+    h = Math.imul(h ^ h >>> 13, 1274126177);
+    return ((h ^ h >>> 16) >>> 0) / 4294967295;
+  };
+  const a = hash(ix, iz), b = hash(ix + 1, iz), c = hash(ix, iz + 1), d = hash(ix + 1, iz + 1);
+  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
+}
+
+export function regionShore(region, z) {
+  return -52 + (regionNoise(region.seed, 0, z / 160, 9) - .5) * 22 + 3 * Math.sin(z * .014 + region.phase);
+}
+
 export function regionHeight(region, x, z) {
-  const erosion = region.ridges.reduce((h, r) => h + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / r.radius ** 2), 0);
-  const phase = region.phase, radius = Math.hypot(x, z), outer = smooth(22, 48, radius);
-  const distant = smooth(90, 150, radius) * region.surroundings.reduce((h, r) => h + r.height * Math.exp(-((x - r.x) ** 2 + (z - r.z) ** 2) / r.radius ** 2), 0);
+  const n = (scale, channel) => regionNoise(region.seed, x / scale, z / scale, channel) - .5;
+  const broad = n(260, 1), rolling = n(110, 2), detail = n(36, 3);
+  const floor = 4.5 + x * .006 + z * .003 + broad * 1.8 + rolling * .45 + detail * .08;
+  const bend = (regionNoise(region.seed, 0, z / 270, 5) - .5) * 65;
   if (region.module === 'coast') {
-    const shore = -42 + 5 * Math.sin(z * .044 + phase) + 2 * Math.sin(z * .1 + phase);
-    return -3.5 + smooth(shore - 12, shore + 20, x) * (7 + erosion * .12) + outer * smooth(14, 65, x) * erosion * .9 + distant * smooth(0, 80, x);
+    const shore = x - regionShore(region, z);
+    const land = smooth(-12, 48, shore);
+    return -3 + smooth(-30, 26, shore) * 5.8 + smooth(20, 110, shore) * 1.8
+      + land * (rolling * .5 + detail * .06)
+      + smooth(100, 340, shore) * (12 + broad * 20 + rolling * 8);
   }
   if (region.module === 'basin') {
-    const bend = Math.sin(z * .018 + phase) * 9;
-    const walls = smooth(22, 37, Math.abs(x - bend)) * 15 + smooth(41, 58, Math.abs(x - bend)) * 13;
-    return 2.5 + erosion * .07 + outer * (walls + erosion * .5) + distant;
+    const valley = Math.abs(x - bend);
+    return floor + smooth(95, 290, valley) * (23 + broad * 28 + rolling * 7)
+      + smooth(220, 500, -z) * (12 + broad * 14);
   }
   if (region.module === 'upland') {
-    const ridge = 28 * gaussian((z + 55 + 8 * Math.sin(x * .04 + phase)) / 20) + 15 * gaussian((x - 57) / 18);
-    return 12 + erosion * .08 + outer * (ridge + erosion * 1.2 + 3 * Math.sin(x * .04 + z * .025 + phase) ** 2) + distant;
+    return floor + 8 + smooth(95, 320, -z + bend * .3) * (42 + broad * 32 + rolling * 12)
+      + smooth(160, 420, x + bend) * (17 + broad * 18);
   }
   if (region.module === 'caldera') {
-    const d = Math.hypot(x + 7, z + 9), rim = 31 * gaussian((d - 64) / 13);
-    const breach = 1 - .68 * gaussian((x - 14) / 20) * smooth(15, 55, z);
-    return 4 + erosion * .1 + outer * (rim * breach + erosion * .3) + distant * .65;
+    // Eroded remnants of a much wider rim, outside the colony terrace.
+    const d = Math.hypot((x + 115) * .92, z + 70), rim = 30 * gaussian((d - 350 - broad * 40) / 95);
+    const breach = .3 + .7 * smooth(-90, 180, -z + x * .4);
+    return floor - 1 + rim * breach + smooth(110, 260, -z) * rolling * 8;
   }
-  let height = 3 + erosion * .09;
+  let height = floor - 1.5;
   for (const crater of region.craters) {
     const d = Math.hypot(x - crater.x, z - crater.z), r = crater.radius;
-    height += outer * (r * .22 * gaussian((d - r) / (r * .17)) - r * .22 * Math.exp(-Math.pow(d / (r * .72), 4)));
+    height += r * .19 * gaussian((d - r) / (r * .2)) - r * .18 * Math.exp(-Math.pow(d / (r * .72), 4));
   }
-  return height + distant * .4;
+  return height + smooth(120, 420, Math.hypot(x, z)) * (broad * 12 + rolling * 4);
 }
 
 // The renderer and every placement/camera query share the same nine patches.
@@ -182,5 +181,5 @@ export function regionSite(region, x, z) {
     if (!Number.isFinite(coastDistance)) coastDistance = null;
   }
   const inBuildArea = regionBuildCell(x, z) !== null;
-  return { x, z, height, slope, water, inBuildArea, buildable: inBuildArea && !water && slope < .35, deposits: deposits.map(d => d.type), coastDistance };
+  return { x, z, height, slope, water, inBuildArea, buildable: inBuildArea && !water && slope < .12, deposits: deposits.map(d => d.type), coastDistance };
 }

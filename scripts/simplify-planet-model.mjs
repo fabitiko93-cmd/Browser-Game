@@ -3,6 +3,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 const path = process.argv[2], target = Number(process.argv[3] ?? 4000);
+const foliage = process.argv.includes('--foliage');
 const data = await readFile(path), jsonSize = data.readUInt32LE(12);
 const doc = JSON.parse(data.subarray(20, 20 + jsonSize)), bin = data.subarray(28 + jsonSize);
 const widths = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
@@ -29,7 +30,7 @@ for (const mesh of doc.meshes) for (const primitive of mesh.primitives) {
   const original = values(primitive.indices), position = values(primitive.attributes.POSITION), normal = values(primitive.attributes.NORMAL), uv = values(primitive.attributes.TEXCOORD_0);
   const attributes = new Float32Array(position.length / 3 * 5);
   for (let i = 0; i < position.length / 3; i++) attributes.set([normal[i * 3], normal[i * 3 + 1], normal[i * 3 + 2], uv[i * 2], uv[i * 2 + 1]], i * 5);
-  const [indices, measured] = MeshoptSimplifier.simplifyWithAttributes(original, position, 3, attributes, 5, [.1, .1, .1, 1, 1], null, target * 3, .035, ['LockBorder']);
+  const [indices, measured] = MeshoptSimplifier.simplifyWithAttributes(original, position, 3, attributes, 5, foliage ? [.02, .02, .02, .1, .1] : [.1, .1, .1, 1, 1], null, Math.min(target * 3, original.length), foliage ? .12 : .035, foliage ? ['Permissive', 'Prune'] : ['LockBorder']);
   const used = [...new Set(indices)], remap = new Map(used.map((old, i) => [old, i]));
   before += original.length / 3; after += indices.length / 3; error = Math.max(error, measured);
   const output = {};
