@@ -1,3 +1,4 @@
+import { regionBiome } from './planet-biomes.js';
 import { PlanetPreviewScene } from './planet-preview-scene.js';
 import { createPlanetBlueprint, createRegionBlueprint, PLANET_PRESETS, REGION_MODULES, SAMPLE_PLANET_SEED } from './planet-blueprint.js';
 
@@ -26,7 +27,7 @@ function drawMarkers() {
   }
 }
 function updateRegion() {
-  const config = REGION_MODULES[selected.module];
+  const config = regionBiome({ preset: planet.preset, module: selected.module }) ?? REGION_MODULES[selected.module];
   $('region-name').textContent = selected.name; $('region-kind').textContent = config.name;
   $('region-description').textContent = config.description;
   $('region-status').textContent = mode === 'orbit' ? 'Erschlossen' : 'Baugebiet · Ansicht';
@@ -53,7 +54,7 @@ async function enterRegion() {
   const currentRequest = ++request; mode = 'region'; app.dataset.mode = mode;
   $('markers').hidden = true; $('grid-toggle').hidden = false; $('region-enter').hidden = true; $('orbit-return').hidden = false;
   selectedSite = null; $('site-info').hidden = true; region = createRegionBlueprint(planet, selected.id); updateRegion(); loading(true);
-  try { await view.showRegion(region); if (currentRequest !== request) return; loading(false); $('asset-state').textContent = 'Originalmodelle · Poly Haven'; }
+  try { await view.showRegion(region); if (currentRequest !== request) return; loading(false); $('asset-state').textContent = 'Poly Haven · EZ-Tree'; }
   catch (error) { if (currentRequest === request) fail(error); }
 }
 function orbit() {

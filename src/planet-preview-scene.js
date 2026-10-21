@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches } from './planet-blueprint.js';
+import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches, regionCreek } from './planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat, FLORA_ASSETS } from './planet-environment.js';
-import { readFloraVariants, addFloraBatches, createForestBatches, updateForestBatches } from './planet-flora.js';
+import { readFloraVariants, addFloraBatches } from './planet-flora.js';
+import { regionBiome } from './planet-biomes.js';
 import { blendHabitatGround } from './planet-ground-material.js';
 import { constrainRegionCamera, stepRegionFocus } from './planet-camera.js';
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
@@ -65,7 +66,6 @@ export class PlanetPreviewScene {
       this.controls.update();
       this.advanceSiteFocus(delta);
       this.keepCameraAboveGround();
-      if (this.mode === 'region') updateForestBatches(this.forest, this.camera.position);
       if (this.mode === 'orbit' && this.clouds && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.clouds.rotation.y += delta * .004; this.dirty = true; }
       if (this.mode === 'region' && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
       if (this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; this.onFrame?.(); }
@@ -237,37 +237,37 @@ export class PlanetPreviewScene {
     this.clearGroup(this.land); this.forest = null; this.terrain = null; this.grid = null; this.siteMark = null; this.waterTime = null;
     this.environmentRecipe = createRegionEnvironment(region);
     this.globe.visible = false; this.land.visible = true;
-    const module = REGION_MODULES[region.module], living = region.preset === 'temperate', airless = region.module === 'regolith';
-    this.scene.background = new THREE.Color(module.sky);
-    this.scene.fog = airless ? null : new THREE.FogExp2(module.fog, region.module === 'caldera' ? .0018 : .0015);
-    this.stars.visible = airless; this.renderer.toneMappingExposure = .88;
+    const module = REGION_MODULES[region.module], biome = regionBiome(region), living = !!biome, airless = region.module === 'regolith';
+    this.scene.background = new THREE.Color(biome?.sky ?? module.sky);
+    this.scene.fog = airless ? null : new THREE.FogExp2(biome?.fog ?? module.fog, living ? .00135 : .0015);
+    this.stars.visible = airless; this.renderer.toneMappingExposure = living ? .94 : .88;
     const warm = region.module === 'basin';
-    this.sun.color.set(warm ? '#ffe0bb' : region.module === 'upland' ? '#e8f1ff' : '#fff0d8');
-    this.hemi.color.set(module.sky); this.hemi.groundColor.set(module.palette[0]);
-    this.sun.position.set(-70, 95, region.module === 'upland' ? 65 : -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 2.5 : 2.3; this.sun.castShadow = true; this.hemi.intensity = airless ? .06 : .85;
+    this.sun.color.set(living ? '#fff3df' : warm ? '#ffe0bb' : region.module === 'upland' ? '#e8f1ff' : '#fff0d8');
+    this.hemi.color.set(biome?.sky ?? module.sky); this.hemi.groundColor.set(living ? '#536348' : module.palette[0]);
+    this.sun.position.set(-70, 95, region.module === 'upland' ? 65 : -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 2.5 : living ? 2.6 : 2.3; this.sun.castShadow = true; this.hemi.intensity = airless ? .06 : living ? 1.1 : .85;
     this.controls.enablePan = true; this.controls.minDistance = 14; this.controls.maxDistance = 260; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI * .48;
     this.camera.near = .2; this.camera.far = 1800; this.camera.updateProjectionMatrix(); this.resetCamera();
     const [color, normal, arm] = await Promise.all([this.texture(`${module.ground}-color.webp`, { color: true, repeat: 18 }), this.texture(`${module.ground}-normal.webp`, { repeat: 18 }), module.ground === 'regolith' ? this.texture('regolith-arm.webp', { repeat: 18 }) : null]);
     const modelIds = [...new Set([...region.rocks, ...this.environmentRecipe.rocks].map(r => r.model))];
     const [assetSets, lods] = await Promise.all([Promise.all(modelIds.map(id => this.model(ROCK_ASSETS[id]))), this.environmentLODs()]);
     const floraIds = [...new Set([...this.environmentRecipe.trees, ...this.environmentRecipe.plants].map(p => p.model).filter(id => id !== 'forest'))];
-    const [floraSets, habitatTextures, forestMap] = await Promise.all([
+    const [floraSets, habitatTextures] = await Promise.all([
       Promise.all(floraIds.map(id => this.vegetation(FLORA_ASSETS[id]))),
-      living ? Promise.all(['meadow-color.webp', 'meadow-normal.webp', 'forest-floor-color.webp', 'forest-floor-normal.webp'].map((name, i) => this.texture(name, { color: i % 2 === 0, repeat: 1 }))) : null,
-      this.environmentRecipe.trees.some(p => p.model === 'forest') ? this.texture('pine-forest-atlas.webp', { color: true }) : null
+      living ? Promise.all(['meadow-color.webp', 'meadow-normal.webp', 'forest-floor-color.webp', 'forest-floor-normal.webp'].map((name, i) => this.texture(name, { color: i % 2 === 0, repeat: 1 }))) : null
     ]);
     if (generation !== this.generation || this.disposed) return;
     const geometry = new THREE.PlaneGeometry(region.size, region.size, REGION_TERRAIN.segments, REGION_TERRAIN.segments); geometry.rotateX(-Math.PI / 2);
     const position = geometry.attributes.position;
     for (let i = 0; i < position.count; i++) position.setY(i, regionHeight(region, position.getX(i), position.getZ(i)));
     geometry.computeVertexNormals(); this.colorTerrain(geometry);
-    const ground = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, normalScale: new THREE.Vector2(module.ground === 'regolith' ? 1 : .65, module.ground === 'regolith' ? 1 : .65), vertexColors: true, roughness: 1, envMapIntensity: .12 });
-    if (habitatTextures) blendHabitatGround(ground, { meadow: habitatTextures[0], meadowNormal: habitatTextures[1], forest: habitatTextures[2], forestNormal: habitatTextures[3] });
+    const ground = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, normalScale: new THREE.Vector2(living ? .32 : module.ground === 'regolith' ? 1 : .65, living ? .32 : module.ground === 'regolith' ? 1 : .65), vertexColors: true, roughness: 1, envMapIntensity: .12 });
+    if (habitatTextures) blendHabitatGround(ground, { meadow: habitatTextures[0], meadowNormal: habitatTextures[1], forest: habitatTextures[2], forestNormal: habitatTextures[3] }, region);
     if (arm && !living) { ground.roughnessMap = arm; ground.aoMap = arm; ground.aoMapIntensity = .4; geometry.setAttribute('uv1', geometry.attributes.uv); }
     this.terrain = new THREE.Mesh(geometry, ground); this.terrain.receiveShadow = true; this.land.add(this.terrain);
     this.addTerrainSurroundings(ground);
     if (!airless) this.addSky();
     if (module.water) this.addWater();
+    if (living && region.module === 'basin') this.addCreek();
     this.rockPlacements = [];
     for (let type = 0; type < modelIds.length; type++) for (const source of assetSets[type]) {
       const rocks = region.rocks.filter(r => r.model === modelIds[type]);
@@ -291,16 +291,14 @@ export class PlanetPreviewScene {
         environment.instanceMatrix.needsUpdate = true; environment.computeBoundingSphere(); this.land.add(environment);
       }
     }
-    floraIds.forEach((id, i) => addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: id === 'pine' || id === 'fir' }));
-    if (forestMap) this.forest = createForestBatches(this.land, this.environmentRecipe.trees.filter(p => p.model === 'forest'), forestMap);
-    updateForestBatches(this.forest, this.camera.position);
+    floraIds.forEach((id, i) => addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: ['pine', 'oak', 'aspen'].includes(id) }));
     this.addGrid(); this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
   colorTerrain(geometry) {
     const module = REGION_MODULES[this.region.module], palette = module.palette.map(c => new THREE.Color(c));
     const position = geometry.attributes.position, normal = geometry.attributes.normal;
-    const colors = new Float32Array(position.count * 3), habitats = new Float32Array(position.count * 2), c = new THREE.Color();
+    const colors = new Float32Array(position.count * 3), habitats = new Float32Array(position.count * 3), c = new THREE.Color();
     const floor = { coast: 3, basin: 4, upland: 12, caldera: 4, regolith: 3 }[this.region.module];
     for (let i = 0; i < position.count; i++) {
       const x = position.getX(i), z = position.getZ(i), y = position.getY(i);
@@ -310,14 +308,14 @@ export class PlanetPreviewScene {
       c.copy(palette[0]).lerp(palette[1], altitude).lerp(palette[2], THREE.MathUtils.clamp(slope, 0, .85));
       if (h.cover > 0) c.lerp(new THREE.Color('#ddd9cc'), h.cover);
       if (this.region.module === 'coast' && y < 1.4) c.multiplyScalar(.7 + THREE.MathUtils.clamp(y / 1.4, 0, 1) * .3);
-      c.toArray(colors, i * 3); habitats[i * 2] = h.cover; habitats[i * 2 + 1] = h.forest;
+      c.toArray(colors, i * 3); habitats[i * 3] = h.cover; habitats[i * 3 + 1] = h.forest; habitats[i * 3 + 2] = h.moisture;
     }
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('habitat', new THREE.BufferAttribute(habitats, 2));
+    geometry.setAttribute('habitat', new THREE.BufferAttribute(habitats, 3));
   }
 
   addSky() {
-    const module = REGION_MODULES[this.region.module];
+    const module = regionBiome(this.region) ?? REGION_MODULES[this.region.module];
     const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false,
       uniforms: { top: { value: new THREE.Color(module.sky) }, bottom: { value: new THREE.Color(module.fog) } },
       vertexShader: 'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
@@ -343,6 +341,20 @@ export class PlanetPreviewScene {
       geometry.computeVertexNormals(); this.colorTerrain(geometry); if (material.aoMap) geometry.setAttribute('uv1', uv);
       const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
     }
+  }
+
+  addCreek() {
+    const positions = [], indices = [], segments = 122;
+    for (let i = 0; i <= segments; i++) {
+      const z = -470 + i * 3, creek = regionCreek(this.region, z);
+      const x = creek?.x ?? 0, width = (creek?.width ?? 0) * 1.15;
+      const y = regionGroundHeight(this.region, x, z) + (creek?.depth ?? 0) * .38;
+      positions.push(x - width, y, z, x + width, y, z);
+      if (i < segments) { const a = i * 2; indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    }
+    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ color: '#52878c', roughness: .25, metalness: .12, envMapIntensity: .65, side: THREE.DoubleSide });
+    const creek = new THREE.Mesh(geometry, material); creek.receiveShadow = true; this.land.add(creek);
   }
 
   addWater() {

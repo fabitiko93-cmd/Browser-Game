@@ -335,6 +335,70 @@
       "preparationScript": "scripts/bake-planet-forest.py; scripts/prepare-planet-flora.py",
       "sha256": "575ca355cdb433df08a4be5da3826bebd4f51751caced5af3f752ffbb324d8ba",
       "bytes": 516088
+    },
+    {
+      "file": "woodland-oak.glb",
+      "creator": "Daniel Greenheck / EZ-Tree; ORBIT preset selection",
+      "license": "MIT; bark textures CC0-1.0",
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "sourceCommit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+      "barkSource": "https://ambientcg.com/view?id=Bark001",
+      "preparationScript": "scripts/prepare-planet-woodland.mjs",
+      "changes": "Botanical preset geometry, two fixed seeds, reduced branch sections with retained full leaf coverage, height-normalized roots; 512 px source bark and cutout leaves embedded, summer-green aspen leaves. No runtime generator.",
+      "trianglesPerVariant": [
+        5840,
+        5840
+      ],
+      "bytes": 1069816,
+      "sha256": "1af88c2a8126c5bdedb5f93573d93dcca1f7f09fcd26f33c4d35d1c63cfdb809"
+    },
+    {
+      "file": "woodland-aspen.glb",
+      "creator": "Daniel Greenheck / EZ-Tree; ORBIT preset selection",
+      "license": "MIT; bark textures CC0-1.0",
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "sourceCommit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+      "barkSource": "https://ambientcg.com/view?id=Bark007",
+      "preparationScript": "scripts/prepare-planet-woodland.mjs",
+      "changes": "Botanical preset geometry, two fixed seeds, reduced branch sections with retained full leaf coverage, height-normalized roots; 512 px source bark and cutout leaves embedded, summer-green aspen leaves. No runtime generator.",
+      "trianglesPerVariant": [
+        1806,
+        1806
+      ],
+      "bytes": 494176,
+      "sha256": "8ed350719fb24143816376e71e85e9b81a19b17e39804366aace3ebbc72d7d61"
+    },
+    {
+      "file": "woodland-pine.glb",
+      "creator": "Daniel Greenheck / EZ-Tree; ORBIT preset selection",
+      "license": "MIT; bark textures CC0-1.0",
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "sourceCommit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+      "barkSource": "https://ambientcg.com/view?id=Bark003",
+      "preparationScript": "scripts/prepare-planet-woodland.mjs",
+      "changes": "Botanical preset geometry, two fixed seeds, reduced branch sections with retained full leaf coverage, height-normalized roots; 512 px source bark and cutout leaves embedded, summer-green aspen leaves. No runtime generator.",
+      "trianglesPerVariant": [
+        4130,
+        4130
+      ],
+      "bytes": 916068,
+      "sha256": "6d2085381fcbca35a2595ba4b6be6021f8e31919cab7d73ad8c0c0adf29b7b89"
+    },
+    {
+      "file": "woodland-shrub.glb",
+      "creator": "Daniel Greenheck / EZ-Tree; ORBIT preset selection",
+      "license": "MIT; bark textures CC0-1.0",
+      "source": "https://github.com/dgreenheck/ez-tree",
+      "sourceCommit": "dcf309bd86bd521083d9c70f01f2de45fdc7c457",
+      "barkSource": "https://ambientcg.com/view?id=Bark012",
+      "preparationScript": "scripts/prepare-planet-woodland.mjs",
+      "changes": "Botanical preset geometry, two fixed seeds, reduced branch sections with retained full leaf coverage, height-normalized roots; 512 px source bark and cutout leaves embedded, summer-green aspen leaves. No runtime generator.",
+      "trianglesPerVariant": [
+        4640,
+        4640
+      ],
+      "bytes": 898772,
+      "sha256": "4b12c4488a43517b2b6585ef65b7ebd9acb78eae8c9b114657b05dc40c544fe4"
     }
   ]
 }

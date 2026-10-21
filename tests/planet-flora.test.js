@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { Group, Vector3, Box3 } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, regionSite } from '../src/planet-blueprint.js';
+import { Group, Vector3, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial } from 'three';
+import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, regionSite, regionCreek } from '../src/planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
-import { createForestBatches, updateForestBatches, floraMatrix } from '../src/planet-flora.js';
+import { addFloraBatches, floraMatrix } from '../src/planet-flora.js';
 
 // A 16 m building footprint must rest on a terrace rather than cross a rim.
 // Shores retain their slope and are checked separately from the inland land.
@@ -32,17 +32,18 @@ test('woodland follows habitat, stays rooted, and leaves a meadow through the co
     const planet = createPlanetBlueprint(seed);
     for (const r of planet.regions) {
       const region = createRegionBlueprint(planet, r.id), e = createRegionEnvironment(region);
-      assert.ok(e.trees.length > 20 && e.trees.length < 450);
-      assert.ok(e.plants.length < 3500);
+      assert.ok(e.trees.length > 200 && e.trees.length < 2200);
+      assert.ok(e.plants.length > 3000 && e.plants.length < 16000);
       for (const tree of e.trees) {
         const ground = regionGroundHeight(region, tree.x, tree.z), habitat = regionHabitat(region, tree.x, tree.z, ground);
         assert.ok(habitat.forest > .01 && ground > 1.4);
-        assert.ok(Math.abs(tree.y - ground + .12) < 1e-9);
-        assert.ok(tree.model === 'forest' ? Math.hypot(tree.x, tree.z) > 80 : tree.size < 6.3);
+        assert.ok(Math.abs(tree.y - ground + .08) < 1e-9);
+        assert.ok(['oak', 'aspen', 'pine'].includes(tree.model));
+        assert.ok(tree.size >= 4 && tree.size <= 18);
         const up = new Vector3(0, 1, 0).transformDirection(floraMatrix(tree));
         assert.ok(up.distanceTo(new Vector3(0, 1, 0)) < 1e-9, 'trunks must stay upright');
       }
-      assert.ok(e.trees.filter(t => Math.abs(t.x) < 16 && Math.abs(t.z) < 32).length <= 2);
+      assert.ok(e.trees.filter(t => Math.abs(t.x) < 10 && Math.abs(t.z) < 10).length <= 2);
       for (const fern of e.plants.filter(p => p.model === 'fern')) {
         const h = regionHabitat(region, fern.x, fern.z, fern.y + .025);
         assert.ok(h.moisture > .35 && h.forest > .19);
@@ -52,7 +53,7 @@ test('woodland follows habitat, stays rooted, and leaves a meadow through the co
 });
 
 test('prepared plants retain source variants, normals, UVs and real cutout alpha within a mobile budget', async () => {
-  for (const [name, variants, triangles] of [['pine-young.glb', 2, 40000], ['fir-young.glb', 1, 20000], ['fern.glb', 1, 500], ['meadow-grass.glb', 2, 400]]) {
+  for (const [name, variants, triangles] of [['woodland-oak.glb', 2, 18000], ['woodland-aspen.glb', 2, 18000], ['woodland-pine.glb', 2, 18000], ['woodland-shrub.glb', 2, 18000], ['fern.glb', 1, 500], ['meadow-grass.glb', 2, 400]]) {
     const bytes = await readFile(new URL(`../web/models/planets/${name}`, import.meta.url));
     assert.ok(bytes.length < 3200000); const doc = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)));
     assert.equal(doc.nodes.length, variants);
@@ -63,7 +64,7 @@ test('prepared plants retain source variants, normals, UVs and real cutout alpha
       const a = doc.accessors[p.attributes.POSITION]; assert.ok(a.min[1] > -.001 && a.max[1] <= 1.001);
     }
     assert.ok(count <= triangles);
-    if (name !== 'fir-young.glb') {
+    {
       const material = doc.materials.find(m => m.alphaMode === 'MASK'); assert.ok(material);
       const texture = doc.textures[material.pbrMetallicRoughness.baseColorTexture.index];
       assert.equal(doc.images[texture.source].mimeType, 'image/png');
@@ -71,21 +72,24 @@ test('prepared plants retain source variants, normals, UVs and real cutout alpha
   }
 });
 
-test('distant pine views track the camera without moving roots or sharing mutable frame buffers', () => {
-  const trees = [{ x: 140, y: 4, z: 20, size: 18, width: 1, rotation: .5, variant: 0, tint: 1 }, { x: -160, y: 6, z: -90, size: 22, width: .9, rotation: 1, variant: 1, tint: .95 }];
-  const group = new Group(), forest = createForestBatches(group, trees, null);
-  assert.equal(forest.batches.length, 2);
-  const buffers = new Set(forest.batches.map(b => b.frames)); assert.equal(buffers.size, 2);
-  for (const eye of [new Vector3(70, 100, 130), new Vector3(-80, 60, -70)]) {
-    updateForestBatches(forest, eye);
-    for (const { mesh, plants, frames } of forest.batches) {
-      assert.ok(mesh.boundingSphere && !new Box3().setFromObject(mesh).isEmpty());
-      for (let i = 0; i < plants.length; i++) {
-        assert.ok(frames.getX(i) >= 0 && frames.getX(i) <= 7);
-        assert.equal(frames.getY(i), 1 - plants[i].variant);
-      }
-    }
+test('complete near trees are instanced in cullable chunks and preserve fixed rooted transforms', () => {
+  const geometry = new BufferGeometry(); geometry.setAttribute('position', new Float32BufferAttribute([0,0,0, 1,0,0, 0,1,0], 3));
+  const material = new MeshStandardMaterial(), group = new Group();
+  const trees = [{ x: 25, y: 4, z: 20, size: 12, width: 1, rotation: .5, variant: 0, tint: 1 }, { x: -160, y: 6, z: -90, size: 16, width: .9, rotation: 1, variant: 0, tint: .95 }];
+  addFloraBatches(group, trees, [[{ geometry, material }]], { trees: true });
+  assert.equal(group.children.length, 2);
+  for (const mesh of group.children) { assert.ok(mesh.isInstancedMesh && mesh.boundingSphere); assert.ok(mesh.frustumCulled); assert.equal(mesh.geometry, geometry); mesh.dispose(); }
+  assert.equal(group.children.filter(m => m.castShadow).length, 1);
+  geometry.dispose(); material.dispose();
+});
+
+test('valley creek stays outside every build footprint and excludes plants from its wet bed', () => {
+  const planet = createPlanetBlueprint('NEREID-3077'), region = createRegionBlueprint(planet, planet.regions[1].id);
+  for (let z = -64; z <= 64; z++) assert.equal(regionCreek(region, z), null);
+  for (let z = -430; z <= -140; z += 10) {
+    const c = regionCreek(region, z); assert.ok(c && c.width > 0);
+    assert.equal(regionSite(region, c.x, z).water, true);
+    assert.equal(regionSite(region, c.x, z).inBuildArea, false);
+    const h = regionHabitat(region, c.x, z, regionGroundHeight(region, c.x, z)); assert.equal(h.cover, 0);
   }
-  for (const { mesh } of forest.batches) { mesh.geometry.dispose(); mesh.dispose(); }
-  forest.batches[0].mesh.material.dispose();
 });

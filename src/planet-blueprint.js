@@ -2,7 +2,7 @@ import { worldSeed } from './world.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 4;
+export const PLANET_GENERATOR_VERSION = 5;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
 export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, extent: 10 });
@@ -93,6 +93,15 @@ export function regionShore(region, z) {
   return -52 + (regionNoise(region.seed, 0, z / 160, 9) - .5) * 22 + 3 * Math.sin(z * .014 + region.phase);
 }
 
+// A small scenic creek follows the valley beyond the selectable colony grid.
+// The same bed/width definition is used by terrain, plants and surface water.
+export function regionCreek(region, z) {
+  if (region.preset !== 'temperate' || region.module !== 'basin' || z > -104 || z < -470) return null;
+  const fade = smooth(-104, -128, z) * smooth(-470, -440, z);
+  const x = 10 + (regionNoise(region.seed, 0, z / 135, 81) - .5) * 78 + 10 * Math.sin(z * .012 + region.phase);
+  return { x, width: 3.8 * fade, depth: .7 * fade };
+}
+
 export function regionHeight(region, x, z) {
   const n = (scale, channel) => regionNoise(region.seed, x / scale, z / scale, channel) - .5;
   const broad = n(260, 1), rolling = n(110, 2), detail = n(36, 3);
@@ -107,8 +116,10 @@ export function regionHeight(region, x, z) {
   }
   if (region.module === 'basin') {
     const valley = Math.abs(x - bend);
+    const creek = regionCreek(region, z);
+    const bed = creek ? creek.depth * gaussian((x - creek.x) / (creek.width + 2)) : 0;
     return floor + smooth(95, 290, valley) * (23 + broad * 28 + rolling * 7)
-      + smooth(220, 500, -z) * (12 + broad * 14);
+      + smooth(220, 500, -z) * (12 + broad * 14) - bed;
   }
   if (region.module === 'upland') {
     return floor + 8 + smooth(95, 320, -z + bend * .3) * (42 + broad * 32 + rolling * 12)
@@ -166,7 +177,8 @@ export function regionBuildCell(x, z) {
 export function regionSite(region, x, z) {
   const height = regionGroundHeight(region, x, z), step = 2;
   const slope = Math.hypot(regionHeight(region, x + step, z) - regionHeight(region, x - step, z), regionHeight(region, x, z + step) - regionHeight(region, x, z - step)) / (step * 2);
-  const water = REGION_MODULES[region.module].water && height < .1;
+  const creek = regionCreek(region, z);
+  const water = (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width * 1.05);
   const deposits = region.resources.filter(d => Math.hypot(x - d.x, z - d.z) <= d.radius);
   // Measure against the generated shoreline, not the nominal coast module edge.
   let coastDistance = null;
