@@ -96,7 +96,9 @@ try {
   for (let i = 1; i <= 4; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - 35 - i * 6, y, id: 1 }, { x: x + 35 + i * 6, y, id: 2 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   assert.ok(await distance() < beforePinch); assert.equal(await page.evaluate(() => ORBIT_PLANET_DEBUG.site), null);
-  await page.locator('#camera-home').click(); await page.locator('#grid-toggle').click(); assert.equal(await page.locator('#grid-toggle').getAttribute('aria-pressed'), 'true');
+  await page.locator('#camera-home').click(); assert.equal(await page.locator('#grid-toggle').getAttribute('aria-pressed'), 'true');
+  await page.locator('#grid-toggle').click(); assert.equal(await page.locator('#grid-toggle').getAttribute('aria-pressed'), 'false');
+  await page.locator('#grid-toggle').click(); assert.equal(await page.locator('#grid-toggle').getAttribute('aria-pressed'), 'true');
   await page.touchscreen.tap(Math.round(bounds.width / 2), Math.round(bounds.y + bounds.height / 2)); await page.waitForFunction(() => ORBIT_PLANET_DEBUG.site !== null);
   assert.ok(await page.locator('#site-info').isVisible()); await snapshot('site-390'); await inspect('site-390');
   pass('Original scanned terrain assets render; touch rotation, build grid and ground inspection work without selecting during a drag');

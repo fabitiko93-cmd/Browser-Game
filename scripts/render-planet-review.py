@@ -126,14 +126,8 @@ if r['lake']:
  for i in range(97):a=i/96*2*math.pi;positions.extend([l['x']+math.cos(a)*l['rx']*1.12,l['level'],l['z']+math.sin(a)*l['rz']*1.12])
  for i in range(96):indices.extend([0,i+2,i+1])
  mesh('Crater lake',positions,indices,water)
-road=material('Prepared site',r['region']['colony']['tint']);road.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(*mix(color(r['region']['colony']['tint']),meadow,.35),1)
-road.node_tree.nodes.get('Principled BSDF').inputs['Alpha'].default_value=.55
-for path in ([] if r['region'].get('valley') else r['roads']):
- for a,b in zip(path,path[1:]):
-  dx,dz=b[0]-a[0],b[2]-a[2];length=math.hypot(dx,dz);nx,nz=-dz/length*1.8,dx/length*1.8
-  mesh('Access road',[a[0]+nx,a[1],a[2]+nz,a[0]-nx,a[1],a[2]-nz,b[0]+nx,b[1],b[2]+nz,b[0]-nx,b[1],b[2]-nz],[0,1,2,1,3,2],road)
-pad=material('Cleared plots',r['region']['colony']['tint']);pad.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(*mix(color(r['region']['colony']['tint']),meadow,.55),1)
-# Cleared plot overlays are only shown with the optional grid in the game.
+# The construction grid is a WebGL fragment overlay, not geometry. This CPU
+# review omits it and does not draw the unbuilt road/parcel site-plan recipes.
 light=bpy.data.lights.new('Sun','SUN');light.energy=2.5;light.angle=math.radians(3);obj=bpy.data.objects.new('Sun',light);scene.collection.objects.link(obj);obj.location=(-70,45,95);obj.rotation_euler=(Vector((0,0,0))-obj.location).to_track_quat('-Z','Y').to_euler()
 cam=bpy.data.cameras.new('Camera');obj=bpy.data.objects.new('Camera',cam);scene.collection.objects.link(obj);obj.location=xyz(r['camera']);obj.rotation_euler=(Vector(xyz(r['target']))-obj.location).to_track_quat('-Z','Y').to_euler();cam.type='PERSP';cam.lens_unit='FOV';cam.angle=math.radians(r.get('fov',43));cam.sensor_fit='VERTICAL';cam.clip_end=2000;scene.camera=obj
 scene.render.filepath=os.path.join(root,f'region-{num}.png');bpy.ops.render.render(write_still=True)

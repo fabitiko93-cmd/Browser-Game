@@ -14,6 +14,7 @@
 | `src/planet-biomes.js` | Klimabezogene Vegetation, Bodenfarben, Baum-/Schneegrenzen und Atmosphäre der vier Landschaften |
 | `src/planet-environment.js` | Gemeinsame Feuchte-/Wald-/Wiesenfelder, unabhängig gesäte Felsen, Bäume und Unterwuchs |
 | `src/planet-flora.js` | Vollständige 3D-Baumkronen, zwei kamerabezogene Detailstufen, instanzierter Unterwuchs und räumliche Gruppen für Frustum-Culling |
+| `src/planet-grid.js` | Direkt auf dem Gelände gezeichnetes, pixelbreites Bauraster mit Hauptlinien und Außenrand; keine zusätzlichen Planungsgeometrien |
 | `src/planet-ground-material.js` | Wiese, Wald, offener Basalt und Schnee mit gescannten Details und gemeinsamen Habitatfeldern |
 | `src/ruins.js` / `src/ruins-ui.js` | Bezahlte Bergung und Wiederherstellung, physische Expeditionsfracht und laufender Orbitalbetrieb |
 | `src/trade-board.js` / `src/trade-board-ui.js` | Öffentliche Spielerangebote, geschützte Exporte und real reservierte Importbudgets |

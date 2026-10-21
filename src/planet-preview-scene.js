@@ -9,6 +9,7 @@ import { readFloraVariants, addFloraBatches, readFloraLods, updateFloraLods } fr
 import { regionBiome } from './planet-biomes.js';
 import { planetSurfacePixels } from './planet-geography.js';
 import { blendHabitatGround } from './planet-ground-material.js';
+import { blendBuildGrid } from './planet-grid.js';
 import { constrainRegionCamera, stepRegionFocus, regionOverviewPose } from './planet-camera.js';
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
 
@@ -46,7 +47,7 @@ export class PlanetPreviewScene {
     this.scene.environment = this.environment.texture;
     this.globe = new THREE.Group(); this.land = new THREE.Group(); this.scene.add(this.globe, this.land);
     this.textures = new Map(); this.models = new Map(); this.floraModels = new Map(); this.floraLodModels = new Map(); this.loader = new GLTFLoader();
-    this.ray = new THREE.Raycaster(); this.pointer = new THREE.Vector2(); this.mode = 'orbit'; this.generation = 0; this.dirty = true; this.gridVisible = false;
+    this.ray = new THREE.Raycaster(); this.pointer = new THREE.Vector2(); this.mode = 'orbit'; this.generation = 0; this.dirty = true; this.gridVisible = true;
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(canvas.parentElement);
     this.pointers = new Set(); this.dragged = false;
     this.down = e => { this.siteFocus = null; this.pointers.add(e.pointerId); this.start = { x: e.clientX, y: e.clientY }; this.dragged = this.pointers.size > 1; };
@@ -167,7 +168,7 @@ export class PlanetPreviewScene {
 
   async setPlanet(planet) {
     const generation = ++this.generation; this.planet = planet; this.mode = 'orbit'; this.region = null; this.siteFocus = null;
-    this.clearGroup(this.globe); this.clearGroup(this.land); this.colonyPads = null; this.forest = null; this.terrain = null; this.grid = null; this.siteMark = null; this.clouds = null; this.environmentRecipe = null;
+    this.clearGroup(this.globe); this.clearGroup(this.land); this.forest = null; this.terrain = null; this.buildGrid = null; this.siteMark = null; this.clouds = null; this.environmentRecipe = null;
     const preset = PLANET_PRESETS[planet.preset];
     const layers = planet.preset === 'temperate' ? await this.texture('earth-clouds.jpg') : null;
     const pixels = planet.geography ? planetSurfacePixels(planet.geography) : null;
@@ -232,7 +233,7 @@ export class PlanetPreviewScene {
 
   async showRegion(region) {
     const generation = ++this.generation; this.region = region; this.mode = 'region'; this.siteFocus = null;
-    this.clearGroup(this.land); this.colonyPads = null; this.forest = null; this.terrain = null; this.grid = null; this.siteMark = null; this.waterTime = null;
+    this.clearGroup(this.land); this.forest = null; this.terrain = null; this.buildGrid = null; this.siteMark = null; this.waterTime = null;
     this.environmentRecipe = createRegionEnvironment(region);
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], biome = regionBiome(region), living = !!biome, airless = region.module === 'regolith';
@@ -261,6 +262,7 @@ export class PlanetPreviewScene {
     geometry.computeVertexNormals(); this.colorTerrain(geometry);
     const ground = new THREE.MeshStandardMaterial({ map: color, normalMap: normal, normalScale: new THREE.Vector2(living ? .32 : module.ground === 'regolith' ? 1 : .65, living ? .32 : module.ground === 'regolith' ? 1 : .65), vertexColors: true, roughness: 1, envMapIntensity: .12 });
     if (habitatTextures) blendHabitatGround(ground, { meadow: habitatTextures[0], meadowNormal: habitatTextures[1], forest: habitatTextures[2], forestNormal: habitatTextures[3] }, region);
+    this.buildGrid = blendBuildGrid(ground, { visible: this.gridVisible, pixelRatio: this.renderer.getPixelRatio() });
     if (arm && !living) { ground.roughnessMap = arm; ground.aoMap = arm; ground.aoMapIntensity = .4; geometry.setAttribute('uv1', geometry.attributes.uv); }
     this.terrain = new THREE.Mesh(geometry, ground); this.terrain.receiveShadow = true; this.land.add(this.terrain);
     this.addTerrainSurroundings(ground);
@@ -296,8 +298,7 @@ export class PlanetPreviewScene {
       addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: ['pine', 'oak', 'aspen'].includes(id), lods: this.floraLodModels.get(id) });
     });
     updateFloraLods(this.land, this.camera);
-    if (region.colony) this.addColonySite();
-    this.addGrid(); this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
+    this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
   colorTerrain(geometry) {
@@ -382,36 +383,6 @@ export class PlanetPreviewScene {
     const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
   }
 
-  addColonySite() {
-    const site = this.region.colony, positions = [], indices = [], uvs = [];
-    this.colonyPads = new THREE.Group(); this.colonyPads.visible = this.gridVisible; this.land.add(this.colonyPads);
-    const ground = (x, z) => regionGroundHeight(this.region, x, z) + .045;
-    for (const path of site.roads) for (let p = 1; p < path.length; p++) {
-      const [ax, az] = path[p - 1], [bx, bz] = path[p], length = Math.hypot(bx - ax, bz - az), nx = -(bz - az) / length * 1.8, nz = (bx - ax) / length * 1.8;
-      const count = Math.ceil(length / 1.5), base = positions.length / 3;
-      for (let i = 0; i <= count; i++) {
-        const t = i / count, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
-        positions.push(x + nx, ground(x + nx, z + nz), z + nz, x - nx, ground(x - nx, z - nz), z - nz); uvs.push(0, t, 1, t);
-        if (i < count) { const n = base + i * 2; indices.push(n, n + 1, n + 2, n + 1, n + 3, n + 2); }
-      }
-    }
-    const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    const edge = new Uint8Array(8 * 4);
-    [0, 65, 185, 255, 255, 185, 65, 0].forEach((v, i) => { edge[i * 4] = edge[i * 4 + 1] = edge[i * 4 + 2] = v; edge[i * 4 + 3] = 255; });
-    const alpha = new THREE.DataTexture(edge, 8, 1); alpha.magFilter = alpha.minFilter = THREE.LinearFilter; alpha.needsUpdate = true;
-    const material = new THREE.MeshStandardMaterial({ color: site.tint, roughness: 1, side: THREE.DoubleSide, alphaMap: alpha, transparent: true, opacity: .65, depthWrite: false });
-    material.addEventListener('dispose', () => alpha.dispose());
-    const roads = new THREE.Mesh(geometry, material); roads.receiveShadow = true; (valleyDefinition(this.region) ? this.colonyPads : this.land).add(roads);
-    for (const [x, z, w, d] of site.pads) {
-      const geometry = new THREE.PlaneGeometry(w, d, Math.ceil(w / 2), Math.ceil(d / 2)); geometry.rotateX(-Math.PI / 2); geometry.translate(x, 0, z);
-      const pos = geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) pos.setY(i, ground(pos.getX(i), pos.getZ(i)));
-      geometry.computeVertexNormals();
-      const pad = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: site.tint, roughness: 1, transparent: true, opacity: .16, depthWrite: false })); pad.receiveShadow = true; this.colonyPads.add(pad);
-    }
-  }
-
   addWater() {
     this.waterTime = { value: 0 };
     const shorePixels = new Uint8Array(256 * 4);
@@ -456,19 +427,6 @@ export class PlanetPreviewScene {
     })); this.land.add(foam);
   }
 
-  addGrid() {
-    const lines = [], boundary = [], { cells: size, cellSize: cell, halfExtent: half } = REGION_BUILD_GRID;
-    const line = (output, x1, z1, x2, z2) => {
-      for (let i = 0; i < size; i++) { const a = i / size, b = (i + 1) / size, ax = x1 + (x2 - x1) * a, az = z1 + (z2 - z1) * a, bx = x1 + (x2 - x1) * b, bz = z1 + (z2 - z1) * b;
-        output.push(ax, Math.max(.14, regionGroundHeight(this.region, ax, az)) + .07, az, bx, Math.max(.14, regionGroundHeight(this.region, bx, bz)) + .07, bz);
-      }
-    };
-    for (let i = 0; i <= size; i++) { const p = -half + i * cell, output = i === 0 || i === size ? boundary : lines; line(output, -half, p, half, p); line(output, p, -half, p, half); }
-    this.grid = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lines, 3)), new THREE.LineBasicMaterial({ color: 0xd4dcb7, transparent: true, opacity: .21, depthWrite: false }));
-    this.grid.visible = this.gridVisible; this.land.add(this.grid);
-    this.buildBoundary = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(boundary, 3)), new THREE.LineBasicMaterial({ color: 0xd4dcb7, transparent: true, opacity: .55, depthWrite: false })); this.buildBoundary.visible = this.gridVisible; this.land.add(this.buildBoundary);
-  }
-
   addSiteMark() {
     const geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(16 * 3), 3));
     this.siteMark = new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: 0xf5cc7c, transparent: true, opacity: .95, depthWrite: false }));
@@ -509,7 +467,7 @@ export class PlanetPreviewScene {
     p.project(this.camera); if (p.z < -1 || p.z > 1 || Math.abs(p.x) > 1.1 || Math.abs(p.y) > 1.1) return null;
     return { x: (p.x + 1) * this.width / 2, y: (1 - p.y) * this.height / 2 };
   }
-  setGrid(visible) { this.gridVisible = visible; if (this.grid) this.grid.visible = visible; if (this.buildBoundary) this.buildBoundary.visible = visible; if (this.colonyPads) this.colonyPads.visible = visible; this.dirty = true; }
+  setGrid(visible) { this.gridVisible = !!visible; if (this.buildGrid) this.buildGrid.enabled.value = this.gridVisible ? 1 : 0; this.dirty = true; }
   zoom(factor) { this.siteFocus = null; const offset = this.camera.position.clone().sub(this.controls.target).multiplyScalar(factor); offset.setLength(THREE.MathUtils.clamp(offset.length(), this.controls.minDistance, this.controls.maxDistance)); this.camera.position.copy(this.controls.target).add(offset); this.cameraDestination = null; this.controls.update(); this.keepCameraAboveGround(); this.dirty = true; }
   resize() { const r = this.canvas.parentElement.getBoundingClientRect(); if (!r.width || !r.height) return; this.width = r.width; this.height = r.height; this.renderer.setSize(r.width, r.height, false); this.camera.aspect = r.width / r.height; this.camera.updateProjectionMatrix(); this.dirty = true; }
   disposeModels(models) { for (const { geometry, material } of models) { geometry.dispose(); for (const value of Object.values(material)) if (value?.isTexture) value.dispose(); material.dispose(); } }
