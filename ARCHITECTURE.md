@@ -9,6 +9,7 @@
 | `src/planet-valley.js` / `src/planet-valley-data.js` | Drei offline vorbereitete Flusstäler: gemeinsame Höhen, Flussprofile, Ökologiemasken, Kameras und Standortentwürfe |
 | `src/planet-rocks.js` | Neigungsangepasste Felsplatzierung mit tatsächlicher Modellauflage und Höhen der gerenderten Geländedreiecke |
 | `src/planet-camera.js` | Bodenfolgender, begrenzter Regionsblickpunkt und Kamerafreiheit über Boden und dazwischenliegenden Höhenzügen |
+| `src/planet-sky.js` / `src/planet-sky-data.js` / `src/planet-horizon.js` | Unendliche, regional abgestimmte Himmelsaufnahmen, passende Sonne/Reflexionen und anschließende Fernlandschaft |
 | `src/planet-geography.js` | Gemeinsame sphärische Kontinente, Höhen-/Klimafelder, geeignete Regionskoordinaten und Globusfarben |
 | `src/planet-colony.js` | Unterschiedliche Erschließungswege und vorbereitete Bauflächen je Landschaft; gemeinsame Freihaltung im Bewuchs |
 | `src/planet-biomes.js` | Klimabezogene Vegetation, Bodenfarben, Baum-/Schneegrenzen und Atmosphäre der vier Landschaften |

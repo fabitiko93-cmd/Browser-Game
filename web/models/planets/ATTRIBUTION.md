@@ -1,5 +1,7 @@
 # Planet preview assets
 
+Regional skies: **Poly Haven**, [Kloofendal 48d Partly Cloudy (Pure Sky)](https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky), Greg Zaal / Jarod Guest, and [Kloofendal Overcast (Pure Sky)](https://polyhaven.com/a/kloofendal_overcast_puresky), Greg Zaal — **CC0**. The official 2K HDR sources are tone mapped offline to 2048 × 1024 sRGB WebP; their mirrored lower hemisphere is replaced by the measured horizon colour. `scripts/prepare-planet-skies.mjs` and `sky-provenance.json` record preparation, source URLs and checksums. No HDR decoder or asset-service request runs in the game. The same panoramas supply the visible sky and environment reflections; atmospheric dry worlds use a procedural dust sky and airless worlds retain space.
+
 Planet maps (Earth day, night and clouds, Mars, Moon): **Solar System Scope / INOVE**, https://www.solarsystemscope.com/textures/ — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). No changes to the planetary image files.
 
 Terrain models and surface maps: **Poly Haven**, [Namaqualand](https://polyhaven.com/collections/namaqualand) and [Lunar Landscape](https://polyhaven.com/collections/moon) — [CC0](https://creativecommons.org/publicdomain/zero/1.0/).

@@ -10,6 +10,8 @@ import { regionBiome } from '../src/planet-biomes.js';
 import { planetSurfacePixels } from '../src/planet-geography.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
 import { rockFootprint, fitRockToGround } from '../src/planet-rocks.js';
+import { regionSkyProfile } from '../src/planet-sky.js';
+import { regionHorizonGeometry } from '../src/planet-horizon.js';
 const output = resolve(process.argv[2] ?? 'artifacts/landscapes'), seed = process.argv[3] ?? 'NEREID-3077';
 await mkdir(output, { recursive: true });
 const planet = createPlanetBlueprint(seed, { valley: process.argv[4] }), pixels = planetSurfacePixels(planet.geography);
@@ -55,6 +57,7 @@ for (const r of planet.regions.filter(r => !process.argv.includes('--valley-only
   const site = region.colony;
   const roads = site.roads.map(path => path.map(([x,z]) => [x, regionGroundHeight(region,x,z)+.05,z]));
   const pads = site.pads.map(([x,z,w,d]) => {const g=new PlaneGeometry(w,d,Math.ceil(w/2),Math.ceil(d/2));g.rotateX(-Math.PI/2);g.translate(x,0,z);const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,regionGroundHeight(region,p.getX(i),p.getZ(i))+.05);const result={positions:Array.from(p.array),indices:Array.from(g.index.array)};g.dispose();return result;});
-  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, camera, target, fov:pose.fov, creek, lake:regionLake(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, module:REGION_MODULES[region.module] }));
+  const horizonGeometry = regionHorizonGeometry(region), horizon = { positions: Array.from(horizonGeometry.attributes.position.array), indices: Array.from(horizonGeometry.index.array), colors: Array.from(horizonGeometry.attributes.color.array) }; horizonGeometry.dispose();
+  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, horizon, sky:regionSkyProfile(region), camera, target, fov:pose.fov, creek, lake:regionLake(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, module:REGION_MODULES[region.module] }));
   console.log(r.id, biome.name, environment.trees.length, 'trees');
 }

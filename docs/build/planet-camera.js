@@ -43,6 +43,15 @@ export function regionOverviewPose(region) {
   const factor = Math.min(1, (valley ? 500 : region.preset === 'temperate' ? 340 : 230) / Math.hypot(...offset));
   const target = { x, y: regionGroundHeight(region, x, z) + 3.5, z };
   const eye = { x: x + offset[0] * factor, y: target.y + offset[1] * factor, z: z + offset[2] * factor };
+  const fov = valley ? 55 : region.preset === 'temperate' && region.module === 'upland' ? 60 : 43;
+  if (region.preset !== 'lunar') {
+    // Keep a small strip of sky in the portrait overview while retaining the
+    // original target and distance. The player can still orbit down to build.
+    const horizontal = Math.hypot(eye.x - x, eye.z - z), distance = Math.hypot(horizontal, eye.y - target.y);
+    const pitch = Math.min(Math.atan2(eye.y - target.y, horizontal), (fov / 2 - 5) * Math.PI / 180);
+    const scale = distance * Math.cos(pitch) / horizontal;
+    eye.x = x + (eye.x - x) * scale; eye.z = z + (eye.z - z) * scale; eye.y = target.y + distance * Math.sin(pitch);
+  }
   constrainRegionCamera(region, eye, target);
-  return { eye, target, fov: valley ? 55 : region.preset === 'temperate' && region.module === 'upland' ? 60 : 43 };
+  return { eye, target, fov };
 }

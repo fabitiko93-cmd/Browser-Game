@@ -15,6 +15,11 @@ scene.render.resolution_x=600;scene.render.resolution_y=800;scene.render.resolut
 scene.view_settings.view_transform='AgX';scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=0
 scene.world=bpy.data.worlds.new('Sky');scene.world.use_nodes=True
 scene.world.node_tree.nodes.get('Background').inputs[0].default_value=(.58,.69,.75,1);scene.world.node_tree.nodes.get('Background').inputs[1].default_value=.6
+if r.get('sky') and r['sky']['file']:
+ # Standard keeps the prepared sRGB horizon and the composited photograph in
+ # the same display space. This is still not the runtime's ACES terrain pass.
+ scene.view_settings.view_transform='Standard';scene.view_settings.look='None'
+ nodes=scene.world.node_tree.nodes;links=scene.world.node_tree.links;tex=nodes.new('ShaderNodeTexEnvironment');tex.image=bpy.data.images.load(os.path.join(assets,r['sky']['file']));coord=nodes.new('ShaderNodeTexCoord');mapping=nodes.new('ShaderNodeMapping');mapping.inputs['Rotation'].default_value[2]=-r['sky']['yaw'];links.new(coord.outputs['Normal'],mapping.inputs['Vector']);links.new(mapping.outputs['Vector'],tex.inputs['Vector']);links.new(tex.outputs['Color'],nodes.get('Background').inputs[0]);nodes.get('Background').inputs[1].default_value=.7
 
 def linear(v):return v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4
 def color(s):return tuple(linear(int(s[i:i+2],16)/255) for i in (1,3,5))
@@ -113,8 +118,12 @@ conv=Matrix(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
 for rock in r['rocks']:
  o=bpy.data.objects.new('Rock',rockdata[rock['model']]);scene.collection.objects.link(o);a=rock['matrix'];m=Matrix(tuple(tuple(a[c*4+j] for c in range(4)) for j in range(4)));o.matrix_world=conv@m@conv.inverted()
 
+if r.get('horizon'):
+ h=r['horizon'];hm=material('Distant ground','#ffffff');attr=hm.node_tree.nodes.new('ShaderNodeVertexColor');attr.layer_name='horizonColor';hm.node_tree.links.new(attr.outputs['Color'],hm.node_tree.nodes.get('Principled BSDF').inputs['Base Color']);o=mesh('Horizon',h['positions'],h['indices'],hm);a=o.data.color_attributes.new(name='horizonColor',type='FLOAT_COLOR',domain='POINT')
+ for j in range(len(h['colors'])//3):a.data[j].color=(*h['colors'][j*3:j*3+3],1)
+ for poly in o.data.polygons:poly.use_smooth=True
 water=material('Water','#496f65',.2,.12)
-if r['region']['module']=='coast':mesh('Ocean',[-960,.1,-960,960,.1,-960,960,.1,960,-960,.1,960],[0,2,1,0,3,2],water)
+if r['region']['module']=='coast':mesh('Ocean',[-4000,.1,-4000,4000,.1,-4000,4000,.1,4000,-4000,.1,4000],[0,2,1,0,3,2],water)
 if r['creek']:
  positions=[];indices=[]
  for i,(x,y,z,w) in enumerate(r['creek']):
@@ -128,6 +137,9 @@ if r['lake']:
  mesh('Crater lake',positions,indices,water)
 # The construction grid is a WebGL fragment overlay, not geometry. This CPU
 # review omits it and does not draw the unbuilt road/parcel site-plan recipes.
-light=bpy.data.lights.new('Sun','SUN');light.energy=2.5;light.angle=math.radians(3);obj=bpy.data.objects.new('Sun',light);scene.collection.objects.link(obj);obj.location=(-70,45,95);obj.rotation_euler=(Vector((0,0,0))-obj.location).to_track_quat('-Z','Y').to_euler()
-cam=bpy.data.cameras.new('Camera');obj=bpy.data.objects.new('Camera',cam);scene.collection.objects.link(obj);obj.location=xyz(r['camera']);obj.rotation_euler=(Vector(xyz(r['target']))-obj.location).to_track_quat('-Z','Y').to_euler();cam.type='PERSP';cam.lens_unit='FOV';cam.angle=math.radians(r.get('fov',43));cam.sensor_fit='VERTICAL';cam.clip_end=2000;scene.camera=obj
+light=bpy.data.lights.new('Sun','SUN');light.energy=r.get('sky',{}).get('sunIntensity',2.5);light.angle=math.radians(3);obj=bpy.data.objects.new('Sun',light);scene.collection.objects.link(obj);obj.location=xyz(r['sky']['sunDirection']) if r.get('sky') else (-70,45,95);obj.rotation_euler=(Vector((0,0,0))-obj.location).to_track_quat('-Z','Y').to_euler()
+cam=bpy.data.cameras.new('Camera');obj=bpy.data.objects.new('Camera',cam);scene.collection.objects.link(obj);obj.location=xyz(r['camera']);obj.rotation_euler=(Vector(xyz(r['target']))-obj.location).to_track_quat('-Z','Y').to_euler();cam.type='PERSP';cam.lens_unit='FOV';cam.sensor_fit='VERTICAL';cam.angle=math.radians(r.get('fov',43));cam.clip_end=6000;scene.camera=obj
+if r.get('sky'):
+ # Mist is a layout approximation, not the runtime's post-tone-map fog shader.
+ scene.render.film_transparent=True;scene.render.image_settings.color_mode='RGBA';scene.world.mist_settings.start=0;scene.world.mist_settings.depth=1.7/r['sky']['fogDensity'];scene.world.mist_settings.falloff='QUADRATIC';bpy.context.view_layer.use_pass_mist=True;scene.use_nodes=True;nodes=scene.node_tree.nodes;nodes.clear();layers=nodes.new('CompositorNodeRLayers');blend=nodes.new('CompositorNodeMixRGB');blend.inputs[2].default_value=(*color(r['sky']['horizon']),1);alpha=nodes.new('CompositorNodeSetAlpha');output=nodes.new('CompositorNodeComposite');scene.node_tree.links.new(layers.outputs['Mist'],blend.inputs[0]);scene.node_tree.links.new(layers.outputs['Image'],blend.inputs[1]);scene.node_tree.links.new(blend.outputs[0],alpha.inputs['Image']);scene.node_tree.links.new(layers.outputs['Alpha'],alpha.inputs['Alpha']);scene.node_tree.links.new(alpha.outputs[0],output.inputs[0])
 scene.render.filepath=os.path.join(root,f'region-{num}.png');bpy.ops.render.render(write_still=True)

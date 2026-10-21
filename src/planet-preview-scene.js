@@ -12,6 +12,8 @@ import { blendHabitatGround } from './planet-ground-material.js';
 import { blendBuildGrid } from './planet-grid.js';
 import { constrainRegionCamera, stepRegionFocus, regionOverviewPose } from './planet-camera.js';
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
+import { regionSkyProfile, createRegionSky } from './planet-sky.js';
+import { regionHorizonGeometry } from './planet-horizon.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
 const point = (latitude, longitude, radius = 2.22) => {
@@ -202,6 +204,7 @@ export class PlanetPreviewScene {
   showOrbit() {
     this.generation++; this.mode = 'orbit'; this.siteFocus = null; this.globe.visible = true; this.land.visible = false; this.stars.visible = true;
     this.scene.background = new THREE.Color(0x040a13); this.scene.fog = null;
+    this.scene.environment = this.environment.texture; this.scene.environmentRotation.set(0, 0, 0); this.scene.environmentIntensity = 1;
     this.renderer.toneMappingExposure = 1; this.sun.color.set(0xffe7bf); this.hemi.color.set(0xb8d5e5); this.hemi.groundColor.set(0x615446);
     this.sun.position.set(9, 5, 7); this.sun.target.position.set(0, 0, 0); this.sun.castShadow = false; this.sun.intensity = 3.4; this.hemi.intensity = .07;
     this.controls.target.set(0, 0, 0); this.controls.enablePan = false; this.controls.minDistance = 4.8; this.controls.maxDistance = 18; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI - .15;
@@ -237,23 +240,30 @@ export class PlanetPreviewScene {
     this.environmentRecipe = createRegionEnvironment(region);
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], biome = regionBiome(region), living = !!biome, airless = region.module === 'regolith';
-    this.scene.background = new THREE.Color(biome?.sky ?? module.sky);
-    this.scene.fog = airless ? null : new THREE.FogExp2(biome?.fog ?? module.fog, living ? region.module === 'upland' ? .00095 : .0012 : .0015);
+    const skyProfile = this.skyProfile = regionSkyProfile(region); this.activeSkyTexture = null;
+    this.scene.environment = this.environment.texture; this.scene.environmentRotation.set(0, 0, 0); this.scene.environmentIntensity = 1;
+    this.scene.background = new THREE.Color(skyProfile?.horizon ?? module.sky);
+    this.scene.fog = skyProfile ? new THREE.FogExp2(skyProfile.horizon, skyProfile.fogDensity) : null;
     this.stars.visible = airless; this.renderer.toneMappingExposure = living ? .94 : .88;
     const warm = region.module === 'basin';
     this.sun.color.set(living ? '#fff3df' : warm ? '#ffe0bb' : region.module === 'upland' ? '#e8f1ff' : '#fff0d8');
     this.hemi.color.set(biome?.sky ?? module.sky); this.hemi.groundColor.set(living ? '#536348' : module.palette[0]);
     this.sun.position.set(-70, 95, region.module === 'upland' ? 65 : -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 2.5 : living ? 2.6 : 2.3; this.sun.castShadow = true; this.hemi.intensity = airless ? .06 : living ? 1.1 : .85;
+    if (skyProfile) {
+      this.sun.position.fromArray(skyProfile.sunDirection).multiplyScalar(150); this.sun.color.set(skyProfile.sunColor); this.sun.intensity = skyProfile.sunIntensity;
+      this.hemi.color.set(skyProfile.ambientColor); this.hemi.intensity = skyProfile.ambientIntensity;
+    }
     this.controls.enablePan = true; this.controls.minDistance = 14; this.controls.maxDistance = valleyDefinition(region) ? 560 : living ? 360 : 260; this.controls.minPolarAngle = .15; this.controls.maxPolarAngle = Math.PI * .48;
-    this.camera.near = .2; this.camera.far = 1800; this.camera.updateProjectionMatrix(); this.resetCamera();
+    this.camera.near = .2; this.camera.far = 6000; this.camera.updateProjectionMatrix(); this.resetCamera();
     const [color, normal, arm] = await Promise.all([this.texture(`${module.ground}-color.webp`, { color: true, repeat: 18 }), this.texture(`${module.ground}-normal.webp`, { repeat: 18 }), module.ground === 'regolith' ? this.texture('regolith-arm.webp', { repeat: 18 }) : null]);
     const modelIds = [...new Set([...region.rocks, ...this.environmentRecipe.rocks].map(r => r.model))];
     const [assetSets, lods] = await Promise.all([Promise.all(modelIds.map(id => this.model(ROCK_ASSETS[id]))), this.environmentLODs()]);
     const floraIds = [...new Set([...this.environmentRecipe.trees, ...this.environmentRecipe.plants].map(p => p.model).filter(id => id !== 'forest'))];
-    const [floraSets, habitatTextures, treeLodData] = await Promise.all([
+    const [floraSets, habitatTextures, treeLodData, skyTexture] = await Promise.all([
       Promise.all(floraIds.map(id => this.vegetation(FLORA_ASSETS[id]))),
       living ? Promise.all(['meadow-color.webp', 'meadow-normal.webp', 'forest-floor-color.webp', 'forest-floor-normal.webp'].map((name, i) => this.texture(name, { color: i % 2 === 0, repeat: 1 }))) : null,
-      living ? this.treeLodData ??= fetch(new URL('tree-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Waldmodelle konnten nicht geladen werden.'); return r.json(); }) : null
+      living ? this.treeLodData ??= fetch(new URL('tree-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Waldmodelle konnten nicht geladen werden.'); return r.json(); }) : null,
+      skyProfile?.file ? this.texture(skyProfile.file, { color: true }) : null
     ]);
     if (generation !== this.generation || this.disposed) return;
     const geometry = new THREE.PlaneGeometry(region.size, region.size, REGION_TERRAIN.segments, REGION_TERRAIN.segments); geometry.rotateX(-Math.PI / 2);
@@ -266,7 +276,15 @@ export class PlanetPreviewScene {
     if (arm && !living) { ground.roughnessMap = arm; ground.aoMap = arm; ground.aoMapIntensity = .4; geometry.setAttribute('uv1', geometry.attributes.uv); }
     this.terrain = new THREE.Mesh(geometry, ground); this.terrain.receiveShadow = true; this.land.add(this.terrain);
     this.addTerrainSurroundings(ground);
-    if (!airless) this.addSky();
+    if (skyProfile) {
+      if (skyTexture) {
+        skyTexture.wrapS = THREE.RepeatWrapping; skyTexture.mapping = THREE.EquirectangularReflectionMapping;
+        this.scene.environment = skyTexture; this.scene.environmentRotation.y = -skyProfile.yaw;
+        this.activeSkyTexture = skyTexture;
+      }
+      this.land.add(createRegionSky(skyProfile, skyTexture));
+      this.land.add(new THREE.Mesh(regionHorizonGeometry(region), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, envMapIntensity: .12 })));
+    }
     if (module.water) this.addWater();
     if (living && region.module === 'basin') this.addCreek();
     if (living && regionLake(region)) this.addLake();
@@ -320,18 +338,6 @@ export class PlanetPreviewScene {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('habitat', new THREE.BufferAttribute(habitats, 4));
     geometry.setAttribute('substrate', new THREE.BufferAttribute(substrates, 2));
-  }
-
-  addSky() {
-    const module = regionBiome(this.region) ?? REGION_MODULES[this.region.module];
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false,
-      uniforms: { top: { value: new THREE.Color(module.sky) }, bottom: { value: new THREE.Color(module.fog) } },
-      vertexShader: 'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader: `uniform vec3 top;uniform vec3 bottom;varying vec3 p;void main(){float h=clamp(normalize(p).y,0.,1.);gl_FragColor=vec4(mix(bottom,top,pow(h,.45)),1.);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-      }`
-    })); this.land.add(sky);
   }
 
   addTerrainSurroundings(material) {
@@ -393,23 +399,26 @@ export class PlanetPreviewScene {
     }
     const shoreMap = new THREE.DataTexture(shorePixels, 256, 1); shoreMap.magFilter = shoreMap.minFilter = THREE.LinearFilter; shoreMap.needsUpdate = true;
     const material = new THREE.ShaderMaterial({
-      uniforms: { shoreMap: { value: shoreMap }, time: this.waterTime, phase: { value: this.region.phase }, deep: { value: new THREE.Color('#123e56') }, shallow: { value: new THREE.Color('#398d92') }, sky: { value: new THREE.Color(REGION_MODULES.coast.sky) } },
+      uniforms: { shoreMap: { value: shoreMap }, time: this.waterTime, phase: { value: this.region.phase }, deep: { value: new THREE.Color('#123e56') }, shallow: { value: new THREE.Color('#398d92') }, sky: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky) }, hazeColor: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky).convertLinearToSRGB() }, hazeDensity: { value: this.skyProfile?.fogDensity ?? .00105 }, panorama: { value: this.activeSkyTexture }, photographed: { value: this.activeSkyTexture ? 1 : 0 }, skyYaw: { value: this.skyProfile?.yaw ?? 0 }, sunDirection: { value: this.sun.position.clone().normalize() } },
       vertexShader: 'varying vec3 p;void main(){p=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(p,1.);}',
-      fragmentShader: `uniform sampler2D shoreMap;uniform float time;uniform float phase;uniform vec3 deep;uniform vec3 shallow;uniform vec3 sky;varying vec3 p;
+      fragmentShader: `uniform sampler2D shoreMap;uniform sampler2D panorama;uniform float photographed;uniform float skyYaw;uniform vec3 sunDirection;uniform float time;uniform float phase;uniform vec3 deep;uniform vec3 shallow;uniform vec3 sky;uniform vec3 hazeColor;uniform float hazeDensity;varying vec3 p;
       void main(){
         vec3 n=normalize(vec3(.035*sin(p.x*.7+p.z*.23+time*.8)+.018*sin(p.z*1.4-time),1.,.035*cos(p.z*.65+p.x*.2-time*.6)));
         vec3 eye=normalize(cameraPosition-p);float fresnel=.03+.8*pow(1.-max(dot(n,eye),0.),4.);
         float coast=texture2D(shoreMap,vec2(clamp((p.z+900.)/1800.,0.,1.),.5)).r*255.-128.;
         float depth=max(0.,coast-p.x);vec3 color=mix(shallow,deep,1.-exp(-depth*.06));
-        color=mix(color,sky,fresnel*.6);
-        float glint=pow(max(dot(reflect(-normalize(vec3(-70.,95.,-45.)),n),eye),0.),110.);
+        vec3 reflection=sky;
+        if(photographed>.5){vec3 d=reflect(-eye,n);reflection=texture2D(panorama,vec2((atan(d.z,d.x)-skyYaw)/6.28318530718+.5,asin(clamp(d.y,-1.,1.))/3.14159265359+.5)).rgb;}
+        color=mix(color,reflection,fresnel*.75);
+        float glint=pow(max(dot(reflect(-sunDirection,n),eye),0.),110.);
         color+=vec3(.8,.78,.67)*glint*.65;gl_FragColor=vec4(color,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
+        float haze=1.-exp(-pow(length(cameraPosition-p)*hazeDensity,2.));gl_FragColor.rgb=mix(gl_FragColor.rgb,hazeColor,haze);
       }`
     });
     material.addEventListener('dispose', () => shoreMap.dispose());
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1800), material); water.rotation.x = -Math.PI / 2; water.position.y = .1; this.land.add(water);
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), material); water.rotation.x = -Math.PI / 2; water.position.y = .1; this.land.add(water);
     const positions = [], uv = [], indices = [], segments = 240;
     for (let i = 0; i <= segments; i++) {
       const z = -480 + i * 4; let wet = -150, dry = 60;
