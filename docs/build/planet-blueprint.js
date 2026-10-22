@@ -4,6 +4,7 @@ import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface, crea
 import { createColonySite, createNaturalColonySite, colonyClearance } from './planet-colony.js';
 import { BIOSPHERES } from './planet-biomes.js';
 import { naturalHeight, naturalShore, naturalCreek, naturalLakes } from './planet-terrain.js';
+import { createResourceFields, resourceFieldDensity, RESOURCE_VERSION } from './planet-resources.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
@@ -124,6 +125,7 @@ export function createRegionBlueprint(planet, regionId) {
     const r = planetRandom(planetSubseed(region.seed, `resource/${i}`));
     return { id: `deposit-${i}`, type: i === 3 ? 'geothermal' : 'ore', x: (r() - .5) * 46, z: (r() - .5) * 46, radius: 4 + r() * 3 };
   });
+  if (planet.generatorVersion >= 8) { result.resourceVersion = RESOURCE_VERSION; result.resources = createResourceFields(result); }
   return result;
 }
 
@@ -251,7 +253,7 @@ export function regionSite(region, x, z) {
   const creek = regionCreek(region, z);
   const lake = regionLake(region);
   const water = region.terrain ? regionWater(region, x, z, height) : (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width) || !!(lake && Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) < 1.25 && height < lake.level);
-  const deposits = region.resources.filter(d => Math.hypot(x - d.x, z - d.z) <= d.radius);
+  const deposits = region.resources.filter(d => region.resourceVersion ? resourceFieldDensity(region, d, x, z) > .12 : Math.hypot(x - d.x, z - d.z) <= d.radius);
   // Measure against the generated shoreline, not the nominal coast module edge.
   let coastDistance = null;
   if (REGION_MODULES[region.module].water) {

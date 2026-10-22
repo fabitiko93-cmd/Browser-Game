@@ -1,4 +1,5 @@
 import { REGION_BUILD_GRID, regionBuildCell, regionGroundHeight, regionHeight, regionWater } from './planet-blueprint.js';
+import { PROBE_BUILDINGS } from './planet-resources.js';
 
 // Probe construction is separate from the saved empire and its economy. The
 // same footprint is used for validation, clearing, occupancy and presentation.
@@ -46,11 +47,12 @@ export function assessConstruction(region, state, x, z, objects = []) {
   return result;
 }
 
-export function placeConstruction(region, state, x, z, objects = []) {
+export function placeConstruction(region, state, x, z, objects = [], type = 'habitat') {
+  if (!Object.hasOwn(PROBE_BUILDINGS, type)) return { issue: 'Unbekannter Gebäudetyp.', building: null };
   const assessment = assessConstruction(region, state, x, z, objects);
   if (assessment.issue) return { ...assessment, building: null };
   if (state.buildings.length >= 32 || state.clearings.length >= 256 && !state.clearings.some(f => sameFootprint(f, assessment.footprint))) return { ...assessment, issue: 'Die Bauprobe ist voll. Entferne einen Probebau oder setze die Bauprobe in den Optionen zurück.', building: null };
-  const building = { id: state.nextId++, type: 'habitat', footprint: assessment.footprint, foundation: assessment.foundation };
+  const building = { id: state.nextId++, type, footprint: assessment.footprint, foundation: assessment.foundation };
   state.buildings.push(building);
   if (!state.clearings.some(f => sameFootprint(f, building.footprint))) state.clearings.push({ ...building.footprint });
   return { ...assessment, building };
@@ -66,8 +68,8 @@ export function restoreConstruction(value) {
   if (value?.version !== 1 || !Array.isArray(value.buildings) || !Array.isArray(value.clearings) || value.buildings.length > 32 || value.clearings.length > 256 || !value.clearings.every(validFootprint)) return emptyConstruction();
   const state = emptyConstruction(); state.clearings = value.clearings.map(f => ({ minX: f.minX, minZ: f.minZ, maxX: f.maxX, maxZ: f.maxZ }));
   for (const b of value.buildings) {
-    if (!Number.isSafeInteger(b.id) || b.id < 1 || b.type !== 'habitat' || !validFootprint(b.footprint) || !Number.isFinite(b.foundation?.top) || !Number.isFinite(b.foundation?.bottom) || b.foundation.top <= b.foundation.bottom || b.foundation.top - b.foundation.bottom > 1.45 || Math.abs(b.foundation.top) > 1000 || Math.abs(b.foundation.bottom) > 1000 || state.buildings.some(a => a.id === b.id || overlapsFootprint(a.footprint, b.footprint)) || !state.clearings.some(f => sameFootprint(f, b.footprint))) return emptyConstruction();
-    state.buildings.push({ id: b.id, type: 'habitat', footprint: { ...b.footprint }, foundation: { top: b.foundation.top, bottom: b.foundation.bottom } });
+    if (!Number.isSafeInteger(b.id) || b.id < 1 || !Object.hasOwn(PROBE_BUILDINGS, b.type) || !validFootprint(b.footprint) || !Number.isFinite(b.foundation?.top) || !Number.isFinite(b.foundation?.bottom) || b.foundation.top <= b.foundation.bottom || b.foundation.top - b.foundation.bottom > 1.45 || Math.abs(b.foundation.top) > 1000 || Math.abs(b.foundation.bottom) > 1000 || state.buildings.some(a => a.id === b.id || overlapsFootprint(a.footprint, b.footprint)) || !state.clearings.some(f => sameFootprint(f, b.footprint))) return emptyConstruction();
+    state.buildings.push({ id: b.id, type: b.type, footprint: { ...b.footprint }, foundation: { top: b.foundation.top, bottom: b.foundation.bottom } });
   }
   state.nextId = Math.max(0, ...state.buildings.map(b => b.id)) + 1;
   return state;

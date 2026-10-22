@@ -21,6 +21,7 @@ page.on('response', r => { if (r.status() >= 400 && !r.url().endsWith('favicon.i
 async function loaded() {
   await page.waitForFunction(() => globalThis.ORBIT_PLANET_DEBUG && !ORBIT_PLANET_DEBUG.busy || !document.getElementById('planet-error').hidden, null, { timeout: 90000 });
   assert.equal(await page.locator('#planet-error').isVisible(), false, await page.locator('#error-text').textContent());
+  await settled(); assert.deepEqual(errors, [], 'Page, asset and shader errors must fail before screenshots');
 }
 async function settled() { await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(done))))); }
 async function pick(x, z) {
@@ -40,7 +41,7 @@ async function inspect(label) {
   });
   assert.equal(d.scrollWidth, d.width); assert.ok(d.scrollHeight <= d.height + 1); assert.ok(d.stage >= 185); assert.ok(d.calls < 800 && d.triangles > 1000);
   assert.ok(d.controls.every(c => c.height >= 44 && c.top >= 0 && c.bottom <= d.height + 1), JSON.stringify(d));
-  frames.push({ label, ...d }); await page.screenshot({ path: resolve(output, label + '.png'), timeout: 90000 }); console.log('VIEW', label, d.calls, d.triangles);
+  frames.push({ label, ...d }); const capture = await context.newCDPSession(page), shot = await capture.send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false }); await writeFile(resolve(output, label + '.png'), Buffer.from(shot.data, 'base64')); await capture.detach(); console.log('VIEW', label, d.calls, d.triangles);
 }
 async function assertBatches() {
   const issues = await page.evaluate(() => {

@@ -5,6 +5,7 @@ import { createPlanetBlueprint, createRegionBlueprint, PLANET_PRESETS, REGION_MO
 import { CLIMATE_MODES, CLIMATE_BIOMES } from './planet-climate.js';
 import { PLANET_EXAMPLES } from './planet-examples.js';
 import { constructionKey, emptyConstruction, loadConstructionStore, saveConstructionStore } from './planet-construction.js';
+import { PROBE_BUILDINGS, RESOURCE_TYPES } from './planet-resources.js';
 
 const $ = id => document.getElementById(id), app = document.querySelector('.planet-app');
 const parameters = new URLSearchParams(location.search), debug = parameters.get('debug') === '1';
@@ -27,6 +28,7 @@ function fail(error) {
   $('asset-state').textContent = 'Laden fehlgeschlagen'; console.error('Planet preview:', error);
 }
 function loading(value, label = 'Region wird aufgebaut') {
+  $('probe-type').disabled = value;
   busy = value; $('valley-select').disabled = value; $('biosphere-select').disabled = value; $('loading').hidden = !value; $('loading-label').textContent = label; $('region-enter').disabled = value;
   if (value) $('planet-error').hidden = true;
 }
@@ -54,6 +56,8 @@ function updateRegion() {
   for (const [id, button] of markerButtons) { button.classList.toggle('selected', selected.id === id); button.setAttribute('aria-pressed', String(selected.id === id)); }
   $('view-description').textContent = mode === 'orbit' ? `${planet.regions.length} Regionen · vollständig erschlossen` : `${selected.name} · ${config.name}`;
   $('region-north').hidden = mode !== 'region';
+  $('construction-tools').hidden = mode !== 'region';
+  $('resource-legend').hidden = mode !== 'region' || $('resource-toggle').getAttribute('aria-pressed') !== 'true';
   $('valley-controls').hidden = !valley || mode !== 'region';
   $('comparison-controls').hidden = planet.preset !== 'temperate';
   $('comparison-controls').dataset.valley = String(!!valley && mode === 'region');
@@ -67,11 +71,21 @@ function siteInfo(site) {
   if (!site) { selectedSite = null; $('site-info').hidden = true; return; }
   selectedSite = site; $('site-info').hidden = false; const info = $('site-summary'); info.replaceChildren(); $('site-feedback').textContent = '';
   const assessment = site.construction, counts = assessment?.counts;
-  const heading = document.createElement('strong'); heading.textContent = site.building ? 'Habitat · Bauprobe' : site.water ? 'Wasserfläche' : assessment?.issue ? 'Grundfläche nicht bebaubar' : 'Geeignete Baufläche'; info.append(heading, document.createElement('br'));
-  const resource = site.deposits.includes('geothermal') ? 'Wärmequelle' : site.deposits.includes('ore') ? 'Erzvorkommen' : 'Kein erfasstes Vorkommen';
+  const config = PROBE_BUILDINGS[site.building?.type ?? $('probe-type').value];
+  const heading = document.createElement('strong'); heading.textContent = site.building ? `${config.name} · Bauprobe` : site.water ? 'Wasserfläche' : assessment?.issue ? 'Grundfläche nicht bebaubar' : 'Geeignete Baufläche'; info.append(heading, document.createElement('br'));
+  const resource = [...new Set(site.deposits)].map(id => RESOURCE_TYPES[id]?.field).filter(Boolean).join(' / ') || site.resources?.substrate || 'Kein erfasstes Vorkommen';
   info.append(document.createTextNode(`${resource} · Neigung ${Math.round(Math.atan(site.slope) * 180 / Math.PI)}°${site.coastDistance != null ? ` · Küste ca. ${Math.round(site.coastDistance)} m` : ''}`));
   $('site-build').hidden = !!site.building; $('site-build').disabled = !assessment || !!assessment.issue; $('site-demolish').hidden = !site.building;
-  $('construction-detail').textContent = site.building ? 'Habitat · 8 × 8 m · Bauprobe' : assessment?.issue ?? `8 × 8 m · Räumung: ${counts.tree} Bäume, ${counts.plant} Pflanzen, ${counts.stone} kleine Steine.`;
+  $('site-build').textContent = `${config.name} setzen · Probe`;
+  $('construction-detail').textContent = site.building ? '4 × 4 Rasterfelder · 8 × 8 m' : assessment?.issue ?? `8 × 8 m · Räumung: ${counts.tree} Bäume, ${counts.plant} Pflanzen, ${counts.stone} kleine Steine.`;
+  $('site-production').hidden = !site.production; $('site-production').replaceChildren();
+  if (site.production) {
+    const p = site.production, amount = value => value.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+    const yieldLine = document.createElement('strong'), context = document.createElement('span'); yieldLine.textContent = `${amount(p.daily)} ${p.unit} / Tag · Fördervorschau`;
+    context.textContent = `${p.quality} · Standort ${Math.round(p.factor * 100)} %${p.competition > .001 ? ' · geteilter Förderbereich' : ''}`;
+    const cost = document.createElement('small'); cost.textContent = `${p.workers} Arbeitskräfte · ${p.energy ? `${p.energy} Energie + ` : ''}${p.upkeep} ¢ / Tag`;
+    $('site-production').append(yieldLine, context, cost);
+  }
 }
 async function selectRegion(id) {
   if (busy) return; selected = planet.regions.find(r => r.id === id) ?? selected; siteInfo(null);
@@ -160,15 +174,18 @@ $('zoom-in').addEventListener('click', () => view?.zoom(.82)); $('zoom-out').add
 $('camera-home').addEventListener('click', () => view?.resetCamera());
 $('grid-toggle').addEventListener('click', () => { const visible = $('grid-toggle').getAttribute('aria-pressed') !== 'true'; $('grid-toggle').setAttribute('aria-pressed', String(visible)); $('grid-toggle').setAttribute('aria-label', visible ? 'Bauflächen ausblenden' : 'Bauflächen einblenden'); view?.setGrid(visible); });
 $('reload').addEventListener('click', () => location.reload());
+for (const [id, config] of Object.entries(PROBE_BUILDINGS)) { const option = document.createElement('option'); option.value = id; option.textContent = config.name; $('probe-type').append(option); }
+$('probe-type').addEventListener('change', () => { if (!busy) view?.setProbeType($('probe-type').value); });
+$('resource-toggle').addEventListener('click', () => { const visible = $('resource-toggle').getAttribute('aria-pressed') !== 'true'; $('resource-toggle').setAttribute('aria-pressed', String(visible)); $('resource-toggle').setAttribute('aria-label', visible ? 'Vorkommenskarte ausblenden' : 'Vorkommenskarte einblenden'); $('resource-legend').hidden = !visible; view?.setResourceMap(visible); });
 $('site-build').addEventListener('click', () => {
   if (busy) return; const result = view?.buildSelected(); if (!result) return;
   if (result.issue) { $('site-feedback').textContent = result.issue; return; }
-  if (saveProbe()) $('site-feedback').textContent = 'Habitat gesetzt. Die Grundfläche ist geräumt.';
+  if (saveProbe()) $('site-feedback').textContent = `${PROBE_BUILDINGS[result.building.type].name} gesetzt · Fläche geräumt.`;
   $('site-demolish').focus({ preventScroll: true });
 });
 $('site-demolish').addEventListener('click', () => {
   if (busy || !view?.demolishSelected()) return;
-  if (saveProbe()) $('site-feedback').textContent = 'Probebau entfernt. Die Fläche bleibt geräumt.';
+  if (saveProbe()) $('site-feedback').textContent = 'Probebau entfernt · Fläche bleibt geräumt.';
   $('site-build').focus({ preventScroll: true });
 });
 $('construction-reset').addEventListener('click', () => {
