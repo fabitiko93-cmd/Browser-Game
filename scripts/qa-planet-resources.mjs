@@ -100,7 +100,7 @@ try {
   checks.push('An extractor remains buildable on ordinary ice and yields only a small positive background output');
   await page.goto(`${base}/planet-preview.html?debug=1&seed=20&regions=5&region=region-2`,{waitUntil:'domcontentloaded'});await loaded();
   const ore=await choose('mine');assert.ok(ore);const first=await select('mine',ore);assert.ok(first.production.daily>ice.production.daily*20);
-  await page.locator('#resource-toggle').click();assert.equal(await page.locator('#resource-toggle').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#resource-legend').isVisible(),true);await inspect('resource-map-390');
+  await page.locator('#resource-toggle').click();assert.equal(await page.locator('#resource-toggle').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#selection-legend').isVisible(),true);await inspect('resource-map-390');
   await page.locator('#resource-toggle').click();for(let i=0;i<4;i++)await page.locator('#zoom-in').click();
   await page.locator('#site-build').click();await assertBatches();await inspect('ore-extractor-390');
   const firstId=await page.evaluate(()=>ORBIT_PLANET_DEBUG.site.building.id), alone=await page.evaluate(()=>ORBIT_PLANET_DEBUG.site.production.daily);
