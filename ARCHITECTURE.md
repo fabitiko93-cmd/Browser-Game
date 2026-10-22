@@ -15,6 +15,7 @@
 | `src/planet-colony.js` | Unterschiedliche Erschließungswege und vorbereitete Bauflächen je Landschaft; gemeinsame Freihaltung im Bewuchs |
 | `src/planet-construction.js` / `src/planet-construction-scene.js` | Gesondert gespeicherte Bauprobe: ganze Fundamente prüfen, echte Modellgrenzen räumen, große Felsen sperren und instanzierte Vegetation ohne Nachbarverluste aktualisieren |
 | `src/planet-resources.js` / `src/planet-resource-scene.js` | Seedbasierte Erz-, Kristall- und Wärmefelder mit weichen Rändern, geringem Grundertrag, geteiltem Förderumfeld, sichtbaren Merkmalen, Vorkommenskarte und drei Förderanlagen in der Bauprobe |
+| `src/planet-selection-scene.js` | Maßstäbliche Gebäudegeister, gefüllte Baugrundflächen und vollständige Vorkommensauswahl mit dichtegetreuen Farbstufen und Konturen |
 | `src/planet-biomes.js` | Klimabezogene Vegetation und unabhängige Biosphären: Erdflora, Sporenwald und Korallenflora auf identischer Seed-Geografie |
 | `src/planet-environment.js` | Gemeinsame Feuchte-/Wald-/Wiesenfelder, unabhängig gesäte Felsen, Bäume und Unterwuchs |
 | `src/planet-flora.js` | Vollständige 3D-Baumkronen, zwei kamerabezogene Detailstufen, instanzierter Unterwuchs und räumliche Gruppen für Frustum-Culling |

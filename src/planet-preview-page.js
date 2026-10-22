@@ -68,16 +68,18 @@ function updateRegion() {
 }
 function siteInfo(site) {
   app.dataset.site = String(!!site);
+  $('selection-legend').hidden = !site?.field;
+  if (site?.field) { $('selection-resource').textContent = RESOURCE_TYPES[site.field.type].field; $('selection-legend').style.setProperty('--deposit-color', RESOURCE_TYPES[site.field.type].color); }
   if (!site) { selectedSite = null; $('site-info').hidden = true; return; }
   selectedSite = site; $('site-info').hidden = false; const info = $('site-summary'); info.replaceChildren(); $('site-feedback').textContent = '';
   const assessment = site.construction, counts = assessment?.counts;
   const config = PROBE_BUILDINGS[site.building?.type ?? $('probe-type').value];
-  const heading = document.createElement('strong'); heading.textContent = site.building ? `${config.name} · Bauprobe` : site.water ? 'Wasserfläche' : assessment?.issue ? 'Grundfläche nicht bebaubar' : 'Geeignete Baufläche'; info.append(heading, document.createElement('br'));
+  const heading = document.createElement('strong'); heading.textContent = site.resourceOnly ? `${RESOURCE_TYPES[site.field.type].field} · Vorkommen` : site.building ? `${config.name} · Bauprobe` : site.water ? 'Wasserfläche' : assessment?.issue ? 'Grundfläche nicht bebaubar' : 'Geeignete Baufläche'; info.append(heading, document.createElement('br'));
   const resource = [...new Set(site.deposits)].map(id => RESOURCE_TYPES[id]?.field).filter(Boolean).join(' / ') || site.resources?.substrate || 'Kein erfasstes Vorkommen';
   info.append(document.createTextNode(`${resource} · Neigung ${Math.round(Math.atan(site.slope) * 180 / Math.PI)}°${site.coastDistance != null ? ` · Küste ca. ${Math.round(site.coastDistance)} m` : ''}`));
-  $('site-build').hidden = !!site.building; $('site-build').disabled = !assessment || !!assessment.issue; $('site-demolish').hidden = !site.building;
+  $('site-build').hidden = !!site.building || site.resourceOnly; $('site-build').disabled = !assessment || !!assessment.issue; $('site-demolish').hidden = !site.building;
   $('site-build').textContent = `${config.name} setzen · Probe`;
-  $('construction-detail').textContent = site.building ? '4 × 4 Rasterfelder · 8 × 8 m' : assessment?.issue ?? `8 × 8 m · Räumung: ${counts.tree} Bäume, ${counts.plant} Pflanzen, ${counts.stone} kleine Steine.`;
+  $('construction-detail').textContent = site.resourceOnly ? 'Vorkommen außerhalb des Baugebiets · gesamter Dichtebereich markiert.' : site.building ? '4 × 4 Rasterfelder · 8 × 8 m' : assessment?.issue ? `8 × 8 m · Rote Bauvorschau: ${assessment.issue}` : `8 × 8 m · 4 × 4 Rasterfelder · Räumung: ${counts.tree} Bäume, ${counts.plant} Pflanzen, ${counts.stone} kleine Steine.`;
   $('site-production').hidden = !site.production; $('site-production').replaceChildren();
   if (site.production) {
     const p = site.production, amount = value => value.toLocaleString('de-DE', { maximumFractionDigits: 2 });

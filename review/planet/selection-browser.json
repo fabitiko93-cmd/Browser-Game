@@ -1,0 +1,80 @@
+{
+  "preview": {
+    "types": [
+      "mine"
+    ],
+    "field": "resource-0",
+    "contours": 5,
+    "footprint": {
+      "minX": -2,
+      "minZ": 28,
+      "maxX": 6,
+      "maxZ": 36
+    }
+  },
+  "outside": {
+    "x": 66,
+    "z": -18,
+    "height": 3.890676687321343,
+    "density": 0.021427921706742077
+  },
+  "blocked": {
+    "x": -38.063329425640404,
+    "z": 13.048693514429033
+  },
+  "frames": [
+    {
+      "label": "building-preview-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stage": 290.4375,
+      "buildings": 0,
+      "clearings": 0,
+      "calls": 31,
+      "triangles": 241234,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 785,
+          "bottom": 829,
+          "height": 44
+        },
+        {
+          "id": "site-build",
+          "top": 718,
+          "bottom": 762,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "building-preview-320",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "stage": 207.65625,
+      "buildings": 0,
+      "clearings": 0,
+      "calls": 31,
+      "triangles": 241234,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 514,
+          "bottom": 558,
+          "height": 44
+        },
+        {
+          "id": "site-build",
+          "top": 456,
+          "bottom": 500,
+          "height": 44
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

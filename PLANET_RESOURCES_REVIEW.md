@@ -23,3 +23,13 @@ The planet probe now has ore, crystal and geothermal deposits, three buildable e
 ## Current scope
 
 This implements the agreed soft resource binding in the 3D planet probe. Strategic colony production remains separate until those colonies are connected. Physical iPhone performance and Safari-specific behaviour are not measured by software Chromium QA.
+
+## Selection and building preview
+
+Selecting a buildable tile now shows the actual chosen building model at its eventual scale, a filled 8 × 8 metre foundation and a frame around its complete height and width. Blocked placements use red. Built structures retain their complete footprint outline; a new ghost returns after demolition.
+
+Tapping a deposit highlights its complete dry density field, including the weak tail beyond the nominal outline and beyond the construction square. Four color levels and four density contours derive from the same density function used by production. Stronger overlapping deposits take selection priority; the selected extractor breaks equal-density ties. The legend identifies the selected resource and its intensity scale. Resource inspection outside the square has no building action or construction marker.
+
+Three additional tests compare every ghost's bounds against its eventual model, verify occupied footprint dimensions and blocked colors, and check overlapping selection, all four color levels and true density contours beyond the build square. The complete suite contains 412 tests. Build and build consistency checks pass for 277 generated files.
+
+Actual software WebGL QA exercises all four ghost types, resource selection, 320 × 568 and 390 × 844 portrait layouts, non-overlapping 44-pixel touch actions, building, demolition, blocked placement, a real terrain click outside the grid, deselection and subsequent building-type changes. No page, asset or shader errors were recorded. Reproduce with `scripts/qa-planet-selection.mjs`; screenshots and inspection data are in `review/planet/selection-*`.

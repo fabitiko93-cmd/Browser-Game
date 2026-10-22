@@ -16,8 +16,9 @@ import { regionSkyProfile, createRegionSky } from './planet-sky.js';
 import { regionHorizonGeometry } from './planet-horizon.js';
 import { emptyConstruction, assessConstruction, placeConstruction, demolishConstruction } from './planet-construction.js';
 import { footprintBounds, indexConstructionObjects, applyConstructionClearings, createProbeHabitat } from './planet-construction-scene.js';
-import { sampleResources, extractorProduction } from './planet-resources.js';
+import { sampleResources, extractorProduction, PROBE_BUILDINGS } from './planet-resources.js';
 import { blendResourceGround, createResourcePresentation, createProbeExtractor } from './planet-resource-scene.js';
+import { resourceAt, createBuildingPreview, createResourceSelection } from './planet-selection-scene.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
 const point = (latitude, longitude, radius = 2.22) => {
@@ -255,7 +256,7 @@ export class PlanetPreviewScene {
     this.clearGroup(this.land); this.forest = null; this.terrain = null; this.buildGrid = null; this.siteMark = null; this.waterTime = null;
     this.environmentRecipe = createRegionEnvironment(region);
     this.construction = construction; this.constructionObjects = []; this.probeBuildings = null; this.constructionMark = null; this.selectedCell = null;
-    this.resourceSigns = null; this.resourceTime = { value: 0 };
+    this.resourceSigns = null; this.resourceTime = { value: 0 }; this.selectedPoint = null; this.resourceSelection = null; this.selectionFieldId = null; this.buildingPreview = null;
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], biome = regionBiome(region), living = !!biome, airless = region.module === 'regolith';
     const skyProfile = this.skyProfile = regionSkyProfile(region); this.activeSkyTexture = null;
@@ -486,7 +487,8 @@ export class PlanetPreviewScene {
     this.siteMark = new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: 0xf5cc7c, transparent: true, opacity: .95, depthWrite: false }));
     this.siteMark.visible = false; this.land.add(this.siteMark);
     this.constructionMark = new THREE.LineLoop(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(32 * 3), 3)), new THREE.LineBasicMaterial({ color: '#e9c580', transparent: true, opacity: .8, depthWrite: false }));
-    this.constructionMark.visible = false; this.land.add(this.constructionMark);
+    this.constructionMark.visible = false; this.constructionMark.material.depthTest = false; this.constructionMark.renderOrder = 32; this.land.add(this.constructionMark);
+    this.buildingPreview = new THREE.Group(); this.land.add(this.buildingPreview);
   }
 
   syncConstruction() {
@@ -517,8 +519,8 @@ export class PlanetPreviewScene {
   buildingAt(x, z) { return this.construction?.buildings.find(b => x >= b.footprint.minX && x < b.footprint.maxX && z >= b.footprint.minZ && z < b.footprint.maxZ) ?? null; }
 
   refreshSelected() {
-    if (!this.selectedCell) return;
-    const { x, z } = this.selectedCell, assessment = this.constructionSite(x, z), building = this.buildingAt(x, z);
+    const point = this.selectedCell ?? this.selectedPoint; if (!point) return;
+    const { x, z } = point, resourceOnly = !this.selectedCell, assessment = resourceOnly ? { footprint: null, issue: 'Außerhalb des Baugebiets.', counts: { tree: 0, plant: 0, stone: 0 } } : this.constructionSite(x, z), building = resourceOnly ? null : this.buildingAt(x, z);
     this.siteMark?.material.color.set(assessment.issue && !building ? '#ed927b' : '#e9c580');
     if (this.constructionMark) {
       const f = building?.footprint ?? assessment.footprint; this.constructionMark.visible = !!f;
@@ -530,7 +532,18 @@ export class PlanetPreviewScene {
     }
     const proposal = building ?? { type: this.probeType ?? 'habitat', footprint: assessment.footprint };
     const production = proposal.footprint ? extractorProduction(this.region, proposal, this.construction?.buildings ?? []) : null;
-    this.onSite?.({ ...regionSite(this.region, x, z), construction: assessment, building, resources: sampleResources(this.region, x, z), production }); this.dirty = true;
+    if (this.buildingPreview) {
+      this.clearGroup(this.buildingPreview);
+      if (!building && proposal.footprint) this.buildingPreview.add(createBuildingPreview(this.region, proposal.type, proposal.footprint, assessment.foundation, !!assessment.issue));
+    }
+    const p = this.selectedPoint ?? point, field = resourceAt(this.region, p.x, p.z, PROBE_BUILDINGS[proposal.type]?.resource);
+    if ((field?.id ?? null) !== this.selectionFieldId) {
+      if (this.resourceSelection) { this.clearGroup(this.resourceSelection); this.land.remove(this.resourceSelection); }
+      this.resourceSelection = field ? createResourceSelection(this.region, field) : null;
+      if (this.resourceSelection) this.land.add(this.resourceSelection);
+      this.selectionFieldId = field?.id ?? null;
+    }
+    this.onSite?.({ ...regionSite(this.region, x, z), construction: assessment, building, resourceOnly, field, resources: sampleResources(this.region, x, z), production }); this.dirty = true;
   }
 
   pick(event) {
@@ -539,7 +552,17 @@ export class PlanetPreviewScene {
     const bounds = this.canvas.getBoundingClientRect(); this.pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
     this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0];
     const cell = hit && regionBuildCell(hit.point.x, hit.point.z);
-    if (!cell) { this.selectedCell = null; this.siteFocus = null; this.siteMark.visible = false; if (this.constructionMark) this.constructionMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
+    this.selectedPoint = hit ? { x: hit.point.x, z: hit.point.z } : null;
+    if (!cell) {
+      this.selectedCell = null; this.siteFocus = null; this.siteMark.visible = false; if (this.constructionMark) this.constructionMark.visible = false;
+      if (hit && resourceAt(this.region, hit.point.x, hit.point.z)) this.refreshSelected();
+      else {
+        if (this.buildingPreview) this.clearGroup(this.buildingPreview);
+        if (this.resourceSelection) { this.clearGroup(this.resourceSelection); this.land.remove(this.resourceSelection); }
+        this.resourceSelection = null; this.selectionFieldId = null; this.selectedPoint = null; this.onSite?.(null);
+      }
+      this.dirty = true; return;
+    }
     const { x, z } = cell;
     const site = regionSite(this.region, x, z);
     const position = this.siteMark.geometry.attributes.position, half = REGION_BUILD_GRID.cellSize / 2;
