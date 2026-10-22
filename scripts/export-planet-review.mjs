@@ -5,16 +5,17 @@ import { resolve } from 'node:path';
 import { PlaneGeometry, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three';
 import { createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight, regionGroundHeight, regionCreek, regionLake, ROCK_ASSETS, REGION_MODULES } from '../src/planet-blueprint.js';
 import { regionOverviewPose, constrainRegionCamera } from '../src/planet-camera.js';
-import { floraChunkKey, floraChunkCenter, floraLodLevel, TREE_CHUNK_SIZE } from '../src/planet-flora.js';
-import { regionBiome } from '../src/planet-biomes.js';
+import { floraChunkKey, floraChunkCenter, floraLodLevel, TREE_CHUNK_SIZE, CANOPY_MODELS } from '../src/planet-flora.js';
+import { regionBiome, regionBiosphere } from '../src/planet-biomes.js';
 import { planetSurfacePixels } from '../src/planet-geography.js';
-import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
+import { createRegionEnvironment, regionHabitat, FLORA_ASSETS } from '../src/planet-environment.js';
 import { rockFootprint, fitRockToGround } from '../src/planet-rocks.js';
 import { regionSkyProfile } from '../src/planet-sky.js';
 import { regionHorizonGeometry } from '../src/planet-horizon.js';
 const output = resolve(process.argv[2] ?? 'artifacts/landscapes'), seed = process.argv[3] ?? 'NEREID-3077';
 await mkdir(output, { recursive: true });
-const planet = createPlanetBlueprint(seed, { valley: process.argv[4] }), pixels = planetSurfacePixels(planet.geography);
+const biosphere = process.argv.find(a => a.startsWith('--biosphere='))?.split('=')[1] ?? 'terran';
+const planet = createPlanetBlueprint(seed, { valley: process.argv[4], biosphere }), pixels = planetSurfacePixels(planet.geography, 1024, 512, regionBiosphere(planet));
 await writeFile(resolve(output, 'globe.rgba'), pixels.data);
 await writeFile(resolve(output, 'planet.json'), JSON.stringify(planet));
 const { models: lods } = JSON.parse(await readFile('web/models/planets/rock-lods.json', 'utf8'));
@@ -39,12 +40,12 @@ for (const r of planet.regions.filter(r => !process.argv.includes('--valley-only
   const target = [pose.target.x, pose.target.y, pose.target.z], camera = [pose.eye.x, pose.eye.y, pose.eye.z];
   const chunks = new Map();
   for (const t of [...environment.trees, ...environment.plants]) {
-    const tree = ['oak','aspen','pine'].includes(t.model), key = `${t.model}/${floraChunkKey(t, t.model === 'fern' ? 1 : 2, tree ? TREE_CHUNK_SIZE : 64)}`;
+    const tree = CANOPY_MODELS.includes(t.model), key = `${t.model}/${floraChunkKey(t, t.model === 'fern' ? 1 : 2, tree ? TREE_CHUNK_SIZE : 64)}`;
     if (!chunks.has(key)) chunks.set(key, []); chunks.get(key).push(t);
   }
   for (const plants of chunks.values()) {
     const d = floraChunkCenter(plants).distanceTo(new Vector3(...camera));
-    for (const t of plants) t.renderLod = ['oak','aspen','pine'].includes(t.model) ? floraLodLevel(d) : d < 260 ? 0 : -1;
+    for (const t of plants) t.renderLod = CANOPY_MODELS.includes(t.model) ? floraLodLevel(d) : d < 260 ? 0 : -1;
   }
   const rockModels = lods;
   const rocks = [...region.rocks, ...environment.rocks].map(rock => {
@@ -58,6 +59,6 @@ for (const r of planet.regions.filter(r => !process.argv.includes('--valley-only
   const roads = site.roads.map(path => path.map(([x,z]) => [x, regionGroundHeight(region,x,z)+.05,z]));
   const pads = site.pads.map(([x,z,w,d]) => {const g=new PlaneGeometry(w,d,Math.ceil(w/2),Math.ceil(d/2));g.rotateX(-Math.PI/2);g.translate(x,0,z);const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,regionGroundHeight(region,p.getX(i),p.getZ(i))+.05);const result={positions:Array.from(p.array),indices:Array.from(g.index.array)};g.dispose();return result;});
   const horizonGeometry = regionHorizonGeometry(region), horizon = { positions: Array.from(horizonGeometry.attributes.position.array), indices: Array.from(horizonGeometry.index.array), colors: Array.from(horizonGeometry.attributes.color.array) }; horizonGeometry.dispose();
-  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, horizon, sky:regionSkyProfile(region), camera, target, fov:pose.fov, creek, lake:regionLake(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, module:REGION_MODULES[region.module] }));
+  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, horizon, sky:regionSkyProfile(region), camera, target, fov:pose.fov, creek, lake:regionLake(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, floraAssets:FLORA_ASSETS, module:REGION_MODULES[region.module] }));
   console.log(r.id, biome.name, environment.trees.length, 'trees');
 }

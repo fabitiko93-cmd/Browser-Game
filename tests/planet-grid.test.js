@@ -18,7 +18,7 @@ test('the build overlay composes with living terrain and preserves shared shader
     assert.equal(s.uniforms.forestNormal.value, textures.forestNormal);
     assert.equal(s.uniforms.buildGridEnabled, state.enabled);
     assert.equal(s.uniforms.buildGridPixelRatio.value, 1.4);
-    assert.ok(material.customProgramCacheKey().includes('orbit-climate-ground-v4'));
+    assert.ok(material.customProgramCacheKey().includes('orbit-climate-ground-v5'));
   }
   assert.equal(material.depthTest, true); assert.equal(material.depthWrite, true); assert.equal(material.transparent, false);
   material.dispose();

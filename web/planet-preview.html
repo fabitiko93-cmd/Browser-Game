@@ -36,7 +36,10 @@
     <div class="region-detail"><div><span class="eyebrow" id="region-kind">KÜSTENEBENE</span><h2 id="region-name">Meridian</h2></div><span class="region-status" id="region-status">Erschlossen</span></div>
     <p id="region-context" class="region-context"></p>
     <p id="region-description" class="region-description"></p>
-    <div class="valley-controls" id="valley-controls" hidden><label for="valley-select">Tallandschaft</label><select id="valley-select" aria-label="Tallandschaft wählen"></select></div>
+    <div class="comparison-controls" id="comparison-controls" data-valley="false">
+      <div class="valley-controls"><label for="biosphere-select">Lebenswelt</label><select id="biosphere-select" aria-label="Lebenswelt vergleichen"></select></div>
+      <div class="valley-controls" id="valley-controls" hidden><label for="valley-select">Tallandschaft</label><select id="valley-select" aria-label="Tallandschaft wählen"></select></div>
+    </div>
     <div class="site-info" id="site-info" hidden role="status"></div>
     <button class="primary-button" id="region-enter">Region betreten <span>↘</span></button>
     <button class="back-button" id="orbit-return" hidden>↑ Zur Planetenübersicht</button>
@@ -50,7 +53,7 @@
     <label for="region-count">Regionen</label><select id="region-count"><option value="3">3 Regionen</option><option value="4" selected>4 Regionen</option><option value="5">5 Regionen</option></select>
     <button class="primary-button" type="submit">Musterplanet erzeugen <span>↗</span></button>
   </form>
-  <details><summary>Verwendete Assets</summary><p>Erdähnlicher Globus und Regionen verwenden dieselbe Seed-Geografie. Referenzkarten für trockene/luftlose Welten und Wolken: Solar System Scope / INOVE, CC BY 4.0. Gelände, Felsen und Unterwuchs: Poly Haven, CC0. Vollständige 3D-Bäume: EZ-Tree von Daniel Greenheck, MIT; Rindentexturen von ambientCG, CC0.</p><p>Die drei Tallandschaften verwenden vorbereitete Gelände- und Vegetationskarten. Der Welt-Seed wählt die Landschaft und die örtlichen Platzierungen. Wege und vorbereitete Bauflächen zeigen die Erschließung ohne Gebäudemodelle; die vollständige Koloniewirtschaft ist noch nicht angebunden.</p><a href="./models/planets/provenance.json" target="_blank" rel="noopener">Herkunft der einzelnen Dateien</a></details>
+  <details><summary>Verwendete Assets</summary><p>Globus und Regionen verwenden dieselbe Seed-Geografie. Referenzkarten für trockene/luftlose Welten und Wolken: Solar System Scope / INOVE, CC BY 4.0. Gelände, Felsen, Unterwuchs und Himmelsaufnahmen: Poly Haven, CC0. Vollständige 3D-Bäume: EZ-Tree von Daniel Greenheck, MIT; Rindentexturen von ambientCG, CC0. Alien-Flora: eigene ORBIT-Modelle.</p><p>Die Lebenswelt lässt sich bei gleichem Seed und gleicher Landschaft vergleichen. Klima, Gewässer und Bauflächen bleiben dabei erhalten. Die vollständige Koloniewirtschaft ist noch nicht angebunden.</p><a href="./models/planets/provenance.json" target="_blank" rel="noopener">Herkunft der einzelnen Dateien</a></details>
 </dialog>
 <script type="module" src="./build/planet-preview-page.js"></script>
 </body>

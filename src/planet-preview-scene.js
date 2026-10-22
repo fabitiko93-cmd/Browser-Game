@@ -5,8 +5,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches, regionCreek, regionLake } from './planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat, FLORA_ASSETS } from './planet-environment.js';
-import { readFloraVariants, addFloraBatches, readFloraLods, updateFloraLods } from './planet-flora.js';
-import { regionBiome } from './planet-biomes.js';
+import { readFloraVariants, addFloraBatches, readFloraLods, updateFloraLods, CANOPY_MODELS } from './planet-flora.js';
+import { regionBiome, regionBiosphere } from './planet-biomes.js';
 import { planetSurfacePixels } from './planet-geography.js';
 import { blendHabitatGround } from './planet-ground-material.js';
 import { blendBuildGrid } from './planet-grid.js';
@@ -173,7 +173,8 @@ export class PlanetPreviewScene {
     this.clearGroup(this.globe); this.clearGroup(this.land); this.forest = null; this.terrain = null; this.buildGrid = null; this.siteMark = null; this.clouds = null; this.environmentRecipe = null;
     const preset = PLANET_PRESETS[planet.preset];
     const layers = planet.preset === 'temperate' ? await this.texture('earth-clouds.jpg') : null;
-    const pixels = planet.geography ? planetSurfacePixels(planet.geography) : null;
+    const biology = regionBiosphere(planet);
+    const pixels = planet.geography ? planetSurfacePixels(planet.geography, 1024, 512, biology) : null;
     const map = pixels ? new THREE.DataTexture(pixels.data, pixels.width, pixels.height) : await this.texture(preset.globe, { color: true });
     if (pixels) { map.colorSpace = THREE.SRGBColorSpace; map.magFilter = map.minFilter = THREE.LinearFilter; map.wrapS = THREE.RepeatWrapping; map.needsUpdate = true; }
     if (generation !== this.generation || this.disposed) { if (pixels) map.dispose(); return; }
@@ -186,7 +187,7 @@ export class PlanetPreviewScene {
       this.globe.add(this.clouds);
     }
     if (preset.atmosphere) this.globe.add(new THREE.Mesh(new THREE.SphereGeometry(2.29, 64, 48), new THREE.ShaderMaterial({
-      uniforms: { tint: { value: new THREE.Color(preset.atmosphere) } }, vertexShader: vertex,
+      uniforms: { tint: { value: new THREE.Color(preset.atmosphere).multiply(new THREE.Color(biology.skyTint ?? '#ffffff')) } }, vertexShader: vertex,
       fragmentShader: 'varying vec3 n;varying vec3 p;uniform vec3 tint;void main(){vec3 v=normalize(cameraPosition-p);float rim=pow(1.-abs(dot(normalize(n),v)),3.5);float light=smoothstep(-.3,.6,dot(normalize(n),normalize(vec3(9.,5.,7.))));gl_FragColor=vec4(tint,rim*light*.72);}',
       side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
     })));
@@ -247,7 +248,7 @@ export class PlanetPreviewScene {
     this.stars.visible = airless; this.renderer.toneMappingExposure = living ? .94 : .88;
     const warm = region.module === 'basin';
     this.sun.color.set(living ? '#fff3df' : warm ? '#ffe0bb' : region.module === 'upland' ? '#e8f1ff' : '#fff0d8');
-    this.hemi.color.set(biome?.sky ?? module.sky); this.hemi.groundColor.set(living ? '#536348' : module.palette[0]);
+    this.hemi.color.set(biome?.sky ?? module.sky); this.hemi.groundColor.set(biome?.alien ? biome.moss : living ? '#536348' : module.palette[0]);
     this.sun.position.set(-70, 95, region.module === 'upland' ? 65 : -45); this.sun.target.position.set(0, 0, 0); this.sun.intensity = airless ? 2.5 : living ? 2.6 : 2.3; this.sun.castShadow = true; this.hemi.intensity = airless ? .06 : living ? 1.1 : .85;
     if (skyProfile) {
       this.sun.position.fromArray(skyProfile.sunDirection).multiplyScalar(150); this.sun.color.set(skyProfile.sunColor); this.sun.intensity = skyProfile.sunIntensity;
@@ -262,7 +263,9 @@ export class PlanetPreviewScene {
     const [floraSets, habitatTextures, treeLodData, skyTexture] = await Promise.all([
       Promise.all(floraIds.map(id => this.vegetation(FLORA_ASSETS[id]))),
       living ? Promise.all(['meadow-color.webp', 'meadow-normal.webp', 'forest-floor-color.webp', 'forest-floor-normal.webp'].map((name, i) => this.texture(name, { color: i % 2 === 0, repeat: 1 }))) : null,
-      living ? this.treeLodData ??= fetch(new URL('tree-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Waldmodelle konnten nicht geladen werden.'); return r.json(); }) : null,
+      living ? biome.alien
+        ? this.alienLodData ??= fetch(new URL('alien-flora-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Alien-Flora konnte nicht geladen werden.'); return r.json(); })
+        : this.treeLodData ??= fetch(new URL('tree-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Waldmodelle konnten nicht geladen werden.'); return r.json(); }) : null,
       skyProfile?.file ? this.texture(skyProfile.file, { color: true }) : null
     ]);
     if (generation !== this.generation || this.disposed) return;
@@ -291,7 +294,9 @@ export class PlanetPreviewScene {
     this.rockPlacements = [];
     for (let type = 0; type < modelIds.length; type++) for (const source of assetSets[type]) {
       const rocks = region.rocks.filter(r => r.model === modelIds[type]);
-      const material = source.material.clone(); material.color.multiply(new THREE.Color(module.rockTint)); material.roughness = 1; material.envMapIntensity = .12;
+      const material = source.material.clone(), rockTint = new THREE.Color(module.rockTint);
+      if (biome?.alien) rockTint.lerp(new THREE.Color(biome.dry), .45);
+      material.color.multiply(rockTint); material.roughness = 1; material.envMapIntensity = .12;
       const batch = new THREE.InstancedMesh(source.geometry, material, rocks.length); batch.userData.sharedGeometry = true; batch.userData.rocks = true; batch.castShadow = true; batch.receiveShadow = true;
       rocks.forEach((rock, i) => {
         const pose = fitRockToGround(region, rock, source.footprint); batch.setMatrixAt(i, pose.matrix);
@@ -313,7 +318,7 @@ export class PlanetPreviewScene {
     }
     floraIds.forEach((id, i) => {
       if (treeLodData?.models[id] && !this.floraLodModels.has(id)) this.floraLodModels.set(id, readFloraLods(treeLodData.models[id]));
-      addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: ['pine', 'oak', 'aspen'].includes(id), lods: this.floraLodModels.get(id) });
+      addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: CANOPY_MODELS.includes(id), lods: this.floraLodModels.get(id) });
     });
     updateFloraLods(this.land, this.camera);
     this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
@@ -368,29 +373,34 @@ export class PlanetPreviewScene {
       if (i < segments) { const a = i * 2; indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     }
     const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({ color: '#437e80', roughness: .25, metalness: .12, envMapIntensity: .65, side: THREE.DoubleSide });
+    const waterTint = regionBiome(this.region)?.water;
+    const material = new THREE.MeshStandardMaterial({ color: waterTint ?? '#437e80', roughness: .25, metalness: .12, envMapIntensity: .65, side: THREE.DoubleSide });
     this.waterTime = { value: 0 };
     material.onBeforeCompile = shader => {
       shader.uniforms.riverTime = this.waterTime;
+      shader.uniforms.riverDeep = { value: waterTint ? new THREE.Color(waterTint).multiplyScalar(.43) : new THREE.Color().setRGB(.075, .17, .15) };
+      shader.uniforms.riverBank = { value: waterTint ? new THREE.Color(waterTint).multiplyScalar(.85) : new THREE.Color().setRGB(.24, .34, .26) };
       shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vRiverUv;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvRiverUv=uv;');
-      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vRiverUv;uniform float riverTime;').replace('#include <color_fragment>', `#include <color_fragment>
+      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vRiverUv;uniform float riverTime;uniform vec3 riverDeep;uniform vec3 riverBank;').replace('#include <color_fragment>', `#include <color_fragment>
         float edge=pow(abs(vRiverUv.x*2.-1.),3.);
         float ripple=sin(vRiverUv.y*15.-riverTime*.85+sin(vRiverUv.x*18.+vRiverUv.y*2.))*sin(vRiverUv.y*26.+vRiverUv.x*7.-riverTime*.6);
-        diffuseColor.rgb=mix(vec3(.075,.17,.15),vec3(.24,.34,.26),edge)*(1.+ripple*.055);`);
+        diffuseColor.rgb=mix(riverDeep,riverBank,edge)*(1.+ripple*.055);`);
     };
-    material.customProgramCacheKey = () => 'orbit-valley-water-v1';
+    material.customProgramCacheKey = () => 'orbit-valley-water-v2';
     const creek = new THREE.Mesh(geometry, material); creek.receiveShadow = true; this.land.add(creek);
   }
 
   addLake() {
     const lake = regionLake(this.region), geometry = new THREE.CircleGeometry(1, 96);
     geometry.rotateX(-Math.PI / 2); geometry.scale(lake.rx * 1.12, 1, lake.rz * 1.12); geometry.translate(lake.x, lake.level, lake.z);
-    const material = new THREE.MeshStandardMaterial({ color: '#386d77', roughness: .18, metalness: .17, envMapIntensity: .8 });
+    const material = new THREE.MeshStandardMaterial({ color: regionBiome(this.region)?.water ?? '#386d77', roughness: .18, metalness: .17, envMapIntensity: .8 });
     const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
   }
 
   addWater() {
     this.waterTime = { value: 0 };
+    const biology = regionBiosphere(this.region), shallow = regionBiome(this.region)?.water ?? '#398d92';
+    const deep = biology.ocean ? new THREE.Color().setRGB(...biology.ocean[0].map(v => v / 255), THREE.SRGBColorSpace) : new THREE.Color('#123e56');
     const shorePixels = new Uint8Array(256 * 4);
     for (let i = 0; i < 256; i++) {
       const z = -900 + i / 255 * 1800; let wet = -150, dry = 60;
@@ -399,7 +409,7 @@ export class PlanetPreviewScene {
     }
     const shoreMap = new THREE.DataTexture(shorePixels, 256, 1); shoreMap.magFilter = shoreMap.minFilter = THREE.LinearFilter; shoreMap.needsUpdate = true;
     const material = new THREE.ShaderMaterial({
-      uniforms: { shoreMap: { value: shoreMap }, time: this.waterTime, phase: { value: this.region.phase }, deep: { value: new THREE.Color('#123e56') }, shallow: { value: new THREE.Color('#398d92') }, sky: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky) }, hazeColor: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky).convertLinearToSRGB() }, hazeDensity: { value: this.skyProfile?.fogDensity ?? .00105 }, panorama: { value: this.activeSkyTexture }, photographed: { value: this.activeSkyTexture ? 1 : 0 }, skyYaw: { value: this.skyProfile?.yaw ?? 0 }, sunDirection: { value: this.sun.position.clone().normalize() } },
+      uniforms: { shoreMap: { value: shoreMap }, time: this.waterTime, phase: { value: this.region.phase }, deep: { value: deep }, shallow: { value: new THREE.Color(shallow) }, sky: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky) }, hazeColor: { value: new THREE.Color(this.skyProfile?.horizon ?? REGION_MODULES.coast.sky).convertLinearToSRGB() }, hazeDensity: { value: this.skyProfile?.fogDensity ?? .00105 }, panorama: { value: this.activeSkyTexture }, photographed: { value: this.activeSkyTexture ? 1 : 0 }, skyYaw: { value: this.skyProfile?.yaw ?? 0 }, sunDirection: { value: this.sun.position.clone().normalize() } },
       vertexShader: 'varying vec3 p;void main(){p=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(p,1.);}',
       fragmentShader: `uniform sampler2D shoreMap;uniform sampler2D panorama;uniform float photographed;uniform float skyYaw;uniform vec3 sunDirection;uniform float time;uniform float phase;uniform vec3 deep;uniform vec3 shallow;uniform vec3 sky;uniform vec3 hazeColor;uniform float hazeDensity;varying vec3 p;
       void main(){

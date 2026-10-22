@@ -61,7 +61,10 @@ for i,t in enumerate(r['terrain']):
 # Import the same prepared GLB variants, preserving texture cutouts and source
 # part geometry. Linked meshes instance the original data without rebuilding it.
 models={}
-for model,file in {'oak':'woodland-oak.glb','aspen':'woodland-aspen.glb','pine':'woodland-pine.glb','shrub':'woodland-shrub.glb','fern':'fern.glb','grass':'meadow-grass.glb'}.items():
+used={p['model'] for p in r['environment']['trees']+r['environment']['plants']}
+files=r.get('floraAssets',{'oak':'woodland-oak.glb','aspen':'woodland-aspen.glb','pine':'woodland-pine.glb','shrub':'woodland-shrub.glb','fern':'fern.glb','grass':'meadow-grass.glb'})
+for model,file in files.items():
+ if model not in used:continue
  before=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=os.path.join(assets,file));new=set(bpy.data.objects)-before
  variants={}
  for o in list(new):
@@ -70,17 +73,18 @@ for model,file in {'oak':'woodland-oak.glb','aspen':'woodland-aspen.glb','pine':
   while node.parent and node.parent in new:node=node.parent
   name=node.name
   variant=0
-  if model in ('oak','aspen','pine','shrub'):
+  if model in ('oak','aspen','pine','shrub') or model.startswith('xeno-'):
    for k in (0,1):
-    if f'{model}-{k}' in name:variant=k
+    if f'{model.removeprefix("xeno-")}-{k}' in name:variant=k
   elif model=='grass':
    # PH preparation names source variants grass-0/1.
    variant=1 if name.startswith('grass-b') else 0
   data=o.data.copy();data.transform(o.matrix_world);variants.setdefault(variant,[]).append(data)
  for o in list(new):bpy.data.objects.remove(o,do_unlink=True)
  models[model]=variants
-lods=json.load(open(os.path.join(assets,'tree-lods.json')))['models'];lodmodels={}
+lods=json.load(open(os.path.join(assets,'alien-flora-lods.json' if r['biome'].get('alien') else 'tree-lods.json')))['models'];lodmodels={}
 for model,variants in lods.items():
+ if model not in models:continue
  lodmodels[model]={}
  for variant,levels in enumerate(variants):
   lodmodels[model][variant]=[]
@@ -88,6 +92,9 @@ for model,variants in lods.items():
    parts=[]
    for k,part in enumerate(level):
     data=bpy.data.meshes.new(f'{model}-lod');data.from_pydata([xyz(part['position'][i:i+3]) for i in range(0,len(part['position']),3)],[],[part['index'][i:i+3] for i in range(0,len(part['index']),3)]);data.materials.append(models[model][variant][0].materials[k]);uv=data.uv_layers.new()
+    if part.get('color'):
+     a=data.color_attributes.new(name='Color',type='FLOAT_COLOR',domain='POINT')
+     for j in range(len(part['color'])//3):a.data[j].color=(*part['color'][j*3:j*3+3],1)
     for poly in data.polygons:
      poly.use_smooth=True
      for loop in poly.loop_indices:

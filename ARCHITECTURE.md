@@ -12,7 +12,7 @@
 | `src/planet-sky.js` / `src/planet-sky-data.js` / `src/planet-horizon.js` | Unendliche, regional abgestimmte Himmelsaufnahmen, passende Sonne/Reflexionen und anschließende Fernlandschaft |
 | `src/planet-geography.js` | Gemeinsame sphärische Kontinente, Höhen-/Klimafelder, geeignete Regionskoordinaten und Globusfarben |
 | `src/planet-colony.js` | Unterschiedliche Erschließungswege und vorbereitete Bauflächen je Landschaft; gemeinsame Freihaltung im Bewuchs |
-| `src/planet-biomes.js` | Klimabezogene Vegetation, Bodenfarben, Baum-/Schneegrenzen und Atmosphäre der vier Landschaften |
+| `src/planet-biomes.js` | Klimabezogene Vegetation und unabhängige Biosphären: Erdflora, Sporenwald und Korallenflora auf identischer Seed-Geografie |
 | `src/planet-environment.js` | Gemeinsame Feuchte-/Wald-/Wiesenfelder, unabhängig gesäte Felsen, Bäume und Unterwuchs |
 | `src/planet-flora.js` | Vollständige 3D-Baumkronen, zwei kamerabezogene Detailstufen, instanzierter Unterwuchs und räumliche Gruppen für Frustum-Culling |
 | `src/planet-grid.js` | Direkt auf dem Gelände gezeichnetes, pixelbreites Bauraster mit Hauptlinien und Außenrand; keine zusätzlichen Planungsgeometrien |

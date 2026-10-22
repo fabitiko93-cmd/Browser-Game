@@ -1,12 +1,14 @@
 import { BoxGeometry, Mesh, ShaderMaterial, BackSide, Color, Vector3 } from 'three';
 import { PLANET_SKIES } from './planet-sky-data.js';
 import { REGION_MODULES } from './planet-blueprint.js';
+import { regionBiosphere } from './planet-biomes.js';
 
 // Presentation only: fixed daytime weather, never a new geography/save recipe.
 export function regionSkyProfile(region) {
   if (region.preset === 'lunar' || region.module === 'regolith') return null;
-  const earth = region.preset === 'temperate';
-  const id = earth ? region.module === 'caldera' || ((region.climate?.moisture ?? 0) > .88 && (region.climate?.temperatureC ?? 20) < 10) ? 'overcast' : 'fair' : 'dust';
+  const earth = region.preset === 'temperate', biology = regionBiosphere(region);
+  const weather = earth ? region.module === 'caldera' || ((region.climate?.moisture ?? 0) > .88 && (region.climate?.temperatureC ?? 20) < 10) ? 'overcast' : 'fair' : 'dust';
+  const id = biology.alien ? `${region.biosphere}-${weather}` : weather, overcast = weather === 'overcast';
   const source = PLANET_SKIES[id], module = REGION_MODULES[region.module];
   const azimuth = -2.57 + (region.rotation ?? 0) * .2 + Math.sin((region.latitude ?? 0) * Math.PI / 180) * .15;
   const elevation = source?.elevation ?? .65;
@@ -14,10 +16,10 @@ export function regionSkyProfile(region) {
     id, file: source?.file ?? null, yaw: azimuth - (source?.azimuth ?? 0),
     horizon: source?.horizon ?? module.fog, top: module.sky,
     sunDirection: [Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation), Math.cos(elevation) * Math.sin(azimuth)],
-    sunColor: earth ? '#fff3df' : '#ffe1b0', sunIntensity: id === 'overcast' ? .8 : earth ? 2.6 : 2.3,
-    ambientColor: id === 'overcast' ? '#c7d3df' : earth ? '#b7d0e8' : '#c4ab94',
-    ambientIntensity: id === 'overcast' ? 1.45 : earth ? 1.05 : .85,
-    fogDensity: id === 'overcast' ? .00125 : earth ? region.module === 'upland' ? .00085 : .00105 : .0015
+    sunColor: region.biosphere === 'coral' ? '#ffe1b7' : region.biosphere === 'spore' ? '#e7f4e6' : earth ? '#fff3df' : '#ffe1b0', sunIntensity: overcast ? .8 : earth ? 2.6 : 2.3,
+    ambientColor: biology.alien ? region.biosphere === 'spore' ? '#a9c6ce' : '#c8bfca' : overcast ? '#c7d3df' : earth ? '#b7d0e8' : '#c4ab94',
+    ambientIntensity: overcast ? 1.45 : earth ? 1.05 : .85,
+    fogDensity: overcast ? .00125 : earth ? region.module === 'upland' ? .00085 : .00105 : .0015
   };
 }
 

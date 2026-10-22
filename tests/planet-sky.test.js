@@ -75,7 +75,8 @@ test('distant landscape joins every rendered boundary vertex and stays outside t
 
 test('mobile sky assets have official CC0 provenance and verified output hashes', async () => {
   const provenance = JSON.parse(await readFile('web/models/planets/sky-provenance.json', 'utf8'));
-  assert.equal(provenance.length, 2);
+  assert.equal(provenance.length, Object.keys(PLANET_SKIES).length);
+  assert.equal(provenance.filter(r => !r.derivedFrom).length, 2);
   for (const record of provenance) {
     const bytes = await readFile('web/models/planets/' + record.file);
     assert.equal(record.license, 'CC0-1.0'); assert.ok(record.download.startsWith('https://dl.polyhaven.org/'));

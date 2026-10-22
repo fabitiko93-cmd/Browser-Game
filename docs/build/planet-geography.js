@@ -71,9 +71,17 @@ export function choosePlanetLocations(surface, count = 4) {
   }
   return selected;
 }
-export function surfaceColor(sample, latitude) {
+export function surfaceColor(sample, latitude, biology = null) {
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * clamp(t));
-  if (sample.ocean) return mix(mix([20, 59, 79], [49, 126, 142], smooth(-.15, -.008, sample.land)), [220, 230, 230], smooth(79, 88, Math.abs(latitude)));
+  if (sample.ocean) return mix(mix(biology?.ocean?.[0] ?? [20, 59, 79], biology?.ocean?.[1] ?? [49, 126, 142], smooth(-.15, -.008, sample.land)), [220, 230, 230], smooth(79, 88, Math.abs(latitude)));
+  if (biology?.globe) {
+    const b = biology.globe;
+    let color = mix(b.dry, b.wet, smooth(.25, .85, sample.moisture));
+    color = mix(b.cold, color, smooth(-3, 12, sample.temperatureC));
+    color = mix(color, b.rock, smooth(700, 2100, sample.elevationM) * .7);
+    color = mix(color, [224, 231, 227], smooth(-3, -12, sample.temperatureC) * .92);
+    return mix(b.sand, color, smooth(0, .018, sample.land));
+  }
   const warm = mix([102, 128, 70], [53, 92, 57], smooth(.35, .8, sample.moisture));
   const cold = mix([116, 127, 106], [67, 96, 77], sample.moisture);
   let color = mix(cold, warm, smooth(-3, 12, sample.temperatureC));
@@ -84,12 +92,12 @@ export function surfaceColor(sample, latitude) {
   color = mix([177, 172, 126], color, smooth(0, .018, sample.land));
   return color;
 }
-export function planetSurfacePixels(surface, width = 1024, height = 512) {
+export function planetSurfacePixels(surface, width = 1024, height = 512, biology = null) {
   const data = new Uint8Array(width * height * 4);
   for (let j = 0; j < height; j++) for (let i = 0; i < width; i++) {
     // DataTexture row zero is the south pole. SphereGeometry u=.5 is longitude 0.
     const latitude = -90 + (j + .5) / height * 180, longitude = -180 + (i + .5) / width * 360;
-    const s = samplePlanetSurface(surface, latitude, longitude), color = surfaceColor(s, latitude);
+    const s = samplePlanetSurface(surface, latitude, longitude), color = surfaceColor(s, latitude, biology);
     const lat = latitude * rad, lon = longitude * rad, x = Math.cos(lat) * Math.cos(lon), y = Math.sin(lat), z = Math.cos(lat) * Math.sin(lon);
     const grain = sphereNoise(surface.seed, x * 77, y * 77, z * 77, 13) * .6 + sphereNoise(surface.seed, x * 233, y * 233, z * 233, 14) * .4 - .5;
     const shade = s.ocean ? .99 + grain * .015 : .94 + s.ridge * .1 + grain * .4;

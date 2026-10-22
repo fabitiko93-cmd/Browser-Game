@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 export const TREE_CHUNK_SIZE = 160;
+export const CANOPY_MODELS = Object.freeze(['oak', 'aspen', 'pine', 'xeno-spore', 'xeno-coral']);
 
 // The prepared meshes are one metre high, rooted at y=0. Tree transforms stay
 // upright on gentle slopes; terrain is never used to warp a trunk or building.
@@ -30,6 +31,7 @@ export function readFloraLods(source) {
   return source.map(variant => variant.map(level => level.map(part => {
     const g = new THREE.BufferGeometry();
     for (const [name, width] of [['position', 3], ['normal', 3], ['uv', 2]]) g.setAttribute(name, new THREE.Float32BufferAttribute(part[name], width));
+    if (part.color) g.setAttribute('color', new THREE.Float32BufferAttribute(part.color, 3));
     g.setIndex(part.index); g.computeBoundingSphere(); return g;
   })));
 }

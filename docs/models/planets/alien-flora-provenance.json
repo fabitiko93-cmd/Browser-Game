@@ -1,0 +1,82 @@
+[
+  {
+    "file": "alien-spore.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-alien-flora.mjs",
+    "rights": "Original project-authored geometry; no external asset pack or texture. Three.js geometry preparation tools are MIT licensed.",
+    "variants": 2,
+    "rootedHeightMetres": 1,
+    "trianglesPerVariantAndLod": [
+      [
+        2142,
+        968,
+        372
+      ],
+      [
+        3088,
+        1392,
+        528
+      ]
+    ],
+    "bytes": 200644,
+    "sha256": "d72706b2cd5747dfa05f8de70c62f14892d11f11164d852efdc588d7588c3ec3"
+  },
+  {
+    "file": "alien-coral.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-alien-flora.mjs",
+    "rights": "Original project-authored geometry; no external asset pack or texture. Three.js geometry preparation tools are MIT licensed.",
+    "variants": 2,
+    "rootedHeightMetres": 1,
+    "trianglesPerVariantAndLod": [
+      [
+        5994,
+        2280,
+        660
+      ],
+      [
+        5994,
+        2280,
+        660
+      ]
+    ],
+    "bytes": 800656,
+    "sha256": "aed6703e307627497e1071522edd2dc899ad37a48e4777f8bb040f78b2a40975"
+  },
+  {
+    "file": "alien-pod.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-alien-flora.mjs",
+    "rights": "Original project-authored geometry; no external asset pack or texture. Three.js geometry preparation tools are MIT licensed.",
+    "variants": 2,
+    "rootedHeightMetres": 1,
+    "trianglesPerVariantAndLod": [
+      [
+        450
+      ],
+      [
+        600
+      ]
+    ],
+    "bytes": 52456,
+    "sha256": "8479f1f5a266ccfa34cdfb31c2096d68900dfc3d8bd3fa850e66a320b5c94d6c"
+  },
+  {
+    "file": "alien-cup.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-alien-flora.mjs",
+    "rights": "Original project-authored geometry; no external asset pack or texture. Three.js geometry preparation tools are MIT licensed.",
+    "variants": 2,
+    "rootedHeightMetres": 1,
+    "trianglesPerVariantAndLod": [
+      [
+        960
+      ],
+      [
+        960
+      ]
+    ],
+    "bytes": 86168,
+    "sha256": "a0cdba30bb7f0782ca99b1e6aa4ea255175ac7ddfcbbfafc5a68ad45d410be38"
+  }
+]

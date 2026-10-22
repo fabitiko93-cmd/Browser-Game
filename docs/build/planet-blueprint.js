@@ -2,6 +2,7 @@ import { valleyDefinition, valleyHeight, valleyRiver, valleySite } from './plane
 import { worldSeed } from './world.js';
 import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface } from './planet-geography.js';
 import { createColonySite, colonyClearance } from './planet-colony.js';
+import { BIOSPHERES } from './planet-biomes.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
@@ -38,8 +39,9 @@ export function planetRandom(seed) {
 const anchors = [[37, 15], [22, 39], [-28, 19], [61, -17], [8, -8]];
 const names = ['Meridian', 'Helion', 'Aster', 'Vesper', 'Eos'];
 
-export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', valley = null } = {}) {
+export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', valley = null, biosphere = 'terran' } = {}) {
   if (!Object.hasOwn(PLANET_PRESETS, preset)) throw new Error('Unbekannte Planetenvorlage.');
+  if (!Object.hasOwn(BIOSPHERES, biosphere) || (biosphere !== 'terran' && preset !== 'temperate')) throw new Error('Diese Biosphäre benötigt eine bewohnbare Welt.');
   if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
   const seed = worldSeed(seedValue), next = planetRandom(planetSubseed(seed, 'planet'));
   const modules = preset === 'temperate' ? ['coast', 'basin', 'upland', 'caldera', 'coast'] : preset === 'lunar' ? Array(5).fill('regolith') : ['basin', 'upland', 'caldera', 'basin', 'upland'];
@@ -52,7 +54,7 @@ export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset =
     const gradient = geography ? [samplePlanetSurface(geography, lat + .1, lon).land - samplePlanetSurface(geography, lat - .1, lon).land, samplePlanetSurface(geography, lat, lon + .1).land - samplePlanetSurface(geography, lat, lon - .1).land] : null;
     return { id, valley: modules[i] === 'basin' && preset === 'temperate' ? (['meadow', 'meander', 'woodland'].includes(valley) ? valley : ['meadow', 'meander', 'woodland'][planetSubseed(seed, id) % 3]) : null, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, climate, rotation: gradient ? Math.atan2(gradient[0], gradient[1] / Math.max(.1, Math.cos(lat * Math.PI / 180))) : Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
   });
-  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
+  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, ...(biosphere !== 'terran' ? { biosphere } : {}), radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
 }
 
 export function createRegionBlueprint(planet, regionId) {
@@ -67,6 +69,7 @@ export function createRegionBlueprint(planet, regionId) {
     return { x: (r() - .5) * 560, z: -130 - r() * 350, radius: 20 + r() * 48 };
   });
   const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, valley: region.valley, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
+  if (planet.biosphere) result.biosphere = planet.biosphere;
   if (valleyDefinition(result)) result.colony = valleySite(result);
   if (result.colony && result.module === 'coast') result.colony.roads[1][0][0] = Math.max(-56, Math.min(8, regionShore(result, 25) + 25));
   // Scattered outcrops follow the same broad geological field. A few modest

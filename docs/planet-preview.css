@@ -2,5 +2,12 @@
 
 .region-context{margin:7px 0 0;font-size:9px;line-height:1.35;letter-spacing:.025em;color:#b2c1c9}.region-status{max-width:48%;text-align:right}.planet-app[data-mode=region] .region-description{margin-top:6px}.planet-app[data-mode=region] .region-status{font-size:8px}
 
+/* Long presses on the game must not select labels or open iOS callouts.
+   Native text editing, form controls, scrolling and canvas gestures stay intact. */
+.planet-app,#settings-dialog{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable]:not([contenteditable="false"]){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+select{-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+
 .region-north{position:absolute;left:22px;top:66px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:8px;font-weight:600;color:#f2ddb2;text-shadow:0 1px 4px #000;pointer-events:none}.region-north svg{transform-origin:50% 50%;filter:drop-shadow(0 1px 3px #0008)}
 .valley-controls{display:flex;align-items:center;gap:10px;margin:8px 0 2px}.valley-controls label{font-size:10px;color:#aebfba;white-space:nowrap}.valley-controls select{min-width:0;flex:1;min-height:44px;padding:8px 28px 8px 10px;border:1px solid #96b1a137;border-radius:8px;background:#17272c;color:#e2e9df;font:inherit;font-size:11px}.valley-controls select:focus-visible{outline:2px solid #e3bf7c;outline-offset:2px}@media(max-height:760px){.planet-app[data-mode=region] .region-description{display:none}.planet-app[data-mode=region] .planet-facts{display:none}.valley-controls{margin:5px 0 0}}
+.comparison-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:9px 0}.comparison-controls[data-valley="true"]{grid-template-columns:repeat(2,minmax(0,1fr))}.comparison-controls .valley-controls{min-width:0;margin:0;display:flex;flex-direction:column;align-items:stretch;gap:4px}.comparison-controls label{font-size:9px;letter-spacing:.025em}.comparison-controls select{width:100%;font-size:16px;padding-right:19px}.comparison-controls select:disabled{opacity:.5}@media(max-height:740px) and (max-width:759px){.comparison-controls{margin:6px 0;gap:7px}.comparison-controls label{font-size:8px}}

@@ -5,7 +5,7 @@ import { planetRandom, planetSubseed, regionGroundHeight, regionNoise, regionCre
 
 const clamp = value => Math.max(0, Math.min(1, value));
 const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
-export const FLORA_ASSETS = Object.freeze({ pine: 'woodland-pine.glb', oak: 'woodland-oak.glb', aspen: 'woodland-aspen.glb', shrub: 'woodland-shrub.glb', fern: 'fern.glb', grass: 'meadow-grass.glb' });
+export const FLORA_ASSETS = Object.freeze({ pine: 'woodland-pine.glb', oak: 'woodland-oak.glb', aspen: 'woodland-aspen.glb', shrub: 'woodland-shrub.glb', fern: 'fern.glb', grass: 'meadow-grass.glb', 'xeno-spore': 'alien-spore.glb', 'xeno-coral': 'alien-coral.glb', 'xeno-pod': 'alien-pod.glb', 'xeno-cup': 'alien-cup.glb' });
 
 // These shared, continuous fields drive trees, understory and the ground blend.
 // Meadow clearings are irregular gaps in woodland, never a circular prop ring.
@@ -19,7 +19,7 @@ export function regionHabitat(region, x, z, height, slope = 0) {
     const bank = smooth(creek.level + .08, creek.level + .65, height);
     const sediment = Math.max(e.sediment, (1 - bank) * .8);
     const cover = wet ? 0 : (1 - sediment * .96) * (1 - smooth(.5, .95, slope));
-    const forest = e.forest * (wet ? 0 : 1) * smooth(creek.level + .4, creek.level + 1.5, height) * smooth(4, 11, colonyClearance(region, x, z));
+    const forest = e.forest * (biome.alien ? biome.canopyDensity : 1) * (wet ? 0 : 1) * smooth(creek.level + .4, creek.level + 1.5, height) * smooth(4, 11, colonyClearance(region, x, z));
     return { cover, forest, moisture: clamp(e.moisture + ((biome.moisture ?? .65) - .65) * .18), snow: 0, sediment, variation: regionNoise(region.seed, x / 47, z / 47, 107) };
   }
   const wetDistance = creek ? Math.abs(x - creek.x) : lake ? Math.abs(Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) - 1) * 40 : 200;
@@ -46,12 +46,12 @@ export function regionCover(region, x, z, height, slope = 0) { return regionHabi
 export function createRegionEnvironment(region) {
   const rocks = [], plants = [], trees = [], module = REGION_MODULES[region.module], biome = regionBiome(region);
   const slopeAt = (x, z, span = 2) => Math.hypot(regionGroundHeight(region, x + span, z) - regionGroundHeight(region, x - span, z), regionGroundHeight(region, x, z + span) - regionGroundHeight(region, x, z - span)) / (span * 2);
-  const occupied = new Map(), valley = !!valleyDefinition(region), grid = valley ? region.valley === 'woodland' ? 10.2 : 9.5 : 11, count = valley ? 66 : 32;
+  const occupied = new Map(), valley = !!valleyDefinition(region), grid = biome?.canopySpacing ?? (valley ? region.valley === 'woodland' ? 10.2 : 9.5 : 11), count = valley ? biome?.alien ? Math.ceil(660 / grid) : 66 : 32;
   if (biome) for (let gz = -count; gz <= count; gz++) for (let gx = -count; gx <= count; gx++) {
     const next = planetRandom(planetSubseed(region.seed, `woodland/${gx}/${gz}`));
     const x = (gx + (next() - .5) * .98) * grid, z = (gz + (next() - .5) * .98) * grid;
     const y = regionGroundHeight(region, x, z), slope = slopeAt(x, z), h = regionHabitat(region, x, z, y, slope);
-    const distance = Math.hypot(x, z), density = valley ? .97 * (1 - smooth(450, 620, distance)) : .66;
+    const distance = Math.hypot(x, z), density = (valley ? .97 * (1 - smooth(450, 620, distance)) : .66) * (biome.canopyDensity ?? 1);
     if (h.forest < .06 || next() > h.forest * density || y < 1.5 || slope > (valley ? .58 : .38) || distance > (valley ? 620 : 350)) continue;
     const model = biome.trees[Math.floor(next() * biome.trees.length)], young = next() < .18;
     const size = biome.treeScale * (valley ? (model === 'aspen' ? 13 : 12) + next() * (model === 'aspen' ? 5 : 6) : model === 'pine' ? 10 + next() * 8 : model === 'aspen' ? 9 + next() * 7 : 8 + next() * 6) * (young ? .5 : 1);
@@ -69,15 +69,20 @@ export function createRegionEnvironment(region) {
     const px = (gx + next() - .5) * 8, pz = (gz + next() - .5) * 8;
     const py = regionGroundHeight(region, px, pz), ph = regionHabitat(region, px, pz, py, slopeAt(px, pz));
     if (py < 1.4 || colonyClearance(region, px, pz) < 3 || ph.cover < .5 || Math.hypot(px, pz) > 180) continue;
-    if (ph.forest > .3 && next() < .08) plants.push({ x: px, y: py - .025, z: pz, size: .9 + next() * 1.2, width: 1, model: 'shrub', variant: Math.floor(next() * 2), rotation: next() * Math.PI * 2, tint: .9 + next() * .15 });
+    if (ph.forest > .3 && next() < .08) plants.push({ x: px, y: py - .025, z: pz, size: .9 + next() * 1.2, width: 1, model: biome.alien ? region.biosphere === 'spore' ? 'xeno-pod' : 'xeno-cup' : 'shrub', variant: Math.floor(next() * 2), rotation: next() * Math.PI * 2, tint: .9 + next() * .15 });
     // Meadows use dense, small grass clumps. Shade shifts toward ferns, with
     // a little green understory remaining beneath the mature tree crowns.
-    const count = Math.round(4 + (1 - ph.forest) * (valley ? 9 : 7));
+    const count = biome.alien ? Math.round(1 + (1 - ph.forest) * 2) : Math.round(4 + (1 - ph.forest) * (valley ? 9 : 7));
     for (let i = 0; i < count; i++) {
       const x = px + (next() - .5) * 8, z = pz + (next() - .5) * 8;
       const y = regionGroundHeight(region, x, z), h = regionHabitat(region, x, z, y, slopeAt(x, z));
       if (y < 1.4 || colonyClearance(region, x, z) < 2.8 || next() > h.cover * (.9 - h.forest * .35)) continue;
       const fern = region.module !== 'caldera' && region.module !== 'upland' && h.forest > .25 && h.moisture > .4 && next() < h.forest * .6;
+      if (biome.alien) {
+        const pod = region.biosphere === 'spore' ? h.forest > .2 || next() < .7 : h.moisture > .7 && next() < .18;
+        plants.push({ x, y: y - .04, z, model: pod ? 'xeno-pod' : 'xeno-cup', size: biome.grassHeight * (.55 + next() * .9), width: .85 + next() * .4, rotation: next() * Math.PI * 2, variant: Math.floor(next() * 2), tint: .86 + next() * .2 });
+        continue;
+      }
       plants.push({ x, y: y - .025, z, model: fern ? 'fern' : 'grass', size: fern ? .45 + next() * .6 : biome.grassHeight * (.5 + next() * .75), width: .9 + next() * .3, rotation: next() * Math.PI * 2, variant: fern ? 0 : next() < .92 ? 1 : 0, tint: .9 + next() * .18 });
     }
   }
