@@ -1,0 +1,176 @@
+{
+  "checks": [
+    "Real terrain picking and the build button clear intersecting tree crowns, understory and removable stones; all remaining GPU matrices are preserved",
+    "Reload, independent regions and biosphere comparisons preserve construction and cleared footprints",
+    "Building, demolition and rebuilding fit 320, 375 and 390 pixel portrait layouts; demolition does not respawn cleared objects",
+    "Reset restores the original landscape; a real large scanned rock disables building and rejected placement leaves the entire state unchanged"
+  ],
+  "selected": {
+    "x": 25,
+    "z": 49,
+    "counts": {
+      "tree": 4,
+      "plant": 3,
+      "stone": 0
+    }
+  },
+  "frames": [
+    {
+      "label": "before-clearing-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stage": 286.15625,
+      "buildings": 0,
+      "clearings": 0,
+      "calls": 185,
+      "triangles": 1925200,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 785,
+          "bottom": 829,
+          "height": 44
+        },
+        {
+          "id": "site-build",
+          "top": 718,
+          "bottom": 762,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "habitat-cleared-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stage": 262.15625,
+      "buildings": 1,
+      "clearings": 1,
+      "calls": 195,
+      "triangles": 1943016,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 785,
+          "bottom": 829,
+          "height": 44
+        },
+        {
+          "id": "site-demolish",
+          "top": 694,
+          "bottom": 738,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "habitat-cleared-320",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "stage": 214.125,
+      "buildings": 1,
+      "clearings": 1,
+      "calls": 213,
+      "triangles": 1264828,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 514,
+          "bottom": 558,
+          "height": 44
+        },
+        {
+          "id": "site-demolish",
+          "top": 456,
+          "bottom": 500,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "demolished-320",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "stage": 190,
+      "buildings": 0,
+      "clearings": 1,
+      "calls": 222,
+      "triangles": 1289264,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 514,
+          "bottom": 558,
+          "height": 44
+        },
+        {
+          "id": "site-build",
+          "top": 444.46875,
+          "bottom": 488.46875,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "demolished-375",
+      "width": 375,
+      "height": 667,
+      "scrollWidth": 375,
+      "scrollHeight": 667,
+      "stage": 195,
+      "buildings": 0,
+      "clearings": 1,
+      "calls": 226,
+      "triangles": 1292944,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 613,
+          "bottom": 657,
+          "height": 44
+        },
+        {
+          "id": "site-build",
+          "top": 539.421875,
+          "bottom": 583.421875,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "label": "rebuilt-375",
+      "width": 375,
+      "height": 667,
+      "scrollWidth": 375,
+      "scrollHeight": 667,
+      "stage": 195,
+      "buildings": 1,
+      "clearings": 1,
+      "calls": 233,
+      "triangles": 1293388,
+      "controls": [
+        {
+          "id": "orbit-return",
+          "top": 613,
+          "bottom": 657,
+          "height": 44
+        },
+        {
+          "id": "site-demolish",
+          "top": 539.421875,
+          "bottom": 583.421875,
+          "height": 44
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

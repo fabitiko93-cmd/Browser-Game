@@ -4,6 +4,7 @@ import { PlanetPreviewScene } from './planet-preview-scene.js';
 import { createPlanetBlueprint, createRegionBlueprint, PLANET_PRESETS, REGION_MODULES, SAMPLE_PLANET_SEED } from './planet-blueprint.js';
 import { CLIMATE_MODES, CLIMATE_BIOMES } from './planet-climate.js';
 import { PLANET_EXAMPLES } from './planet-examples.js';
+import { constructionKey, emptyConstruction, loadConstructionStore, saveConstructionStore } from './planet-construction.js';
 
 const $ = id => document.getElementById(id), app = document.querySelector('.planet-app');
 const parameters = new URLSearchParams(location.search), debug = parameters.get('debug') === '1';
@@ -15,6 +16,10 @@ let valleyChoice = VALLEY_VARIANTS.some(v => v.id === parameters.get('valley')) 
 let biosphereChoice = Object.hasOwn(BIOSPHERES, parameters.get('biosphere')) ? parameters.get('biosphere') : 'terran', activeSeed = rawSeed;
 let climateChoice = Object.hasOwn(CLIMATE_MODES, parameters.get('climate')) ? parameters.get('climate') : 'auto';
 let referenceChoice = parameters.get('reference') === '1';
+const probeStorage = { getItem: key => localStorage.getItem(key), setItem: (key, value) => localStorage.setItem(key, value) };
+const constructionStates = loadConstructionStore(probeStorage);
+function regionConstruction(r) { const key = constructionKey(r), state = constructionStates.get(key) ?? emptyConstruction(); constructionStates.delete(key); constructionStates.set(key, state); while (constructionStates.size > 32) constructionStates.delete(constructionStates.keys().next().value); return state; }
+function saveProbe() { const saved = saveConstructionStore(probeStorage, constructionStates); $('site-feedback').textContent = saved ? '' : 'Speichern ist hier nicht verfügbar; die Bauprobe bleibt für diese Sitzung erhalten.'; return saved; }
 
 function fail(error) {
   busy = false; $('loading').hidden = true; $('planet-error').hidden = false;
@@ -58,14 +63,18 @@ function updateRegion() {
   $('gesture-hint').textContent = mode === 'orbit' ? 'Ziehen zum Drehen · Region antippen' : 'Ziehen zum Drehen · Baugebiet antippen';
 }
 function siteInfo(site) {
+  app.dataset.site = String(!!site);
   if (!site) { selectedSite = null; $('site-info').hidden = true; return; }
-  selectedSite = site; const info = $('site-info'); info.hidden = false; info.replaceChildren();
-  const heading = document.createElement('strong'); heading.textContent = site.water ? 'Wasserfläche' : site.buildable ? 'Geeignete Baufläche' : 'Starker Geländehang'; info.append(heading, document.createElement('br'));
+  selectedSite = site; $('site-info').hidden = false; const info = $('site-summary'); info.replaceChildren(); $('site-feedback').textContent = '';
+  const assessment = site.construction, counts = assessment?.counts;
+  const heading = document.createElement('strong'); heading.textContent = site.building ? 'Habitat · Bauprobe' : site.water ? 'Wasserfläche' : assessment?.issue ? 'Grundfläche nicht bebaubar' : 'Geeignete Baufläche'; info.append(heading, document.createElement('br'));
   const resource = site.deposits.includes('geothermal') ? 'Wärmequelle' : site.deposits.includes('ore') ? 'Erzvorkommen' : 'Kein erfasstes Vorkommen';
   info.append(document.createTextNode(`${resource} · Neigung ${Math.round(Math.atan(site.slope) * 180 / Math.PI)}°${site.coastDistance != null ? ` · Küste ca. ${Math.round(site.coastDistance)} m` : ''}`));
+  $('site-build').hidden = !!site.building; $('site-build').disabled = !assessment || !!assessment.issue; $('site-demolish').hidden = !site.building;
+  $('construction-detail').textContent = site.building ? 'Habitat · 8 × 8 m · Bauprobe' : assessment?.issue ?? `8 × 8 m · Räumung: ${counts.tree} Bäume, ${counts.plant} Pflanzen, ${counts.stone} kleine Steine.`;
 }
 async function selectRegion(id) {
-  if (busy) return; selected = planet.regions.find(r => r.id === id) ?? selected; selectedSite = null; $('site-info').hidden = true;
+  if (busy) return; selected = planet.regions.find(r => r.id === id) ?? selected; siteInfo(null);
   updateRegion();
   if (mode === 'orbit') { view.focusRegion(selected); return; }
   await enterRegion();
@@ -73,10 +82,10 @@ async function selectRegion(id) {
 async function enterRegion(pose = null) {
   const currentRequest = ++request; mode = 'region'; app.dataset.mode = mode;
   $('markers').hidden = true; $('grid-toggle').hidden = false; $('region-enter').hidden = true; $('orbit-return').hidden = false;
-  selectedSite = null; $('site-info').hidden = true; loading(true);
+  siteInfo(null); loading(true);
   try {
     region = createRegionBlueprint(planet, selected.id); updateRegion();
-    await view.showRegion(region); if (currentRequest !== request) return;
+    await view.showRegion(region, regionConstruction(region)); if (currentRequest !== request) return;
     if (pose) { view.camera.position.copy(pose.eye); view.controls.target.copy(pose.target); view.camera.fov = pose.fov; view.camera.updateProjectionMatrix(); view.controls.update(); view.keepCameraAboveGround(); view.dirty = true; }
     loading(false); $('asset-state').textContent = 'Region bereit'; const url = new URL(location.href); url.searchParams.set('region', selected.id); if (region.valley) url.searchParams.set('valley', region.valley); else url.searchParams.delete('valley'); history.replaceState(null, '', url);
   }
@@ -84,6 +93,7 @@ async function enterRegion(pose = null) {
 }
 function orbit() {
   request++; mode = 'orbit'; region = null; app.dataset.mode = mode;
+  siteInfo(null);
   $('markers').hidden = false; $('grid-toggle').hidden = true; $('region-enter').hidden = false; $('orbit-return').hidden = true; $('site-info').hidden = true;
   view.showOrbit(); view.focusRegion(selected); updateRegion(); loading(false); $('asset-state').textContent = 'Planet bereit';
   const url = new URL(location.href); url.searchParams.delete('region'); history.replaceState(null, '', url);
@@ -92,6 +102,7 @@ async function generate(seed, preset, regionCount) {
   const currentRequest = ++request;
   activeSeed = seed;
   loading(true, 'Planet wird aufgebaut'); mode = 'orbit'; app.dataset.mode = mode;
+  siteInfo(null);
   try { planet = createPlanetBlueprint(seedValue(seed), { preset, regionCount, name: sourceName, valley: valleyChoice, biosphere: preset === 'temperate' ? biosphereChoice : 'terran', climate: climateChoice, reference: referenceChoice }); }
   catch (error) { if (currentRequest === request) fail(error); return; }
   selected = planet.regions[0]; region = null;
@@ -149,6 +160,22 @@ $('zoom-in').addEventListener('click', () => view?.zoom(.82)); $('zoom-out').add
 $('camera-home').addEventListener('click', () => view?.resetCamera());
 $('grid-toggle').addEventListener('click', () => { const visible = $('grid-toggle').getAttribute('aria-pressed') !== 'true'; $('grid-toggle').setAttribute('aria-pressed', String(visible)); $('grid-toggle').setAttribute('aria-label', visible ? 'Bauflächen ausblenden' : 'Bauflächen einblenden'); view?.setGrid(visible); });
 $('reload').addEventListener('click', () => location.reload());
+$('site-build').addEventListener('click', () => {
+  if (busy) return; const result = view?.buildSelected(); if (!result) return;
+  if (result.issue) { $('site-feedback').textContent = result.issue; return; }
+  if (saveProbe()) $('site-feedback').textContent = 'Habitat gesetzt. Die Grundfläche ist geräumt.';
+  $('site-demolish').focus({ preventScroll: true });
+});
+$('site-demolish').addEventListener('click', () => {
+  if (busy || !view?.demolishSelected()) return;
+  if (saveProbe()) $('site-feedback').textContent = 'Probebau entfernt. Die Fläche bleibt geräumt.';
+  $('site-build').focus({ preventScroll: true });
+});
+$('construction-reset').addEventListener('click', () => {
+  if (busy) return; constructionStates.clear();
+  if (region) { view.construction = regionConstruction(region); view.syncConstruction(); view.refreshSelected(); }
+  saveProbe(); $('settings-dialog').close();
+});
 window.addEventListener('pagehide', () => view?.dispose(), { once: true });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 try {

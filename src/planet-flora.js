@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { footprintBounds } from './planet-construction-scene.js';
 export const TREE_CHUNK_SIZE = 160;
 export const CANOPY_MODELS = Object.freeze(['oak', 'aspen', 'pine', 'acacia', 'tropical', 'palm', 'willow', 'cactus', 'xeno-spore', 'xeno-coral']);
 
@@ -65,24 +66,31 @@ export function updateFloraLods(group, camera) {
 }
 
 export function addFloraBatches(group, placements, variants, { trees = false, lods = null } = {}) {
-  const chunks = new Map(), chunkSize = lods ? TREE_CHUNK_SIZE : 64;
+  const chunks = new Map(), variantBounds = new Map(), chunkSize = lods ? TREE_CHUNK_SIZE : 64;
   for (const plant of placements) {
     const variant = plant.variant % variants.length;
     const key = floraChunkKey(plant, variants.length, chunkSize);
     if (!chunks.has(key)) chunks.set(key, { variant, plants: [] });
     chunks.get(key).plants.push(plant);
   }
-  for (const { variant, plants } of chunks.values()) for (const [part, source] of variants[variant].entries()) {
-    const mesh = new THREE.InstancedMesh(source.geometry, source.material, plants.length);
-    mesh.userData.shared = true; mesh.userData.flora = true;
-    mesh.userData.lodCenter = floraChunkCenter(plants);
-    if (!trees) mesh.userData.floraRange = 260;
-    if (lods) {
-      mesh.userData.floraLods = [source.geometry, ...lods[variant].map(level => level[part])];
+  for (const { variant, plants } of chunks.values()) {
+    if (!variantBounds.has(variant)) {
+      const bounds = new THREE.Box3();
+      for (const source of [...variants[variant], ...(lods?.[variant].flat().map(geometry => ({ geometry })) ?? [])]) { if (!source.geometry.boundingBox) source.geometry.computeBoundingBox(); bounds.union(source.geometry.boundingBox); }
+      variantBounds.set(variant, bounds);
     }
-    mesh.receiveShadow = true;
-    mesh.castShadow = trees && plants.some(p => Math.abs(p.x) < 90 && Math.abs(p.z) < 90);
-    plants.forEach((plant, i) => { mesh.setMatrixAt(i, floraMatrix(plant)); mesh.setColorAt(i, new THREE.Color(plant.color ?? '#ffffff').multiplyScalar(plant.tint)); });
-    mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); if (lods) mesh.boundingSphere.radius += 4; group.add(mesh);
+    const objects = plants.map(p => { const matrix = floraMatrix(p); return { id: `flora:${p.model}:${p.x}/${p.z}`, kind: trees ? 'tree' : 'plant', removable: true, bounds: footprintBounds(variantBounds.get(variant).clone().applyMatrix4(matrix)), matrix, color: new THREE.Color(p.color ?? '#ffffff').multiplyScalar(p.tint) }; });
+    for (const [part, source] of variants[variant].entries()) {
+      const mesh = new THREE.InstancedMesh(source.geometry, source.material, plants.length);
+      mesh.userData.shared = true; mesh.userData.flora = true;
+      mesh.userData.constructionObjects = objects;
+      mesh.userData.lodCenter = floraChunkCenter(plants);
+      if (!trees) mesh.userData.floraRange = 260;
+      if (lods) mesh.userData.floraLods = [source.geometry, ...lods[variant].map(level => level[part])];
+      mesh.receiveShadow = true;
+      mesh.castShadow = trees && plants.some(p => Math.abs(p.x) < 90 && Math.abs(p.z) < 90);
+      objects.forEach((o, i) => { mesh.setMatrixAt(i, o.matrix); mesh.setColorAt(i, o.color); });
+      mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); if (lods) mesh.boundingSphere.radius += 4; group.add(mesh);
+    }
   }
 }

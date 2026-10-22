@@ -14,6 +14,8 @@ import { constrainRegionCamera, stepRegionFocus, regionOverviewPose } from './pl
 import { rockFootprint, fitRockToGround } from './planet-rocks.js';
 import { regionSkyProfile, createRegionSky } from './planet-sky.js';
 import { regionHorizonGeometry } from './planet-horizon.js';
+import { emptyConstruction, assessConstruction, placeConstruction, demolishConstruction } from './planet-construction.js';
+import { footprintBounds, indexConstructionObjects, applyConstructionClearings, createProbeHabitat } from './planet-construction-scene.js';
 
 const ASSETS = new URL('../models/planets/', import.meta.url);
 const point = (latitude, longitude, radius = 2.22) => {
@@ -245,10 +247,11 @@ export class PlanetPreviewScene {
     this.controls.update(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
-  async showRegion(region) {
+  async showRegion(region, construction = emptyConstruction()) {
     const generation = ++this.generation; this.region = region; this.mode = 'region'; this.siteFocus = null;
     this.clearGroup(this.land); this.forest = null; this.terrain = null; this.buildGrid = null; this.siteMark = null; this.waterTime = null;
     this.environmentRecipe = createRegionEnvironment(region);
+    this.construction = construction; this.constructionObjects = []; this.probeBuildings = null; this.constructionMark = null; this.selectedCell = null;
     this.globe.visible = false; this.land.visible = true;
     const module = REGION_MODULES[region.module], biome = regionBiome(region), living = !!biome, airless = region.module === 'regolith';
     const skyProfile = this.skyProfile = regionSkyProfile(region); this.activeSkyTexture = null;
@@ -305,20 +308,22 @@ export class PlanetPreviewScene {
       const material = source.material.clone(), rockTint = new THREE.Color(module.rockTint);
       if (biome?.alien) rockTint.lerp(new THREE.Color(biome.dry), .45);
       material.color.multiply(rockTint); material.roughness = 1; material.envMapIntensity = .12;
-      const batch = new THREE.InstancedMesh(source.geometry, material, rocks.length); batch.userData.sharedGeometry = true; batch.userData.rocks = true; batch.castShadow = true; batch.receiveShadow = true;
+      const batch = new THREE.InstancedMesh(source.geometry, material, rocks.length); batch.userData.sharedGeometry = true; batch.userData.rocks = true; batch.userData.constructionObjects = []; batch.castShadow = true; batch.receiveShadow = true;
       rocks.forEach((rock, i) => {
         const pose = fitRockToGround(region, rock, source.footprint); batch.setMatrixAt(i, pose.matrix);
         batch.setColorAt(i, new THREE.Color().setScalar(.86 + (rock.variant / 2) * .2));
+        if (!source.geometry.boundingBox) source.geometry.computeBoundingBox(); batch.userData.constructionObjects.push({ id: rock.id, kind: 'stone', matrix: pose.matrix, color: new THREE.Color().setScalar(.86 + rock.variant * .1), bounds: footprintBounds(source.geometry.boundingBox.clone().applyMatrix4(pose.matrix)) });
         this.rockPlacements.push({ id: rock.id, model: rock.model, matrix: pose.matrix, footprint: source.footprint });
       });
       batch.instanceMatrix.needsUpdate = true; batch.computeBoundingSphere(); this.land.add(batch);
       const distant = this.environmentRecipe.rocks.filter(r => r.model === modelIds[type]), low = lods[modelIds[type]];
       if (distant.length) {
         const environment = new THREE.InstancedMesh(low.geometry, material, distant.length);
-        environment.userData.sharedGeometry = true; environment.userData.rocks = true; environment.receiveShadow = true;
+        environment.userData.sharedGeometry = true; environment.userData.rocks = true; environment.userData.constructionObjects = []; environment.receiveShadow = true;
         distant.forEach((rock, i) => {
           const pose = fitRockToGround(region, rock, low.footprint); environment.setMatrixAt(i, pose.matrix);
           environment.setColorAt(i, new THREE.Color().setScalar(.8 + rock.variant * .1));
+          if (!low.geometry.boundingBox) low.geometry.computeBoundingBox(); environment.userData.constructionObjects.push({ id: rock.id, kind: 'stone', matrix: pose.matrix, color: new THREE.Color().setScalar(.8 + rock.variant * .1), bounds: footprintBounds(low.geometry.boundingBox.clone().applyMatrix4(pose.matrix)) });
           this.rockPlacements.push({ id: rock.id, model: rock.model, matrix: pose.matrix, footprint: low.footprint });
         });
         environment.instanceMatrix.needsUpdate = true; environment.computeBoundingSphere(); this.land.add(environment);
@@ -329,6 +334,8 @@ export class PlanetPreviewScene {
       addFloraBatches(this.land, [...this.environmentRecipe.trees, ...this.environmentRecipe.plants].filter(p => p.model === id), floraSets[i], { trees: CANOPY_MODELS.includes(id), lods: this.floraLodModels.get(id) });
     });
     updateFloraLods(this.land, this.camera);
+    this.constructionObjects = indexConstructionObjects(this.land, region);
+    this.probeBuildings = new THREE.Group(); this.land.add(this.probeBuildings); this.syncConstruction();
     this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
   }
 
@@ -465,6 +472,47 @@ export class PlanetPreviewScene {
     const geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(16 * 3), 3));
     this.siteMark = new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color: 0xf5cc7c, transparent: true, opacity: .95, depthWrite: false }));
     this.siteMark.visible = false; this.land.add(this.siteMark);
+    this.constructionMark = new THREE.LineLoop(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(32 * 3), 3)), new THREE.LineBasicMaterial({ color: '#e9c580', transparent: true, opacity: .8, depthWrite: false }));
+    this.constructionMark.visible = false; this.land.add(this.constructionMark);
+  }
+
+  syncConstruction() {
+    applyConstructionClearings(this.land, this.construction);
+    if (this.probeBuildings) { this.clearGroup(this.probeBuildings); for (const b of this.construction.buildings) this.probeBuildings.add(createProbeHabitat(b)); }
+    this.dirty = true;
+  }
+
+  constructionSite(x, z) { return assessConstruction(this.region, this.construction ?? emptyConstruction(), x, z, this.constructionObjects ?? []); }
+
+  buildSelected() {
+    if (!this.selectedCell || this.mode !== 'region') return null;
+    const result = placeConstruction(this.region, this.construction, this.selectedCell.x, this.selectedCell.z, this.constructionObjects);
+    if (result.building) this.syncConstruction();
+    this.refreshSelected(); return result;
+  }
+
+  demolishSelected() {
+    if (!this.selectedCell || this.mode !== 'region') return false;
+    const b = this.buildingAt(this.selectedCell.x, this.selectedCell.z);
+    if (!b || !demolishConstruction(this.construction, b.id)) return false;
+    this.syncConstruction(); this.refreshSelected(); return true;
+  }
+
+  buildingAt(x, z) { return this.construction?.buildings.find(b => x >= b.footprint.minX && x < b.footprint.maxX && z >= b.footprint.minZ && z < b.footprint.maxZ) ?? null; }
+
+  refreshSelected() {
+    if (!this.selectedCell) return;
+    const { x, z } = this.selectedCell, assessment = this.constructionSite(x, z), building = this.buildingAt(x, z);
+    this.siteMark?.material.color.set(assessment.issue && !building ? '#ed927b' : '#e9c580');
+    if (this.constructionMark) {
+      const f = building?.footprint ?? assessment.footprint; this.constructionMark.visible = !!f;
+      if (f) {
+        const positions = this.constructionMark.geometry.attributes.position, corners = [[f.minX, f.minZ], [f.maxX, f.minZ], [f.maxX, f.maxZ], [f.minX, f.maxZ]];
+        for (let side = 0; side < 4; side++) for (let i = 0; i < 8; i++) { const a = corners[side], b = corners[(side + 1) % 4], px = a[0] + (b[0] - a[0]) * i / 8, pz = a[1] + (b[1] - a[1]) * i / 8; positions.setXYZ(side * 8 + i, px, Math.max(.1, regionGroundHeight(this.region, px, pz)) + .14, pz); }
+        positions.needsUpdate = true; this.constructionMark.geometry.computeBoundingSphere(); this.constructionMark.material.color.set(assessment.issue && !building ? '#ed927b' : '#e9c580');
+      }
+    }
+    this.onSite?.({ ...regionSite(this.region, x, z), construction: assessment, building }); this.dirty = true;
   }
 
   pick(event) {
@@ -473,7 +521,7 @@ export class PlanetPreviewScene {
     const bounds = this.canvas.getBoundingClientRect(); this.pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
     this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0];
     const cell = hit && regionBuildCell(hit.point.x, hit.point.z);
-    if (!cell) { this.siteFocus = null; this.siteMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
+    if (!cell) { this.selectedCell = null; this.siteFocus = null; this.siteMark.visible = false; if (this.constructionMark) this.constructionMark.visible = false; this.onSite?.(null); this.dirty = true; return; }
     const { x, z } = cell;
     const site = regionSite(this.region, x, z);
     const position = this.siteMark.geometry.attributes.position, half = REGION_BUILD_GRID.cellSize / 2;
@@ -483,7 +531,7 @@ export class PlanetPreviewScene {
       position.setXYZ(side * 4 + i, px, Math.max(.1, regionGroundHeight(this.region, px, pz)) + .12, pz);
     }
     position.needsUpdate = true; this.siteMark.geometry.computeBoundingSphere(); this.siteMark.visible = true; this.siteMark.material.color.set(site.buildable ? '#e9c580' : '#ed927b');
-    this.onSite?.(site); this.focusSite(site); this.dirty = true;
+    this.selectedCell = cell; this.refreshSelected(); this.focusSite(site); this.dirty = true;
   }
 
   northBearing() {

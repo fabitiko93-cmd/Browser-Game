@@ -41,7 +41,11 @@
       <div class="valley-controls"><label for="biosphere-select">Lebenswelt</label><select id="biosphere-select" aria-label="Lebenswelt vergleichen"></select></div>
       <div class="valley-controls" id="valley-controls" hidden><label for="valley-select">Tallandschaft</label><select id="valley-select" aria-label="Tallandschaft wählen"></select></div>
     </div>
-    <div class="site-info" id="site-info" hidden role="status"></div>
+    <div class="site-info" id="site-info" hidden>
+      <div id="site-summary"></div><p id="construction-detail"></p>
+      <div class="site-actions"><button class="primary-button" id="site-build">Habitat setzen · Probe</button><button class="back-button" id="site-demolish" hidden>Probebau entfernen</button></div>
+      <p id="site-feedback" role="status"></p>
+    </div>
     <button class="primary-button" id="region-enter">Region betreten <span>↘</span></button>
     <button class="back-button" id="orbit-return" hidden>↑ Zur Planetenübersicht</button>
   </section>
@@ -56,6 +60,7 @@
     <button class="primary-button" type="submit">Welt erzeugen <span>↗</span></button>
   </form>
   <details class="landscape-discovery"><summary>Landschaften entdecken</summary><p>Besuche acht Beispielregionen aus erzeugten Welten. Über „Lebenswelt“ kannst du denselben Ort mit anderer Flora vergleichen.</p><div id="examples-grid" class="examples-grid"></div></details>
+  <details><summary>Bauprobe</summary><p>Tippe im Baugebiet auf eine Fläche und setze ein Habitat. Die umrandeten 4 × 4 Rasterfelder werden geprüft: Bäume, Unterwuchs und kleine Steine werden geräumt; Wasser, Steilhänge und große Felsblöcke verhindern den Bau. Nach einem Abriss bleibt die Fläche geräumt.</p><p>Probebauten bleiben auf diesem Gerät gespeichert. Sie sind unabhängig von deinem Reichsspielstand und verbrauchen keine Waren. Das Zurücksetzen entfernt alle Probebauten und stellt den ursprünglichen Bewuchs wieder her.</p><button class="back-button" id="construction-reset">Bauprobe zurücksetzen</button></details>
   <details><summary>Verwendete Assets</summary><p>Globus und Regionen verwenden dieselbe Seed-Geografie. Referenzkarten für trockene/luftlose Welten und Wolken: Solar System Scope / INOVE, CC BY 4.0. Gelände, Felsen, Unterwuchs und Himmelsaufnahmen: Poly Haven, CC0. Vollständige 3D-Bäume: EZ-Tree von Daniel Greenheck, MIT; Rindentexturen von ambientCG, CC0. Alien-Flora und klimaspezifische Pflanzen: eigene ORBIT-Modelle.</p><p>Acht Klimabiome und sechs Geländeformen entstehen aus der Planetengeografie. Temperatur, Feuchtigkeit und Standort bestimmen Bewuchs, Gewässer und nutzbare Kolonieterrassen. Die Lebenswelt lässt sich bei gleichem Seed und gleicher Landschaft vergleichen. Die vollständige Koloniewirtschaft ist noch nicht angebunden.</p><a href="./models/planets/provenance.json" target="_blank" rel="noopener">Herkunft der einzelnen Dateien</a></details>
 </dialog>
 <script type="module" src="./build/planet-preview-page.js"></script>
