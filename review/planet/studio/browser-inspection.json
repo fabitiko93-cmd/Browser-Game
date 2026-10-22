@@ -1,0 +1,233 @@
+{
+  "status": "passed",
+  "browser": "153.0.8010.0",
+  "frames": [
+    {
+      "label": "studio-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stage": 485,
+      "calls": 14,
+      "triangles": 228436,
+      "controls": [
+        {
+          "id": "studio-exit",
+          "x": 271.75,
+          "y": 566,
+          "width": 104.25,
+          "height": 44,
+          "bottom": 610
+        },
+        {
+          "id": "studio-scene",
+          "x": 89.40625,
+          "y": 614,
+          "width": 286.59375,
+          "height": 44,
+          "bottom": 658
+        },
+        {
+          "id": "Natürlich",
+          "x": 14,
+          "y": 666,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 710
+        },
+        {
+          "id": "Weich",
+          "x": 136.65625,
+          "y": 666,
+          "width": 116.671875,
+          "height": 44,
+          "bottom": 710
+        },
+        {
+          "id": "Klar",
+          "x": 259.328125,
+          "y": 666,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 710
+        },
+        {
+          "id": "Übersicht",
+          "x": 14,
+          "y": 718,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 762
+        },
+        {
+          "id": "Baugebiet",
+          "x": 136.65625,
+          "y": 718,
+          "width": 116.671875,
+          "height": 44,
+          "bottom": 762
+        },
+        {
+          "id": "Bodennähe",
+          "x": 259.328125,
+          "y": 718,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 762
+        },
+        {
+          "id": "studio-capture",
+          "x": 14,
+          "y": 770,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 814
+        },
+        {
+          "id": "studio-compare",
+          "x": 136.65625,
+          "y": 770,
+          "width": 116.671875,
+          "height": 44,
+          "bottom": 814
+        },
+        {
+          "id": "studio-adjust",
+          "x": 259.328125,
+          "y": 770,
+          "width": 116.65625,
+          "height": 44,
+          "bottom": 814
+        }
+      ]
+    },
+    {
+      "label": "studio-320",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "stage": 224,
+      "calls": 16,
+      "triangles": 257236,
+      "controls": [
+        {
+          "id": "studio-exit",
+          "x": 201.75,
+          "y": 309,
+          "width": 104.25,
+          "height": 44,
+          "bottom": 353
+        },
+        {
+          "id": "studio-scene",
+          "x": 89.40625,
+          "y": 353,
+          "width": 216.59375,
+          "height": 44,
+          "bottom": 397
+        },
+        {
+          "id": "Natürlich",
+          "x": 14,
+          "y": 402,
+          "width": 94,
+          "height": 44,
+          "bottom": 446
+        },
+        {
+          "id": "Weich",
+          "x": 113,
+          "y": 402,
+          "width": 94,
+          "height": 44,
+          "bottom": 446
+        },
+        {
+          "id": "Klar",
+          "x": 212,
+          "y": 402,
+          "width": 94,
+          "height": 44,
+          "bottom": 446
+        },
+        {
+          "id": "Übersicht",
+          "x": 14,
+          "y": 451,
+          "width": 94,
+          "height": 44,
+          "bottom": 495
+        },
+        {
+          "id": "Baugebiet",
+          "x": 113,
+          "y": 451,
+          "width": 94,
+          "height": 44,
+          "bottom": 495
+        },
+        {
+          "id": "Bodennähe",
+          "x": 212,
+          "y": 451,
+          "width": 94,
+          "height": 44,
+          "bottom": 495
+        },
+        {
+          "id": "studio-capture",
+          "x": 14,
+          "y": 500,
+          "width": 94,
+          "height": 44,
+          "bottom": 544
+        },
+        {
+          "id": "studio-compare",
+          "x": 113,
+          "y": 500,
+          "width": 94,
+          "height": 44,
+          "bottom": 544
+        },
+        {
+          "id": "studio-adjust",
+          "x": 212,
+          "y": 500,
+          "width": 94,
+          "height": 44,
+          "bottom": 544
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "ice",
+      "biome": "ice",
+      "module": "lake",
+      "seed": 28
+    },
+    {
+      "id": "rainforest",
+      "biome": "rainforest",
+      "module": "basin",
+      "seed": 20
+    },
+    {
+      "id": "temperate",
+      "biome": "temperate",
+      "module": "coast",
+      "seed": 5
+    }
+  ],
+  "checks": [
+    "Appearance switches preserve geometry, geology and actual camera; snapshots restore their appearance without accumulation.",
+    "Direct links restore the full view after reload and leave existing construction storage byte-for-byte unchanged.",
+    "Touch-adjusted sliders work; deleting a snapshot frees its slot; a snapshot restores its original world after switching to other landscapes.",
+    "Portrait controls fit at 320×568 and 390×844; all three cameras work in ice, rainforest and coast scenes; water/terrain haze stays consistent; airless haze is disabled; exiting restores the saved building and original scene lighting."
+  ],
+  "errors": []
+}

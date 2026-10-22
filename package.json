@@ -11,7 +11,9 @@
     "build:check": "node scripts/build.mjs --check",
     "audio:render": "node scripts/audio-assets.mjs",
     "dev": "node scripts/dev.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "qa:planet-studio": "node scripts/qa-planet-studio.mjs",
+    "quality:planet": "node scripts/quality-planet.mjs"
   },
   "devDependencies": {
     "@dgreenheck/ez-tree": "1.1.0",

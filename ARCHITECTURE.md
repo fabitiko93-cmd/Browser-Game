@@ -6,6 +6,7 @@
 | `src/world.js` / `src/world-save.js` | Seedbasierte Weltgeneration, dynamische Systeme, Sternanker, Fördergrenzen und Weltschema |
 | `src/planet-blueprint.js` | Versionierte, serialisierbare Planeten- und Regionsrezepte mit unabhängigen Teil-Seeds und austauschbaren Landschaftsmodulen |
 | `src/planet-preview-page.js` / `src/planet-preview-scene.js` | Separate Planetenprobe: drehbarer Globus, expliziter Regionswechsel, echte Pack-Assets, Touchkamera und unverbindliche Bauflächenprüfung |
+| `src/planet-studio.js` / `src/planet-studio-page.js` | Landschaftsvergleich im echten Renderer: feste Kameras, bestehende Seed-Beispiele, live abstimmbare Bildstimmungen, drei Sitzungsaufnahmen und wiederherstellbare Ansichtslinks ohne Änderungen an Spielständen |
 | `src/planet-valley.js` / `src/planet-valley-data.js` | Drei offline vorbereitete Flusstäler: gemeinsame Höhen, Flussprofile, Ökologiemasken, Kameras und Standortentwürfe |
 | `src/planet-rocks.js` | Neigungsangepasste Felsplatzierung mit tatsächlicher Modellauflage und Höhen der gerenderten Geländedreiecke |
 | `src/planet-camera.js` | Bodenfolgender, begrenzter Regionsblickpunkt und Kamerafreiheit über Boden und dazwischenliegenden Höhenzügen |

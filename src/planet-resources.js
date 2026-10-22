@@ -26,7 +26,7 @@ const backgrounds = Object.freeze({
 });
 
 export function resourceSubstrate(region, x, z) {
-  if (region.climateBiome === 'ice') return 'ice';
+  if (region.climateBiome === 'ice' && region.preset !== 'lunar' && region.module !== 'regolith') return 'ice';
   if (region.module === 'caldera') return 'basalt';
   if (region.module === 'regolith' || region.module === 'upland' || regionNoise(region.seed, x / 44, z / 44, 731) > .67) return 'rock';
   return region.preset === 'arid' || region.climateBiome === 'desert' || region.module === 'coast' ? 'sand' : 'sediment';

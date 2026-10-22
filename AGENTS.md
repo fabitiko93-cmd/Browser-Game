@@ -18,4 +18,6 @@ Quellen liegen in `src/` und `web/`. `docs/` wird automatisch erzeugt und zusamm
 Keine Versionsnummern in einzelne Imports schreiben und keine Cachelisten von Hand pflegen.
 Vor einer Veröffentlichung `npm run build`, `npm test` und `npm run build:check` ausführen.
 Bei Änderungen an Darstellung oder Touchbedienung die betroffene Ansicht in einem schmalen Hochformat prüfen.
+Für größere visuelle Aufgaben den kurzen Ablauf in `VISUAL_WORKFLOW.md` verwenden: Referenz und Asset-Eignung zuerst, früh vollständige Szenen im echten Renderer vergleichen, die besten gemeinsamen Regeln auf unterschiedliche Seeds übertragen. Der Landschaftsvergleich der Planetenprobe unterstützt diese Arbeit. Routinedetails innerhalb des Auftrags selbst entscheiden.
+Für Planetenänderungen bündelt `npm run quality:planet` Build, Tests, Ressourcen-Audit und Browserprüfungen. Gerenderte Aufnahmen anschließend tatsächlich ansehen; echte iPhone-/Safari-Prüfung separat ausweisen.
 Keine zusätzlichen Agenten ohne ausdrücklichen Auftrag einsetzen.

@@ -6,13 +6,14 @@ import { CLIMATE_MODES, CLIMATE_BIOMES } from './planet-climate.js';
 import { PLANET_EXAMPLES } from './planet-examples.js';
 import { constructionKey, emptyConstruction, loadConstructionStore, saveConstructionStore } from './planet-construction.js';
 import { PROBE_BUILDINGS, RESOURCE_TYPES } from './planet-resources.js';
+import { PlanetStudio } from './planet-studio-page.js';
 
 const $ = id => document.getElementById(id), app = document.querySelector('.planet-app');
 const parameters = new URLSearchParams(location.search), debug = parameters.get('debug') === '1';
 const rawSeed = parameters.get('seed') ?? SAMPLE_PLANET_SEED;
 const seedValue = value => /^\d+$/.test(value) && Number(value) <= 0xffffffff ? Number(value) : value;
 let planet, region, selected, view, busy = true, request = 0, sourceName = parameters.get('name')?.slice(0, 40) || 'Nereid';
-let mode = 'orbit', markerButtons = new Map(), selectedSite = null;
+let mode = 'orbit', markerButtons = new Map(), selectedSite = null, studio;
 let valleyChoice = VALLEY_VARIANTS.some(v => v.id === parameters.get('valley')) ? parameters.get('valley') : null;
 let biosphereChoice = Object.hasOwn(BIOSPHERES, parameters.get('biosphere')) ? parameters.get('biosphere') : 'terran', activeSeed = rawSeed;
 let climateChoice = Object.hasOwn(CLIMATE_MODES, parameters.get('climate')) ? parameters.get('climate') : 'auto';
@@ -26,11 +27,13 @@ function fail(error) {
   busy = false; $('loading').hidden = true; $('planet-error').hidden = false;
   $('error-text').textContent = error?.message || 'Bitte prüfe deine Verbindung und öffne die Ansicht erneut.';
   $('asset-state').textContent = 'Laden fehlgeschlagen'; console.error('Planet preview:', error);
+  studio?.sync();
 }
 function loading(value, label = 'Region wird aufgebaut') {
   $('probe-type').disabled = value;
   busy = value; $('valley-select').disabled = value; $('biosphere-select').disabled = value; $('loading').hidden = !value; $('loading-label').textContent = label; $('region-enter').disabled = value;
   if (value) $('planet-error').hidden = true;
+  studio?.sync();
 }
 function drawMarkers() {
   if (!view || !planet) return;
@@ -63,7 +66,7 @@ function updateRegion() {
   $('comparison-controls').dataset.valley = String(!!valley && mode === 'region');
   $('biosphere-select').value = planet.biosphere ?? 'terran';
   $('valley-select').value = valley?.id ?? '';
-  $('view-caption').textContent = mode === 'orbit' ? 'ORBITALE ÜBERSICHT' : 'REGIONALE ANSICHT';
+  $('view-caption').textContent = studio?.active ? 'LANDSCHAFTSVERGLEICH' : mode === 'orbit' ? 'ORBITALE ÜBERSICHT' : 'REGIONALE ANSICHT';
   $('gesture-hint').textContent = mode === 'orbit' ? 'Ziehen zum Drehen · Region antippen' : 'Ziehen zum Drehen · Baugebiet antippen';
 }
 function siteInfo(site) {
@@ -101,8 +104,10 @@ async function enterRegion(pose = null) {
   siteInfo(null); loading(true);
   try {
     region = createRegionBlueprint(planet, selected.id); updateRegion();
-    await view.showRegion(region, regionConstruction(region)); if (currentRequest !== request) return;
+    view.studioActive = !!studio?.active;
+    await view.showRegion(region, studio?.active ? emptyConstruction() : regionConstruction(region)); if (currentRequest !== request) return;
     if (pose) { view.camera.position.copy(pose.eye); view.controls.target.copy(pose.target); view.camera.fov = pose.fov; view.camera.updateProjectionMatrix(); view.controls.update(); view.keepCameraAboveGround(); view.dirty = true; }
+    studio?.regionReady(pose);
     loading(false); $('asset-state').textContent = 'Region bereit'; const url = new URL(location.href); url.searchParams.set('region', selected.id); if (region.valley) url.searchParams.set('valley', region.valley); else url.searchParams.delete('valley'); history.replaceState(null, '', url);
   }
   catch (error) { if (currentRequest === request) fail(error); }
@@ -172,8 +177,8 @@ $('seed-random').addEventListener('click', () => { $('seed-input').value = Strin
 $('seed-form').addEventListener('submit', e => { e.preventDefault(); const seed = $('seed-input').value.trim(); if (!seed) return; referenceChoice = false; climateChoice = $('planet-climate').value; $('settings-dialog').close(); void generate(seed, $('planet-preset').value, Number($('region-count').value)); });
 $('region-enter').addEventListener('click', () => { if (!busy) void enterRegion(); });
 $('orbit-return').addEventListener('click', () => { if (!busy) orbit(); });
-$('zoom-in').addEventListener('click', () => view?.zoom(.82)); $('zoom-out').addEventListener('click', () => view?.zoom(1.22));
-$('camera-home').addEventListener('click', () => view?.resetCamera());
+$('zoom-in').addEventListener('click', () => { view?.zoom(.82); studio?.rememberCamera(); }); $('zoom-out').addEventListener('click', () => { view?.zoom(1.22); studio?.rememberCamera(); });
+$('camera-home').addEventListener('click', () => studio?.active ? studio.setCamera('overview') : view?.resetCamera());
 $('grid-toggle').addEventListener('click', () => { const visible = $('grid-toggle').getAttribute('aria-pressed') !== 'true'; $('grid-toggle').setAttribute('aria-pressed', String(visible)); $('grid-toggle').setAttribute('aria-label', visible ? 'Bauflächen ausblenden' : 'Bauflächen einblenden'); view?.setGrid(visible); });
 $('reload').addEventListener('click', () => location.reload());
 for (const [id, config] of Object.entries(PROBE_BUILDINGS)) { const option = document.createElement('option'); option.value = id; option.textContent = config.name; $('probe-type').append(option); }
@@ -197,11 +202,32 @@ $('construction-reset').addEventListener('click', () => {
 });
 window.addEventListener('pagehide', () => view?.dispose(), { once: true });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
+
+async function visitStudioScene(recipe) {
+  if (busy) return;
+  const preset = Object.hasOwn(PLANET_PRESETS, recipe.preset) ? recipe.preset : 'temperate';
+  const climate = Object.hasOwn(CLIMATE_MODES, recipe.climate) ? recipe.climate : 'auto';
+  const biology = Object.hasOwn(BIOSPHERES, recipe.biosphere) ? recipe.biosphere : 'terran';
+  const count = [3, 4, 5].includes(recipe.regions) ? recipe.regions : 5;
+  const sameWorld = String(activeSeed) === String(recipe.seed) && planet.preset === preset && planet.regions.length === count && climateChoice === climate && biosphereChoice === biology && referenceChoice === !!recipe.reference && valleyChoice === (recipe.valley ?? null);
+  climateChoice = climate; biosphereChoice = biology; referenceChoice = !!recipe.reference; valleyChoice = recipe.valley ?? null;
+  if (!sameWorld) await generate(String(recipe.seed), preset, count);
+  if (!$('planet-error').hidden) return;
+  selected = planet.regions.find(r => r.id === recipe.region) ?? planet.regions[0]; updateRegion();
+  if (sameWorld && region?.regionId === selected.id) { studio.regionReady(); studio.sync(); }
+  else await enterRegion();
+}
+
+studio = new PlanetStudio({
+  getState: () => ({ planet, region, selected, view, busy, mode, seed: activeSeed }),
+  visit: visitStudioScene,
+  toggle: async (active, pose) => { view.studioActive = active; await enterRegion(pose); }
+});
 try {
   view = new PlanetPreviewScene($('planet-canvas'), { onSite: siteInfo, onFrame: drawMarkers }); view.failed = fail;
   const preset = Object.hasOwn(PLANET_PRESETS, parameters.get('preset')) ? parameters.get('preset') : 'temperate';
   const count = Number(parameters.get('regions') ?? 4);
-  void generate(rawSeed, preset, [3, 4, 5].includes(count) ? count : 4).then(() => { const direct = planet.regions.find(r => r.id === parameters.get('region')); if (direct && $('planet-error').hidden) { selected = direct; return enterRegion(); } });
+  void generate(rawSeed, preset, [3, 4, 5].includes(count) ? count : 4).then(() => { if (!planet || !$('planet-error').hidden) return; const direct = planet.regions.find(r => r.id === parameters.get('region')); if (direct || studio.active) { selected = direct ?? planet.regions[0]; return enterRegion(); } });
 } catch (error) { fail(error); }
 
-if (debug) globalThis.ORBIT_PLANET_DEBUG = { get planet() { return planet; }, get region() { return region; }, get mode() { return mode; }, get busy() { return busy; }, get selected() { return selected; }, get site() { return selectedSite; }, get view() { return view; } };
+if (debug) globalThis.ORBIT_PLANET_DEBUG = { get planet() { return planet; }, get region() { return region; }, get mode() { return mode; }, get busy() { return busy; }, get selected() { return selected; }, get site() { return selectedSite; }, get view() { return view; }, get studio() { return studio; } };

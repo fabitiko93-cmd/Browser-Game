@@ -59,7 +59,7 @@ export class PlanetPreviewScene {
     this.pointers = new Set(); this.dragged = false;
     this.down = e => { this.siteFocus = null; this.pointers.add(e.pointerId); this.start = { x: e.clientX, y: e.clientY }; this.dragged = this.pointers.size > 1; };
     this.move = e => { if (this.start && Math.hypot(e.clientX - this.start.x, e.clientY - this.start.y) > 7) this.dragged = true; };
-    this.up = e => { const click = !this.dragged && this.pointers.size === 1; this.pointers.delete(e.pointerId); if (click && this.mode === 'region') this.pick(e); if (!this.pointers.size) this.start = null; };
+    this.up = e => { const click = !this.dragged && this.pointers.size === 1; this.pointers.delete(e.pointerId); if (click && this.mode === 'region' && !this.studioActive) this.pick(e); if (!this.pointers.size) this.start = null; };
     this.cancel = e => { this.pointers.delete(e.pointerId); this.dragged = true; this.start = null; };
     canvas.addEventListener('pointerdown', this.down); canvas.addEventListener('pointermove', this.move); canvas.addEventListener('pointerup', this.up); canvas.addEventListener('pointercancel', this.cancel);
     this.contextLost = e => { e.preventDefault(); this.failed?.(new Error('Die Grafikverbindung wurde unterbrochen. Bitte Ansicht erneut laden.')); };
@@ -78,8 +78,8 @@ export class PlanetPreviewScene {
       this.keepCameraAboveGround();
       if (this.mode === 'region' && updateFloraLods(this.land, this.camera)) this.dirty = true;
       if (this.mode === 'orbit' && this.clouds && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.clouds.rotation.y += delta * .004; this.dirty = true; }
-      if (this.mode === 'region' && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
-      if (this.mode === 'region' && this.resourceTime && this.region?.preset !== 'lunar' && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.resourceTime.value += delta; this.dirty = true; }
+      if (this.mode === 'region' && !this.studioActive && this.waterTime && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.waterTime.value += delta; this.dirty = true; }
+      if (this.mode === 'region' && !this.studioActive && this.resourceTime && this.region?.preset !== 'lunar' && !matchMedia('(prefers-reduced-motion: reduce)').matches) { this.resourceTime.value += delta; this.dirty = true; }
       if (this.dirty) { this.renderer.render(this.scene, this.camera); this.dirty = false; this.onFrame?.(); }
     }; this.frameId = requestAnimationFrame(this.animate);
     this.resize();
@@ -343,6 +343,36 @@ export class PlanetPreviewScene {
     this.constructionObjects = indexConstructionObjects(this.land, region);
     this.probeBuildings = new THREE.Group(); this.land.add(this.probeBuildings); this.syncConstruction();
     this.addSiteMark(); this.keepCameraAboveGround(); this.dirty = true;
+    this.baseAppearance = { exposure: this.renderer.toneMappingExposure, fill: this.hemi.intensity, environment: this.scene.environmentIntensity, haze: this.scene.fog?.density ?? 0, normal: this.terrain.material.normalScale.clone() };
+  }
+
+  setStudioCamera({ eye, target, fov }) {
+    this.cameraDestination = null; this.siteFocus = null;
+    const damping = this.controls.enableDamping; this.controls.enableDamping = false; this.controls.update();
+    this.camera.position.set(eye.x, eye.y, eye.z); this.controls.target.set(target.x, target.y, target.z);
+    this.camera.fov = fov; this.camera.updateProjectionMatrix(); this.controls.update(); this.controls.enableDamping = damping;
+    this.keepCameraAboveGround(); updateFloraLods(this.land, this.camera); this.dirty = true;
+  }
+
+  setStudioAppearance({ exposure = 1, fill = 1, haze = 1, detail = 1 }) {
+    if (!this.baseAppearance || this.mode !== 'region') return;
+    const base = this.baseAppearance;
+    this.renderer.toneMappingExposure = base.exposure * exposure; this.hemi.intensity = base.fill * fill; this.scene.environmentIntensity = base.environment * fill;
+    if (this.scene.fog) this.scene.fog.density = base.haze * haze;
+    this.terrain.material.normalScale.copy(base.normal).multiplyScalar(detail);
+    // The coast uses its own haze shader; keep water and terrain consistent.
+    this.land.traverse(m => { if (m.material?.uniforms?.hazeDensity) m.material.uniforms.hazeDensity.value = base.haze * haze; });
+    this.dirty = true;
+  }
+
+  captureStudioImage() {
+    this.keepCameraAboveGround(); updateFloraLods(this.land, this.camera);
+    // Render and copy synchronously: no preserveDrawingBuffer or second GL context.
+    this.renderer.render(this.scene, this.camera);
+    const image = document.createElement('canvas'), scale = Math.min(1, 1200 / Math.max(this.canvas.width, this.canvas.height));
+    image.width = Math.round(this.canvas.width * scale); image.height = Math.round(this.canvas.height * scale);
+    image.getContext('2d').drawImage(this.canvas, 0, 0, image.width, image.height);
+    return image.toDataURL('image/jpeg', .88);
   }
 
   colorTerrain(geometry) {
@@ -503,14 +533,14 @@ export class PlanetPreviewScene {
   productionFor(building, buildings = this.construction?.buildings ?? []) { return extractorProduction(this.region, building, buildings); }
 
   buildSelected() {
-    if (!this.selectedCell || this.mode !== 'region') return null;
+    if (this.studioActive || !this.selectedCell || this.mode !== 'region') return null;
     const result = placeConstruction(this.region, this.construction, this.selectedCell.x, this.selectedCell.z, this.constructionObjects, this.probeType ?? 'habitat');
     if (result.building) this.syncConstruction();
     this.refreshSelected(); return result;
   }
 
   demolishSelected() {
-    if (!this.selectedCell || this.mode !== 'region') return false;
+    if (this.studioActive || !this.selectedCell || this.mode !== 'region') return false;
     const b = this.buildingAt(this.selectedCell.x, this.selectedCell.z);
     if (!b || !demolishConstruction(this.construction, b.id)) return false;
     this.syncConstruction(); this.refreshSelected(); return true;
@@ -547,7 +577,7 @@ export class PlanetPreviewScene {
   }
 
   pick(event) {
-    if (!this.terrain || !this.region) return;
+    if (this.studioActive || !this.terrain || !this.region) return;
     this.keepCameraAboveGround();
     const bounds = this.canvas.getBoundingClientRect(); this.pointer.set((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1);
     this.ray.setFromCamera(this.pointer, this.camera); const hit = this.ray.intersectObject(this.terrain, false)[0];

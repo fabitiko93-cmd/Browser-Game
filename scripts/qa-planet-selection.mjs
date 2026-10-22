@@ -1,14 +1,13 @@
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
-import { createRequire } from 'node:module';
+import { chromium } from './qa-browser-runtime.mjs';
 import assert from 'node:assert/strict';
 import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight } from '../src/planet-blueprint.js';
 import { resourceAt } from '../src/planet-selection-scene.js';
 import { resourceFieldDensity } from '../src/planet-resources.js';
 
 const root = resolve(import.meta.dirname, '..'), output = process.env.ORBIT_QA_OUTPUT_DIR ?? '/tmp/orbit-selection-qa';
-const require = createRequire(resolve(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, '../package.json')), { chromium } = require('playwright');
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.glb': 'model/gltf-binary', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg' };
 const server = createServer(async (req, res) => {
   try { const path = resolve(root, 'docs', '.' + new URL(req.url, 'http://localhost').pathname); if (!path.startsWith(resolve(root, 'docs') + '/')) throw Error('path'); res.writeHead(200, { 'Content-Type': mime[extname(path)] ?? 'application/octet-stream' }); res.end(await readFile(path)); }
