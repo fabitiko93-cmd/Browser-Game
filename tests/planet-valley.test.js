@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Group, PerspectiveCamera, Matrix4, Frustum, Vector3, BufferGeometry, BufferAttribute, MeshStandardMaterial } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionHeight, regionGroundHeight, regionCreek, regionSite } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionHeight, regionGroundHeight, regionCreek, regionSite } from '../src/planet-blueprint.js';
 import { VALLEY_VARIANTS, valleyEcology } from '../src/planet-valley.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
 import { regionOverviewPose } from '../src/planet-camera.js';

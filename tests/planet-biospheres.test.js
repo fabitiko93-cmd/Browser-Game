@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { Group, PerspectiveCamera, Frustum, Matrix4, Vector3, MeshStandardMaterial } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionSite } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionSite } from '../src/planet-blueprint.js';
 import { BIOSPHERES, regionBiome, regionBiosphere } from '../src/planet-biomes.js';
 import { createRegionEnvironment, FLORA_ASSETS } from '../src/planet-environment.js';
 import { colonyClearance } from '../src/planet-colony.js';

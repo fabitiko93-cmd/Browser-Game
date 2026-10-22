@@ -68,12 +68,12 @@ async function auditGrounding() {
   assert.ok(audit.rocks > 20 && audit.points > 1000 && audit.maxGap <= -.05, JSON.stringify(audit)); groundings.push(audit);
 }
 async function generate(seed, preset = 'temperate', regions = '4') {
-  await page.locator('#settings-open').click(); await page.locator('#seed-input').fill(seed); await page.locator('#planet-preset').selectOption(preset); await page.locator('#region-count').selectOption(regions); await page.locator('#seed-form button[type=submit]').click(); await loaded();
+  await page.goto(base + '/planet-preview.html?debug=1&reference=1&seed=' + encodeURIComponent(seed) + '&preset=' + preset + '&regions=' + regions, { waitUntil: 'domcontentloaded' }); await loaded();
 }
 const saved = () => page.evaluate(() => localStorage.getItem('orbit3077-save'));
 const camera = () => page.evaluate(() => ORBIT_PLANET_DEBUG.view.camera.position.toArray());
 try {
-  await page.goto(base + '/planet-preview.html?debug=1', { waitUntil: 'domcontentloaded' }); await loaded();
+  await page.goto(base + '/planet-preview.html?debug=1&reference=1', { waitUntil: 'domcontentloaded' }); await loaded();
   await snapshot('orbit-390'); await inspect('orbit-390');
   const recipe = await page.evaluate(() => ORBIT_PLANET_DEBUG.planet);
   assert.equal(recipe.regions.length, 4); assert.ok(recipe.regions.every(r => r.explored)); assert.equal(await saved(), original);

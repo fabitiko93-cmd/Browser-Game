@@ -1,0 +1,1369 @@
+{
+  "checks": [
+    "Eight real generated climate regions load, render and fit the portrait interface without console or asset errors",
+    "Alien comparisons preserve seed geography and render frozen regions without inappropriate plants",
+    "Grid visibility, real terrain picking, buildability display, focus and zoom remain operational",
+    "Touch camera remains operational; long-press selection is disabled while native text input stays editable",
+    "Small portrait views and dry/airless worlds retain usable controls and valid rendered geometry"
+  ],
+  "frames": [
+    {
+      "label": "temperate-390",
+      "mode": "region",
+      "biome": "temperate",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 445.578125,
+      "calls": 174,
+      "triangles": 869218,
+      "memory": {
+        "geometries": 55,
+        "textures": 26
+      },
+      "plants": 4968,
+      "trees": 694,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "boreal-390",
+      "mode": "region",
+      "biome": "boreal",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 132,
+      "triangles": 1045199,
+      "memory": {
+        "geometries": 51,
+        "textures": 25
+      },
+      "plants": 2924,
+      "trees": 630,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "desert-390",
+      "mode": "region",
+      "biome": "desert",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 25,
+      "triangles": 506372,
+      "memory": {
+        "geometries": 35,
+        "textures": 17
+      },
+      "plants": 0,
+      "trees": 40,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "steppe-390",
+      "mode": "region",
+      "biome": "steppe",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 84,
+      "triangles": 715597,
+      "memory": {
+        "geometries": 47,
+        "textures": 21
+      },
+      "plants": 4405,
+      "trees": 127,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 179,
+      "triangles": 1489254,
+      "memory": {
+        "geometries": 52,
+        "textures": 21
+      },
+      "plants": 5589,
+      "trees": 1800,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "wetland-390",
+      "mode": "region",
+      "biome": "wetland",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 445.578125,
+      "calls": 112,
+      "triangles": 1620871,
+      "memory": {
+        "geometries": 52,
+        "textures": 19
+      },
+      "plants": 5583,
+      "trees": 433,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "tundra-390",
+      "mode": "region",
+      "biome": "tundra",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 445.578125,
+      "calls": 40,
+      "triangles": 550184,
+      "memory": {
+        "geometries": 34,
+        "textures": 19
+      },
+      "plants": 1232,
+      "trees": 0,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "ice-390",
+      "mode": "region",
+      "biome": "ice",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 22,
+      "triangles": 462648,
+      "memory": {
+        "geometries": 34,
+        "textures": 17
+      },
+      "plants": 0,
+      "trees": 0,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "coral-ice-390",
+      "mode": "region",
+      "biome": "ice",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 22,
+      "triangles": 462648,
+      "memory": {
+        "geometries": 34,
+        "textures": 21
+      },
+      "plants": 0,
+      "trees": 0,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-example-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 116,
+      "triangles": 1637940,
+      "memory": {
+        "geometries": 45,
+        "textures": 21
+      },
+      "plants": 2401,
+      "trees": 769,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-spore-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 127,
+      "triangles": 1463738,
+      "memory": {
+        "geometries": 57,
+        "textures": 21
+      },
+      "plants": 2138,
+      "trees": 1525,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-coral-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 116,
+      "triangles": 1637940,
+      "memory": {
+        "geometries": 57,
+        "textures": 21
+      },
+      "plants": 2401,
+      "trees": 769,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-terran-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 179,
+      "triangles": 1489254,
+      "memory": {
+        "geometries": 76,
+        "textures": 25
+      },
+      "plants": 5589,
+      "trees": 1800,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-landscape-390",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "stageHeight": 427.4375,
+      "calls": 179,
+      "triangles": 1489254,
+      "memory": {
+        "geometries": 76,
+        "textures": 25
+      },
+      "plants": 5589,
+      "trees": 1800,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 57.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 372,
+          "bottom": 57.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 188
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 240
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 292
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 376,
+          "bottom": 344
+        },
+        {
+          "id": "biosphere-select",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 776
+        },
+        {
+          "id": "orbit-return",
+          "w": 346,
+          "h": 44,
+          "right": 368,
+          "bottom": 829
+        }
+      ]
+    },
+    {
+      "label": "rainforest-320",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 320,
+      "height": 568,
+      "scrollWidth": 320,
+      "scrollHeight": 568,
+      "stageHeight": 190,
+      "calls": 217,
+      "triangles": 1512986,
+      "memory": {
+        "geometries": 80,
+        "textures": 25
+      },
+      "plants": 5589,
+      "trees": 1800,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 61
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 302,
+          "bottom": 61
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 256,
+          "bottom": 183
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 306,
+          "bottom": 183
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 256,
+          "bottom": 233
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 306,
+          "bottom": 233
+        },
+        {
+          "id": "biosphere-select",
+          "w": 276,
+          "h": 44,
+          "right": 298,
+          "bottom": 469.140625
+        },
+        {
+          "id": "orbit-return",
+          "w": 276,
+          "h": 44,
+          "right": 298,
+          "bottom": 558
+        }
+      ]
+    },
+    {
+      "label": "rainforest-375",
+      "mode": "region",
+      "biome": "rainforest",
+      "width": 375,
+      "height": 667,
+      "scrollWidth": 375,
+      "scrollHeight": 667,
+      "stageHeight": 272.578125,
+      "calls": 200,
+      "triangles": 1374672,
+      "memory": {
+        "geometries": 81,
+        "textures": 25
+      },
+      "plants": 5589,
+      "trees": 1800,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 51.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 357,
+          "bottom": 51.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 164
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 164
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 214
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 214
+        },
+        {
+          "id": "biosphere-select",
+          "w": 331,
+          "h": 44,
+          "right": 353,
+          "bottom": 536.71875
+        },
+        {
+          "id": "orbit-return",
+          "w": 331,
+          "h": 44,
+          "right": 353,
+          "bottom": 657
+        }
+      ]
+    },
+    {
+      "label": "arid-375",
+      "mode": "region",
+      "biome": "desert",
+      "width": 375,
+      "height": 667,
+      "scrollWidth": 375,
+      "scrollHeight": 667,
+      "stageHeight": 411.859375,
+      "calls": 14,
+      "triangles": 332696,
+      "memory": {
+        "geometries": 14,
+        "textures": 14
+      },
+      "plants": 0,
+      "trees": 0,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 51.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 357,
+          "bottom": 51.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 164
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 164
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 214
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 214
+        },
+        {
+          "id": "orbit-return",
+          "w": 331,
+          "h": 44,
+          "right": 353,
+          "bottom": 657
+        }
+      ]
+    },
+    {
+      "label": "lunar-375",
+      "mode": "region",
+      "biome": "ice",
+      "width": 375,
+      "height": 667,
+      "scrollWidth": 375,
+      "scrollHeight": 667,
+      "stageHeight": 411.859375,
+      "calls": 10,
+      "triangles": 236712,
+      "memory": {
+        "geometries": 10,
+        "textures": 8
+      },
+      "plants": 0,
+      "trees": 0,
+      "controls": [
+        {
+          "id": "",
+          "w": 44,
+          "h": 44,
+          "right": 62,
+          "bottom": 51.5
+        },
+        {
+          "id": "settings-open",
+          "w": 44,
+          "h": 44,
+          "right": 357,
+          "bottom": 51.5
+        },
+        {
+          "id": "zoom-in",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 164
+        },
+        {
+          "id": "zoom-out",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 164
+        },
+        {
+          "id": "camera-home",
+          "w": 44,
+          "h": 44,
+          "right": 311,
+          "bottom": 214
+        },
+        {
+          "id": "grid-toggle",
+          "w": 44,
+          "h": 44,
+          "right": 361,
+          "bottom": 214
+        },
+        {
+          "id": "orbit-return",
+          "w": 331,
+          "h": 44,
+          "right": 353,
+          "bottom": 657
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "environment": "Chromium 153 / SwiftShader; real WebGL renderer",
+  "maxRecordedDrawCalls": 217,
+  "maxRecordedTriangles": 1637940
+}

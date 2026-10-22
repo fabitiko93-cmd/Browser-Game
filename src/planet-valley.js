@@ -6,6 +6,7 @@ import { VALLEY_DATA } from './planet-valley-data.js';
 export const VALLEY_VARIANTS = Object.freeze(VALLEY_DATA.map(({ id, name, description }) => Object.freeze({ id, name, description })));
 const decoded = new Map();
 export function valleyDefinition(region) {
+  if (region.generatorVersion >= 8 || region.terrain) return null;
   return region.preset === 'temperate' && region.module === 'basin' ? VALLEY_DATA.find(v => v.id === region.valley) ?? VALLEY_DATA[region.seed % VALLEY_DATA.length] : null;
 }
 function maps(v) {

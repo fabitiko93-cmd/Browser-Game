@@ -1,0 +1,27 @@
+{
+  "seedsPerType": 500,
+  "planets": 1500,
+  "regions": 7500,
+  "biomeCounts": {
+    "temperate": 499,
+    "desert": 239,
+    "boreal": 341,
+    "rainforest": 393,
+    "wetland": 237,
+    "tundra": 341,
+    "steppe": 375,
+    "ice": 75
+  },
+  "landformCounts": {
+    "basin": 480,
+    "caldera": 642,
+    "upland": 1154,
+    "plain": 1905,
+    "lake": 395,
+    "coast": 424,
+    "regolith": 2500
+  },
+  "layoutCount": 2924,
+  "minimumUsableFraction": 0.625,
+  "failures": []
+}

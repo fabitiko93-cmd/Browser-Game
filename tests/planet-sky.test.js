@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { PlaneGeometry, Vector3, Euler, Texture } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight } from '../src/planet-blueprint.js';
 import { regionSkyProfile, createRegionSky } from '../src/planet-sky.js';
 import { PLANET_SKIES } from '../src/planet-sky-data.js';
 import { regionHorizonGeometry, REGION_HORIZON_EXTENT } from '../src/planet-horizon.js';

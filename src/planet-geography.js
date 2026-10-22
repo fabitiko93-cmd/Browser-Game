@@ -1,8 +1,11 @@
+import { climateBiome, CLIMATE_MODES, CLIMATE_BIOMES } from './planet-climate.js';
 // Shared spherical geography. The globe and every regional recipe sample this
 // field; marker coordinates are selected from actual land and climate.
 const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 const rad = Math.PI / 180;
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+const globePalettes = Object.fromEntries(Object.entries(CLIMATE_BIOMES).map(([k, p]) => [k, { ground: hex(p.ground), green: hex(p.meadow), rock: hex(p.gravel[0]) }]));
 export function sphereNoise(seed, x, y, z, channel = 0) {
   const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
   const u = smooth(0, 1, x - ix), v = smooth(0, 1, y - iy), w = smooth(0, 1, z - iz);
@@ -18,6 +21,17 @@ export function createPlanetGeography(seed) {
   });
   return { seed, continents };
 }
+export function createNaturalGeography(seed, { preset = 'temperate', climate = 'auto' } = {}) {
+  if (!Object.hasOwn(CLIMATE_MODES, climate)) throw new Error('Unbekanntes Weltklima.');
+  const n = (i, channel = 140) => sphereNoise(seed, i * 7.13 + .31, 8.29, -3.19, channel);
+  const config = CLIMATE_MODES[climate], continents = [];
+  const count = 3 + Math.floor(n(1) * 4);
+  for (let i = 0; i < count; i++) {
+    const lat = Math.asin(n(i + 2) * 1.74 - .87), lon = n(i + 11) * Math.PI * 2;
+    continents.push({ x: Math.cos(lat) * Math.cos(lon), y: Math.sin(lat), z: Math.cos(lat) * Math.sin(lon), radius: .47 + n(i + 21) * .37 });
+  }
+  return { seed, continents, natural: true, preset, climate, temperatureOffset: preset === 'lunar' ? -45 : preset === 'arid' ? 7 + n(40) * 12 : config.temperature ?? -5 + n(40) * 15, precipitation: preset === 'temperate' ? config.rain ?? .77 + n(41) * .53 : 0 };
+}
 export function samplePlanetSurface(surface, latitude, longitude) {
   const lat = latitude * rad, lon = longitude * rad;
   const x = Math.cos(lat) * Math.cos(lon), y = Math.sin(lat), z = Math.cos(lat) * Math.sin(lon);
@@ -27,10 +41,60 @@ export function samplePlanetSurface(surface, latitude, longitude) {
   land += (n(3.4, 1) - .5) * .44 + (n(8, 2) - .5) * .13 + (n(23, 7) - .5) * .035;
   const ridge = Math.pow(smooth(.36, .72, n(4.8, 3)), 1.8) * (.4 + n(17, 6) * .6);
   const elevationM = Math.max(0, land * 1500 + smooth(.07, .28, land) * ridge * 1900);
-  const temperatureC = 32 - Math.abs(latitude) * .4 - elevationM * .0045;
-  const moisture = clamp(.44 + n(3.2, 4) * .58 - Math.exp(-Math.pow((Math.abs(latitude) - 27) / 12, 2)) * .29 - elevationM / 14000);
+  let temperatureC = 32 - Math.abs(latitude) * .4 - elevationM * .0045;
+  let moisture = clamp(.44 + n(3.2, 4) * .58 - Math.exp(-Math.pow((Math.abs(latitude) - 27) / 12, 2)) * .29 - elevationM / 14000);
   const volcanism = n(6.2, 5);
-  return { land, ocean: land < 0, elevationM, temperatureC, moisture, ridge, volcanism };
+  if (surface.natural) {
+    temperatureC = 33 + surface.temperatureOffset - Math.abs(latitude) * .63 - elevationM * .005;
+    const coastal = Math.exp(-Math.max(0, land) * 10) * .12;
+    const rainShadow = ridge * .19 * (.25 + n(3.4, 151));
+    moisture = clamp((.36 + n(3.2, 4) * .74 + coastal - Math.exp(-Math.pow((Math.abs(latitude) - 28) / 13, 2)) * .44 - rainShadow) * surface.precipitation, .02, .99);
+    if (surface.preset !== 'temperate') land = .03 + Math.abs(land);
+  }
+  return { land, ocean: land < 0, elevationM, temperatureC, moisture, ridge, volcanism, ...(surface.natural ? { natural: true, preset: surface.preset } : {}) };
+}
+
+export function naturalLandform(sample, seed, latitude, longitude, preset = 'temperate') {
+  if (preset === 'lunar') return 'regolith';
+  const n = sphereNoise(seed, latitude * .13 + 17, longitude * .1 - 3, 7.9, 160);
+  if (preset === 'temperate' && sample.land < .035) return 'coast';
+  if (sample.volcanism > .77 && sample.elevationM > 250 && n > .35) return 'caldera';
+  if (sample.elevationM > 1000 || sample.ridge > .57) return 'upland';
+  if (preset === 'temperate' && sample.moisture > .64 && n > .6) return 'lake';
+  if (preset === 'temperate' && sample.moisture > .43 && n < .48) return 'basin';
+  return 'plain';
+}
+
+// Always choose five first: changing the displayed region count preserves IDs,
+// coordinates and recipes of every already-visible location.
+export function chooseNaturalLocations(surface, count = 4) {
+  const candidates = [];
+  for (let latitude = -81; latitude <= 81; latitude += 3) for (let longitude = -179; longitude < 180; longitude += 5) {
+    const sample = samplePlanetSurface(surface, latitude, longitude);
+    if (sample.ocean || (surface.preset === 'temperate' && sample.land < .006)) continue;
+    const biome = surface.preset === 'arid' ? 'desert' : climateBiome(sample);
+    const module = naturalLandform(sample, surface.seed, latitude, longitude, surface.preset);
+    const priority = sphereNoise(surface.seed, latitude * 1.17 + .3, longitude * .79, 1.7, 170);
+    candidates.push({ latitude, longitude, ...sample, climateBiome: biome, module, priority });
+  }
+  const selected = [];
+  for (let i = 0; i < 5; i++) {
+    let best = null, score = -Infinity;
+    for (const c of candidates) {
+      const separation = selected.length ? Math.min(...selected.map(p => {
+        const a = p.latitude * rad, b = c.latitude * rad, dl = (p.longitude - c.longitude) * rad;
+        return Math.acos(clamp(Math.sin(a) * Math.sin(b) + Math.cos(a) * Math.cos(b) * Math.cos(dl), -1, 1));
+      })) : 1;
+      if (separation < .3) continue;
+      const variety = selected.some(p => p.climateBiome === c.climateBiome) ? 0 : .3;
+      const geology = selected.some(p => p.module === c.module) ? 0 : .18;
+      const value = c.priority + variety + geology + Math.min(1, separation) * .22 + (i === 0 && c.climateBiome === 'temperate' ? .1 : 0);
+      if (value > score) { score = value; best = c; }
+    }
+    if (!best) throw new Error('Keine geeignete Landregion.');
+    selected.push(best);
+  }
+  return selected.slice(0, count);
 }
 export function choosePlanetLocations(surface, count = 4) {
   const candidates = [];
@@ -73,6 +137,23 @@ export function choosePlanetLocations(surface, count = 4) {
 }
 export function surfaceColor(sample, latitude, biology = null) {
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * clamp(t));
+  if (sample.natural) {
+    if (sample.preset === 'lunar') return mix([90, 94, 99], [179, 177, 166], clamp(sample.elevationM / 2100 + sample.volcanism * .25));
+    if (sample.preset === 'arid') return mix(mix([146, 103, 77], [193, 155, 108], sample.volcanism), [87, 87, 84], smooth(800, 2400, sample.elevationM));
+    if (sample.ocean) return mix(mix(biology?.ocean?.[0] ?? [18, 55, 76], biology?.ocean?.[1] ?? [51, 119, 134], smooth(-.15, -.008, sample.land)), [211, 227, 231], smooth(-3, -14, sample.temperatureC));
+    const shades = [];
+    // Sample either side of the ecological thresholds so the orbital map
+    // blends continuously while its region labels use the central climate.
+    for (const dt of [-1, 1]) for (const dm of [-.025, .025]) {
+      const c = globePalettes[climateBiome({ ...sample, temperatureC: sample.temperatureC + dt, moisture: sample.moisture + dm })];
+      shades.push(mix(c.ground, c.green, sample.moisture * .8));
+    }
+    let c = shades[0].map((_, i) => shades.reduce((s, a) => s + a[i], 0) / shades.length);
+    if (biology?.globe) c = mix(c, mix(biology.globe.dry, biology.globe.wet, sample.moisture), .67);
+    c = mix(c, [99, 108, 106], smooth(1000, 2600, sample.elevationM) * .55);
+    c = mix(c, [221, 231, 232], smooth(0, -14, sample.temperatureC) * .95);
+    return mix(biology?.globe?.sand ?? [195, 185, 146], c, smooth(.001, .024, sample.land));
+  }
   if (sample.ocean) return mix(mix(biology?.ocean?.[0] ?? [20, 59, 79], biology?.ocean?.[1] ?? [49, 126, 142], smooth(-.15, -.008, sample.land)), [220, 230, 230], smooth(79, 88, Math.abs(latitude)));
   if (biology?.globe) {
     const b = biology.globe;

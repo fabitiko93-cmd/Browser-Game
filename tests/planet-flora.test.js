@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Group, Vector3, BufferGeometry, Float32BufferAttribute, MeshStandardMaterial } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, regionSite, regionCreek } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, regionSite, regionCreek } from '../src/planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
 import { colonyClearance } from '../src/planet-colony.js';
 import { addFloraBatches, floraMatrix } from '../src/planet-flora.js';

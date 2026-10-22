@@ -9,6 +9,28 @@ export function createColonySite(module) {
   };
   return sites[module] ? structuredClone(sites[module]) : null;
 }
+export function createNaturalColonySite(module, next, sample) {
+  const variant = Math.floor(next() * 3), angle = (next() - .5) * .7, candidates = [];
+  const names = ['Verbundene Baugruppen', 'Versetzte Terrassen', 'Offene Quartiere'];
+  const rotate = (x, z) => [x * Math.cos(angle) - z * Math.sin(angle), x * Math.sin(angle) + z * Math.cos(angle)];
+  const layouts = [[[-27, 18], [4, -13], [31, 23]], [[-26, -25], [9, 7], [34, -28]], [[-32, 28], [0, -21], [32, 19]]];
+  for (const [x, z] of layouts[variant]) candidates.push(rotate(module === 'coast' ? x * .48 + 20 : x, z));
+  // A bounded fallback searches valid ground instead of altering terrain or
+  // silently accepting an unusable building footprint.
+  for (let z = -42; z <= 42; z += 14) for (let x = module === 'coast' ? 0 : -42; x <= 42; x += 14) candidates.push([x, z]);
+  const pads = [];
+  for (const [x, z] of candidates) {
+    const w = 16 + variant * 2, d = 18 + (variant === 1 ? 4 : 0);
+    if (Math.abs(x) + w / 2 > 59 || Math.abs(z) + d / 2 > 59) continue;
+    if (pads.some(([px, pz, pw, pd]) => Math.abs(x - px) < (w + pw) / 2 + 4 && Math.abs(z - pz) < (d + pd) / 2 + 4)) continue;
+    const points = [-w / 2, 0, w / 2].flatMap(dx => [-d / 2, 0, d / 2].map(dz => sample(x + dx, z + dz)));
+    if (points.some(p => p.water || p.slope > .1) || Math.max(...points.map(p => p.height)) - Math.min(...points.map(p => p.height)) > 1.3) continue;
+    pads.push([x, z, w, d]); if (pads.length === 3) break;
+  }
+  if (pads.length < 2) throw new Error('Kein ausreichend großes, trockenes Kolonieplateau.');
+  const hub = [module === 'coast' ? 13 : 0, 0], roads = pads.map(([x, z]) => [hub, [x, z]]);
+  return { name: names[variant], description: 'Trockene, flache Baugruppen mit geprüftem Abstand zu Gewässern und durchgehenden Zugängen.', variant, roads, pads, tint: '#859085' };
+}
 export function distanceToPath(x, z, points) {
   let d = Infinity;
   for (let i = 1; i < points.length; i++) {

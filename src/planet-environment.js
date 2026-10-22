@@ -1,15 +1,38 @@
 import { valleyDefinition, valleyEcology } from './planet-valley.js';
 import { regionBiome } from './planet-biomes.js';
 import { colonyClearance } from './planet-colony.js';
-import { planetRandom, planetSubseed, regionGroundHeight, regionNoise, regionCreek, regionLake, REGION_MODULES } from './planet-blueprint.js';
+import { planetRandom, planetSubseed, regionGroundHeight, regionNoise, regionCreek, regionLake, regionLakes, regionWater, REGION_MODULES } from './planet-blueprint.js';
 
 const clamp = value => Math.max(0, Math.min(1, value));
 const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
-export const FLORA_ASSETS = Object.freeze({ pine: 'woodland-pine.glb', oak: 'woodland-oak.glb', aspen: 'woodland-aspen.glb', shrub: 'woodland-shrub.glb', fern: 'fern.glb', grass: 'meadow-grass.glb', 'xeno-spore': 'alien-spore.glb', 'xeno-coral': 'alien-coral.glb', 'xeno-pod': 'alien-pod.glb', 'xeno-cup': 'alien-cup.glb' });
+export const FLORA_ASSETS = Object.freeze({ pine: 'woodland-pine.glb', oak: 'woodland-oak.glb', aspen: 'woodland-aspen.glb', shrub: 'woodland-shrub.glb', fern: 'fern.glb', grass: 'meadow-grass.glb', acacia: 'climate-acacia.glb', tropical: 'climate-tropical.glb', palm: 'climate-palm.glb', willow: 'climate-willow.glb', cactus: 'climate-cactus.glb', reed: 'climate-reed.glb', 'xeno-spore': 'alien-spore.glb', 'xeno-coral': 'alien-coral.glb', 'xeno-pod': 'alien-pod.glb', 'xeno-cup': 'alien-cup.glb' });
+export const NATURAL_FLORA_BUDGET = Object.freeze({ trees: 1800, plants: 6500 });
+const biomes = new WeakMap();
+const cachedBiome = r => { if (!biomes.has(r)) biomes.set(r, regionBiome(r)); return biomes.get(r); };
+
+function naturalHabitat(region, x, z, height, slope) {
+  const b = cachedBiome(region);
+  if (!b) return { cover: 0, forest: 0, moisture: 0, snow: 0 };
+  const c = regionCreek(region, z), lakes = regionLakes(region), underwater = regionWater(region, x, z, height);
+  let distance = c ? Math.abs(x - c.x) / Math.sqrt(1 + c.tangent ** 2) - c.width : region.module === 'coast' ? Math.max(0, height * 7) : 180;
+  for (const l of lakes) distance = Math.min(distance, Math.abs(Math.hypot((x - l.x) / l.rx, (z - l.z) / l.rz) - 1) * Math.min(l.rx, l.rz));
+  const moisture = clamp(b.moisture * .8 + regionNoise(region.seed, x / 105, z / 105, 231) * .2 + Math.exp(-Math.max(0, distance) / 17) * .22);
+  const variation = regionNoise(region.seed, x / 65, z / 65, 232);
+  const bare = region.module === 'caldera' ? smooth(.3, .67, regionNoise(region.seed, x / 49, z / 49, 233)) * .83 : smooth(.2, .75, slope) * .6;
+  const snow = b.id === 'ice' ? (1 - smooth(.55, 1.05, slope) * .6) : smooth(b.snowLine - 16, b.snowLine + 16, height + (variation - .5) * 25) * (1 - smooth(.6, 1.1, slope));
+  const shore = region.module === 'coast' ? smooth(.5, 2.8, height) : 1;
+  const cover = underwater ? 0 : b.cover * shore * (1 - bare) * (1 - snow) * (1 - smooth(.4, .95, slope));
+  const woodland = regionNoise(region.seed, x / 85 + 3, z / 85 - 4, 234) * .7 + regionNoise(region.seed, x / 30, z / 30, 235) * .3;
+  const canopy = smooth(.39, .73, woodland + (b.forest - .5) * .55 + Math.exp(-Math.max(0, distance) / 28) * .12);
+  const forest = b.trees.length ? (b.id === 'desert' ? .022 + canopy * .055 : canopy) * (1 - snow) * shore * (1 - smooth(.3, .62, slope)) * (1 - smooth(b.treeLine - 12, b.treeLine + 12, height)) * smooth(4, 11, colonyClearance(region, x, z)) * (underwater ? 0 : 1) : 0;
+  const sediment = underwater ? 0 : Math.exp(-Math.max(0, distance) / 4) * .7;
+  return { cover, forest, moisture, snow, sediment, variation };
+}
 
 // These shared, continuous fields drive trees, understory and the ground blend.
 // Meadow clearings are irregular gaps in woodland, never a circular prop ring.
 export function regionHabitat(region, x, z, height, slope = 0) {
+  if (region.terrain) return naturalHabitat(region, x, z, height, slope);
   const biome = regionBiome(region);
   if (!biome) return { cover: 0, forest: 0, moisture: 0, snow: 0 };
   const creek = regionCreek(region, z), lake = regionLake(region);
@@ -44,6 +67,7 @@ export function regionHabitat(region, x, z, height, slope = 0) {
 export function regionCover(region, x, z, height, slope = 0) { return regionHabitat(region, x, z, height, slope).cover; }
 
 export function createRegionEnvironment(region) {
+  if (region.generatorVersion >= 8) return createNaturalEnvironment(region);
   const rocks = [], plants = [], trees = [], module = REGION_MODULES[region.module], biome = regionBiome(region);
   const slopeAt = (x, z, span = 2) => Math.hypot(regionGroundHeight(region, x + span, z) - regionGroundHeight(region, x - span, z), regionGroundHeight(region, x, z + span) - regionGroundHeight(region, x, z - span)) / (span * 2);
   const occupied = new Map(), valley = !!valleyDefinition(region), grid = biome?.canopySpacing ?? (valley ? region.valley === 'woodland' ? 10.2 : 9.5 : 11), count = valley ? biome?.alien ? Math.ceil(660 / grid) : 66 : 32;
@@ -105,4 +129,44 @@ export function createRegionEnvironment(region) {
     rocks.push({ id: `river-gravel-${i}`, x, z, scale: .18 + next() ** 2 * .8, rotation: next() * Math.PI * 2, variant: Math.floor(next()*3), model: next() < .6 ? 'rounded' : 'layered' });
   }
   return { rocks, plants, trees };
+}
+
+function createNaturalEnvironment(region) {
+  const b = cachedBiome(region), trees = [], plants = [], rocks = [], module = REGION_MODULES[region.module];
+  const slopeAt = (x, z) => Math.hypot(regionGroundHeight(region, x + 2, z) - regionGroundHeight(region, x - 2, z), regionGroundHeight(region, x, z + 2) - regionGroundHeight(region, x, z - 2)) / 4;
+  const grid = b?.canopySpacing ?? 15, extent = 430, count = Math.ceil(extent / grid), occupied = new Map();
+  if (b?.trees.length) for (let gz = -count; gz <= count; gz++) for (let gx = -count; gx <= count; gx++) {
+    const n = planetRandom(planetSubseed(region.seed, `forest/${gx}/${gz}`)), x = (gx + (n() - .5) * .9) * grid, z = (gz + (n() - .5) * .9) * grid;
+    if (Math.hypot(x, z) > extent) continue;
+    const y = regionGroundHeight(region, x, z), slope = slopeAt(x, z), h = naturalHabitat(region, x, z, y, slope);
+    if (n() > h.forest * .88 * (b.canopyDensity ?? 1) || h.forest < .012 || slope > .42 || colonyClearance(region, x, z) < 4 || regionWater(region, x, z, y)) continue;
+    const model = b.trees[Math.floor(n() * b.trees.length)], size = b.treeScale * (9 + n() * 8) * (n() < .18 ? .55 : 1);
+    let overlap = false;
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const t = occupied.get(`${gx + dx}/${gz + dz}`); if (t && Math.hypot(t.x - x, t.z - z) < (t.size + size) * .2) overlap = true; }
+    if (overlap) continue;
+    const tree = { x, y: y - .055, z, model, size, width: .82 + n() * .34, variant: Math.floor(n() * 2), rotation: n() * Math.PI * 2, tint: .86 + n() * .22, rank: n() };
+    trees.push(tree); occupied.set(`${gx}/${gz}`, tree);
+  }
+  if (b?.understory > 0) for (let gz = -19; gz <= 19; gz++) for (let gx = -19; gx <= 19; gx++) {
+    const n = planetRandom(planetSubseed(region.seed, `groundcover/${gx}/${gz}`)), px = gx * 9, pz = gz * 9;
+    const count = Math.round((b.alien ? 3 : 7) * b.understory);
+    for (let i = 0; i < count; i++) {
+      const x = px + (n() - .5) * 9, z = pz + (n() - .5) * 9;
+      if (Math.hypot(x, z) > 180 || colonyClearance(region, x, z) < 2.8) continue;
+      const y = regionGroundHeight(region, x, z), slope = slopeAt(x, z), h = naturalHabitat(region, x, z, y, slope);
+      if (n() > h.cover * (.88 - h.forest * .28) || regionWater(region, x, z, y)) continue;
+      const model = b.alien ? region.biosphere === 'spore' ? 'xeno-pod' : 'xeno-cup' : b.id === 'wetland' && h.moisture > .7 ? 'reed' : h.forest > .35 && h.moisture > .55 && n() < .4 ? 'fern' : 'grass';
+      plants.push({ x, y: y - .025, z, model, size: b.grassHeight * (.5 + n() * .85), width: .8 + n() * .4, variant: model === 'fern' ? 0 : Math.floor(n() * 2), rotation: n() * Math.PI * 2, tint: b.id === 'steppe' ? .85 + n() * .12 : .87 + n() * .2, color: !b.alien && (b.id === 'steppe' || b.id === 'tundra') ? '#d1c190' : null, rank: n() });
+    }
+  }
+  for (let gz = -9; gz <= 9; gz++) for (let gx = -9; gx <= 9; gx++) {
+    const n = planetRandom(planetSubseed(region.seed, `geology/${gx}/${gz}`)), x = (gx + n() - .5) * 40, z = (gz + n() - .5) * 40;
+    const y = regionGroundHeight(region, x, z);
+    if (colonyClearance(region, x, z) < 5 || Math.hypot(x, z) < 85 || Math.hypot(x, z) > 390 || n() > .42 || slopeAt(x, z) > .45 || regionWater(region, x, z, y)) continue;
+    rocks.push({ id: `geology-${gx}/${gz}`, x, z, scale: .6 + n() ** 2 * 5, rotation: n() * Math.PI * 2, variant: Math.floor(n() * 3), model: module.rockModels[Math.floor(n() * module.rockModels.length)] });
+  }
+  // Stable random ranks avoid a directional cut when a dense region reaches
+  // its mobile budget; detail changes cannot move rocks or the tree population.
+  const bounded = (items, max) => { if (items.length > max) { items.sort((a, b) => a.rank - b.rank); items.length = max; } for (const p of items) delete p.rank; return items; };
+  return { trees: bounded(trees, NATURAL_FLORA_BUDGET.trees), plants: bounded(plants, NATURAL_FLORA_BUDGET.plants), rocks };
 }

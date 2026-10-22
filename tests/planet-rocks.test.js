@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, Vector3 } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, ROCK_ASSETS } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionHeight, ROCK_ASSETS } from '../src/planet-blueprint.js';
 import { rockFootprint, fitRockToGround } from '../src/planet-rocks.js';
 
 async function scannedGeometry(file) {

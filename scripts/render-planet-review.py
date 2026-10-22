@@ -73,7 +73,7 @@ for model,file in files.items():
   while node.parent and node.parent in new:node=node.parent
   name=node.name
   variant=0
-  if model in ('oak','aspen','pine','shrub') or model.startswith('xeno-'):
+  if model not in ('grass','fern'):
    for k in (0,1):
     if f'{model.removeprefix("xeno-")}-{k}' in name:variant=k
   elif model=='grass':
@@ -82,7 +82,9 @@ for model,file in files.items():
   data=o.data.copy();data.transform(o.matrix_world);variants.setdefault(variant,[]).append(data)
  for o in list(new):bpy.data.objects.remove(o,do_unlink=True)
  models[model]=variants
-lods=json.load(open(os.path.join(assets,'alien-flora-lods.json' if r['biome'].get('alien') else 'tree-lods.json')))['models'];lodmodels={}
+lods={}
+for file in ['tree-lods.json','alien-flora-lods.json','climate-flora-lods.json']:lods.update(json.load(open(os.path.join(assets,file)))['models'])
+lodmodels={}
 for model,variants in lods.items():
  if model not in models:continue
  lodmodels[model]={}
@@ -137,8 +139,8 @@ if r['creek']:
   positions.extend([x-w,y,z,x+w,y,z])
   if i<len(r['creek'])-1:a=i*2;indices.extend([a,a+2,a+1,a+1,a+2,a+3])
  mesh('River',positions,indices,water)
-if r['lake']:
- l=r['lake'];positions=[l['x'],l['level'],l['z']];indices=[]
+for l in r.get('lakes', [r['lake']] if r['lake'] else []):
+ positions=[l['x'],l['level'],l['z']];indices=[]
  for i in range(97):a=i/96*2*math.pi;positions.extend([l['x']+math.cos(a)*l['rx']*1.12,l['level'],l['z']+math.sin(a)*l['rz']*1.12])
  for i in range(96):indices.extend([0,i+2,i+1])
  mesh('Crater lake',positions,indices,water)

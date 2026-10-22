@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 export const TREE_CHUNK_SIZE = 160;
-export const CANOPY_MODELS = Object.freeze(['oak', 'aspen', 'pine', 'xeno-spore', 'xeno-coral']);
+export const CANOPY_MODELS = Object.freeze(['oak', 'aspen', 'pine', 'acacia', 'tropical', 'palm', 'willow', 'cactus', 'xeno-spore', 'xeno-coral']);
 
 // The prepared meshes are one metre high, rooted at y=0. Tree transforms stay
 // upright on gentle slopes; terrain is never used to warp a trunk or building.
@@ -82,7 +82,7 @@ export function addFloraBatches(group, placements, variants, { trees = false, lo
     }
     mesh.receiveShadow = true;
     mesh.castShadow = trees && plants.some(p => Math.abs(p.x) < 90 && Math.abs(p.z) < 90);
-    plants.forEach((plant, i) => { mesh.setMatrixAt(i, floraMatrix(plant)); mesh.setColorAt(i, new THREE.Color().setScalar(plant.tint)); });
+    plants.forEach((plant, i) => { mesh.setMatrixAt(i, floraMatrix(plant)); mesh.setColorAt(i, new THREE.Color(plant.color ?? '#ffffff').multiplyScalar(plant.tint)); });
     mesh.instanceMatrix.needsUpdate = true; mesh.computeBoundingSphere(); if (lods) mesh.boundingSphere.radius += 4; group.add(mesh);
   }
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SphereGeometry, PerspectiveCamera, Vector3 } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionSite, regionCreek, regionLake, regionShore } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionGroundHeight, regionSite, regionCreek, regionLake, regionShore } from '../src/planet-blueprint.js';
 import { createPlanetGeography, samplePlanetSurface, planetSurfacePixels } from '../src/planet-geography.js';
 import { createRegionEnvironment, regionHabitat } from '../src/planet-environment.js';
 import { colonyClearance } from '../src/planet-colony.js';

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches, regionCreek, regionLake } from './planet-blueprint.js';
+import { PLANET_PRESETS, REGION_MODULES, ROCK_ASSETS, REGION_BUILD_GRID, REGION_TERRAIN, planetRandom, planetSubseed, regionHeight, regionGroundHeight, regionSite, regionBuildCell, regionTerrainPatches, regionCreek, regionLake, regionLakes } from './planet-blueprint.js';
 import { createRegionEnvironment, regionHabitat, FLORA_ASSETS } from './planet-environment.js';
 import { readFloraVariants, addFloraBatches, readFloraLods, updateFloraLods, CANOPY_MODELS } from './planet-flora.js';
 import { regionBiome, regionBiosphere } from './planet-biomes.js';
@@ -119,6 +119,16 @@ export class PlanetPreviewScene {
       return variants;
     }));
     return this.floraModels.get(name);
+  }
+
+  async climateLODs(ids) {
+    this.lodSources ??= new Map();
+    const groups = [...new Set(ids.map(id => id.startsWith('xeno-') ? 'alien-flora' : ['acacia', 'tropical', 'palm', 'willow', 'cactus', 'reed'].includes(id) ? 'climate-flora' : CANOPY_MODELS.includes(id) ? 'tree' : null).filter(Boolean))];
+    const data = await Promise.all(groups.map(group => {
+      if (!this.lodSources.has(group)) this.lodSources.set(group, fetch(new URL(`${group}-lods.json`, ASSETS)).then(r => { if (!r.ok) throw new Error('Pflanzendetails konnten nicht geladen werden.'); return r.json(); }));
+      return this.lodSources.get(group);
+    }));
+    return { models: Object.assign({}, ...data.map(d => d.models)) };
   }
 
   environmentLODs() {
@@ -263,9 +273,7 @@ export class PlanetPreviewScene {
     const [floraSets, habitatTextures, treeLodData, skyTexture] = await Promise.all([
       Promise.all(floraIds.map(id => this.vegetation(FLORA_ASSETS[id]))),
       living ? Promise.all(['meadow-color.webp', 'meadow-normal.webp', 'forest-floor-color.webp', 'forest-floor-normal.webp'].map((name, i) => this.texture(name, { color: i % 2 === 0, repeat: 1 }))) : null,
-      living ? biome.alien
-        ? this.alienLodData ??= fetch(new URL('alien-flora-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Alien-Flora konnte nicht geladen werden.'); return r.json(); })
-        : this.treeLodData ??= fetch(new URL('tree-lods.json', ASSETS)).then(r => { if (!r.ok) throw new Error('Waldmodelle konnten nicht geladen werden.'); return r.json(); }) : null,
+      living ? this.climateLODs(floraIds) : null,
       skyProfile?.file ? this.texture(skyProfile.file, { color: true }) : null
     ]);
     if (generation !== this.generation || this.disposed) return;
@@ -290,7 +298,7 @@ export class PlanetPreviewScene {
     }
     if (module.water) this.addWater();
     if (living && region.module === 'basin') this.addCreek();
-    if (living && regionLake(region)) this.addLake();
+    if (living) for (const lake of regionLakes(region)) this.addLake(lake);
     this.rockPlacements = [];
     for (let type = 0; type < modelIds.length; type++) for (const source of assetSets[type]) {
       const rocks = region.rocks.filter(r => r.model === modelIds[type]);
@@ -328,7 +336,9 @@ export class PlanetPreviewScene {
     const module = REGION_MODULES[this.region.module], palette = module.palette.map(c => new THREE.Color(c));
     const position = geometry.attributes.position, normal = geometry.attributes.normal;
     const substrates = new Float32Array(position.count * 2), colors = new Float32Array(position.count * 3), habitats = new Float32Array(position.count * 4), c = new THREE.Color();
-    const floor = { coast: 3, basin: 4, upland: 12, caldera: 4, regolith: 3 }[this.region.module];
+    const floor = { coast: 3, basin: 4, upland: 12, caldera: 4, regolith: 3, plain: 7, lake: 7 }[this.region.module];
+    const biome = regionBiome(this.region);
+    if (biome?.natural) { palette[0].set(biome.ground); palette[1].set(biome.dry); palette[2].set(biome.gravel[0]); }
     for (let i = 0; i < position.count; i++) {
       const x = position.getX(i), z = position.getZ(i), y = position.getY(i);
       const ny = Math.max(.05, normal.getY(i)), slope = Math.sqrt(Math.max(0, 1 - ny * ny)) / ny;
@@ -337,6 +347,10 @@ export class PlanetPreviewScene {
       c.copy(palette[0]).lerp(palette[1], altitude).lerp(palette[2], THREE.MathUtils.clamp(slope, 0, .85));
       if (h.cover > 0) c.lerp(new THREE.Color('#ddd9cc'), h.cover);
       if (this.region.module === 'coast' && y < 1.4) c.multiplyScalar(.7 + THREE.MathUtils.clamp(y / 1.4, 0, 1) * .3);
+      // Natural ground already chooses its mineral/turf/snow albedo in the
+      // habitat shader. Multiplying it by a second rock tint darkens snow and
+      // turns exposed mountain faces almost black after lighting.
+      if (biome?.natural) c.set('#ffffff');
       substrates[i * 2] = h.sediment ?? 0; substrates[i * 2 + 1] = h.variation ?? .5;
       c.toArray(colors, i * 3); habitats[i * 4] = h.cover; habitats[i * 4 + 1] = h.forest; habitats[i * 4 + 2] = h.moisture; habitats[i * 4 + 3] = h.snow;
     }
@@ -374,7 +388,7 @@ export class PlanetPreviewScene {
     }
     const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setIndex(indices); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.computeVertexNormals();
     const waterTint = regionBiome(this.region)?.water;
-    const material = new THREE.MeshStandardMaterial({ color: waterTint ?? '#437e80', roughness: .25, metalness: .12, envMapIntensity: .65, side: THREE.DoubleSide });
+    const material = new THREE.MeshStandardMaterial({ color: waterTint ?? '#437e80', roughness: .34, metalness: .025, envMapIntensity: .35, side: THREE.DoubleSide });
     this.waterTime = { value: 0 };
     material.onBeforeCompile = shader => {
       shader.uniforms.riverTime = this.waterTime;
@@ -386,14 +400,15 @@ export class PlanetPreviewScene {
         float ripple=sin(vRiverUv.y*15.-riverTime*.85+sin(vRiverUv.x*18.+vRiverUv.y*2.))*sin(vRiverUv.y*26.+vRiverUv.x*7.-riverTime*.6);
         diffuseColor.rgb=mix(riverDeep,riverBank,edge)*(1.+ripple*.055);`);
     };
-    material.customProgramCacheKey = () => 'orbit-valley-water-v2';
+    if (regionBiome(this.region)?.frozen) { material.color.set('#b1d0d8'); material.roughness = .55; material.metalness = 0; material.onBeforeCompile = () => {}; }
+    material.customProgramCacheKey = () => regionBiome(this.region)?.frozen ? 'orbit-frozen-water-v1' : 'orbit-valley-water-v2';
     const creek = new THREE.Mesh(geometry, material); creek.receiveShadow = true; this.land.add(creek);
   }
 
-  addLake() {
-    const lake = regionLake(this.region), geometry = new THREE.CircleGeometry(1, 96);
-    geometry.rotateX(-Math.PI / 2); geometry.scale(lake.rx * 1.12, 1, lake.rz * 1.12); geometry.translate(lake.x, lake.level, lake.z);
-    const material = new THREE.MeshStandardMaterial({ color: regionBiome(this.region)?.water ?? '#386d77', roughness: .18, metalness: .17, envMapIntensity: .8 });
+  addLake(lake) {
+    const geometry = new THREE.CircleGeometry(1, 128), biome = regionBiome(this.region);
+    geometry.rotateX(-Math.PI / 2); geometry.scale(lake.rx * 1.25, 1, lake.rz * 1.25); geometry.translate(lake.x, lake.level, lake.z);
+    const material = new THREE.MeshStandardMaterial({ color: biome?.frozen ? '#b1d0d8' : biome?.water ?? '#386d77', roughness: biome?.frozen ? .5 : .18, metalness: biome?.frozen ? 0 : .17, envMapIntensity: .8 });
     const mesh = new THREE.Mesh(geometry, material); mesh.receiveShadow = true; this.land.add(mesh);
   }
 

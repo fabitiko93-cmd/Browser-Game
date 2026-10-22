@@ -37,8 +37,8 @@ export function constrainRegionCamera(region, eye, target) {
 
 // One shared portrait overview for the runtime and the independent scene review.
 export function regionOverviewPose(region) {
-  const centers = { coast: [-8, -20], basin: [-10, -15], upland: [0, -35], caldera: [-10, -55], regolith: [0, 0] };
-  const offsets = { coast: [-160, 145, 230], basin: [170, 150, 220], upland: [160, 85, 260], caldera: [160, 190, 210], regolith: [70, 85, 105] };
+  const centers = { coast: [-8, -20], basin: [-10, -15], upland: [0, -35], caldera: [-10, -55], regolith: [0, 0], plain: [0, -20], lake: [-15, -45] };
+  const offsets = { coast: [-160, 145, 230], basin: [170, 150, 220], upland: [160, 85, 260], caldera: [160, 190, 210], regolith: [70, 85, 105], plain: [135, 105, 230], lake: [150, 130, 250] };
   const valley = valleyDefinition(region), [x, z] = valley?.target ?? centers[region.module], offset = valley?.camera ?? offsets[region.module];
   const factor = Math.min(1, (valley ? 500 : region.preset === 'temperate' ? 340 : 230) / Math.hypot(...offset));
   const target = { x, y: regionGroundHeight(region, x, z) + 3.5, z };

@@ -1,12 +1,13 @@
 import { valleyDefinition, valleyHeight, valleyRiver, valleySite } from './planet-valley.js';
 import { worldSeed } from './world.js';
-import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface } from './planet-geography.js';
-import { createColonySite, colonyClearance } from './planet-colony.js';
+import { createPlanetGeography, choosePlanetLocations, samplePlanetSurface, createNaturalGeography, chooseNaturalLocations } from './planet-geography.js';
+import { createColonySite, createNaturalColonySite, colonyClearance } from './planet-colony.js';
 import { BIOSPHERES } from './planet-biomes.js';
+import { naturalHeight, naturalShore, naturalCreek, naturalLakes } from './planet-terrain.js';
 
 // Only IDs, choices and transforms belong in a planet recipe. GPU objects and
 // textures are presentation data. A new generation algorithm gets a new version.
-export const PLANET_GENERATOR_VERSION = 7;
+export const PLANET_GENERATOR_VERSION = 8;
 export const SAMPLE_PLANET_SEED = 'NEREID-3077';
 export const REGION_BUILD_GRID = Object.freeze({ cells: 64, cellSize: 2, halfExtent: 64 });
 export const REGION_TERRAIN = Object.freeze({ segments: 128, outerSegments: 72, nearSegments: 120, farSegments: 48, nearExtent: 3.5, extent: 10 });
@@ -20,10 +21,12 @@ export const ROCK_ASSETS = Object.freeze({
 });
 export const REGION_MODULES = Object.freeze({
   coast: { name: 'Küstenebene', ground: 'sand', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: true, relief: 1.5, tint: '#ffffff', palette: ['#a6a18a', '#d4cbb0', '#71817c'], sky: '#789eae', fog: '#94afb5', rockTint: '#cbd1c5', description: 'Helle Strandterrassen, blaues Meer und Felsgruppen entlang einer geschwungenen Küste.' },
-  basin: { name: 'Rotes Becken', ground: 'sand', rock: 'namaqualand', rockModels: ['layered', 'rounded'], water: false, relief: 2.2, tint: '#ffffff', palette: ['#b47e5b', '#e0ae7e', '#915d4a'], sky: '#9f826b', fog: '#baa18a', rockTint: '#b78769', description: 'Ein breiter Talboden zwischen verwitterten Hängen. Auf erdähnlichen Welten wachsen Wiesen und lichte Kieferngruppen.' },
+  basin: { name: 'Talbecken', ground: 'sand', rock: 'namaqualand', rockModels: ['layered', 'rounded'], water: false, relief: 2.2, tint: '#ffffff', palette: ['#b47e5b', '#e0ae7e', '#915d4a'], sky: '#9f826b', fog: '#baa18a', rockTint: '#b78769', description: 'Ein breiter Talboden zwischen verwitterten Hängen. Auf erdähnlichen Welten wachsen Wiesen und lichte Kieferngruppen.' },
   upland: { name: 'Felsiges Hochland', ground: 'regolith', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 3.5, tint: '#ffffff', palette: ['#87968d', '#c6c9bd', '#687778'], sky: '#8ca9b4', fog: '#b4c4ca', rockTint: '#a3afa9', description: 'Sanfte Hochlandterrassen vor entfernten Bergrücken; auf erdähnlichen Welten mit Wiesen und lockerem Nadelwald.' },
   caldera: { name: 'Vulkanisches Becken', ground: 'regolith', rock: 'lunar', rockModels: ['lunar', 'rounded'], water: false, relief: 2.8, tint: '#ffffff', palette: ['#383f41', '#727877', '#9b7459'], sky: '#7e807e', fog: '#949a97', rockTint: '#65706e', description: 'Eine alte Vulkanebene mit flachem Beckenboden und fernem, aufgebrochenem Rand; auf erdähnlichen Welten kehrt Vegetation zurück.' },
-  regolith: { name: 'Kraterplateau', ground: 'regolith', rock: 'lunar', rockModels: ['lunar'], water: false, relief: 2.6, tint: '#ffffff', palette: ['#8a8a85', '#c0beb5', '#70716d'], sky: '#03070d', fog: '#03070d', rockTint: '#a9aca7', description: 'Luftloses Gelände mit Einschlagskratern, scharfem Licht und verstreuten Mondgesteinen.' }
+  regolith: { name: 'Kraterplateau', ground: 'regolith', rock: 'lunar', rockModels: ['lunar'], water: false, relief: 2.6, tint: '#ffffff', palette: ['#8a8a85', '#c0beb5', '#70716d'], sky: '#03070d', fog: '#03070d', rockTint: '#a9aca7', description: 'Luftloses Gelände mit Einschlagskratern, scharfem Licht und verstreuten Mondgesteinen.' },
+  plain: { name: 'Offene Ebene', ground: 'sand', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 1.3, tint: '#ffffff', palette: ['#a5a185', '#c4b99c', '#777d70'], sky: '#9aadb9', fog: '#c6ceca', rockTint: '#b3b3a1', description: 'Weite, sanft gewellte Ebenen mit offenen Horizonten und niedrigen Felsrücken.' },
+  lake: { name: 'Seenlandschaft', ground: 'sand', rock: 'namaqualand', rockModels: ['rounded', 'layered'], water: false, relief: 1.5, tint: '#ffffff', palette: ['#969c7e', '#bbc3aa', '#707d75'], sky: '#9bb3c3', fog: '#c5d3d4', rockTint: '#aeb7aa', description: 'Unregelmäßige Seen und kleinere Wasserbecken liegen zwischen trockenen Uferterrassen und bewachsenen Rücken.' }
 });
 const smooth = (a, b, value) => { const t = Math.max(0, Math.min(1, (value - a) / (b - a))); return t * t * (3 - 2 * t); };
 const gaussian = value => Math.exp(-value * value);
@@ -39,7 +42,7 @@ export function planetRandom(seed) {
 const anchors = [[37, 15], [22, 39], [-28, 19], [61, -17], [8, -8]];
 const names = ['Meridian', 'Helion', 'Aster', 'Vesper', 'Eos'];
 
-export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', valley = null, biosphere = 'terran' } = {}) {
+export function createReferencePlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', valley = null, biosphere = 'terran' } = {}) {
   if (!Object.hasOwn(PLANET_PRESETS, preset)) throw new Error('Unbekannte Planetenvorlage.');
   if (!Object.hasOwn(BIOSPHERES, biosphere) || (biosphere !== 'terran' && preset !== 'temperate')) throw new Error('Diese Biosphäre benötigt eine bewohnbare Welt.');
   if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
@@ -54,11 +57,37 @@ export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset =
     const gradient = geography ? [samplePlanetSurface(geography, lat + .1, lon).land - samplePlanetSurface(geography, lat - .1, lon).land, samplePlanetSurface(geography, lat, lon + .1).land - samplePlanetSurface(geography, lat, lon - .1).land] : null;
     return { id, valley: modules[i] === 'basin' && preset === 'temperate' ? (['meadow', 'meander', 'woodland'].includes(valley) ? valley : ['meadow', 'meander', 'woodland'][planetSubseed(seed, id) % 3]) : null, name: names[i], module: modules[i], seed: planetSubseed(seed, id), latitude: lat + (preset === 'temperate' ? 0 : (r() - .5) * 16), longitude: lon + (preset === 'temperate' ? 0 : (r() - .5) * 60), explored: true, climate, rotation: gradient ? Math.atan2(gradient[0], gradient[1] / Math.max(.1, Math.cos(lat * Math.PI / 180))) : Math.floor(r() * 4) * Math.PI / 2, areaKm2: 1200 + Math.floor(r() * 2600) };
   });
-  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, ...(biosphere !== 'terran' ? { biosphere } : {}), radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
+  return { generatorVersion: 7, seed, name: String(name).slice(0, 40), preset, ...(biosphere !== 'terran' ? { biosphere } : {}), radiusKm: PLANET_PRESETS[preset].radiusKm * (.94 + next() * .12), axialTilt: .08 + next() * .12, geography, regions };
+}
+
+export function createPlanetBlueprint(seedValue = SAMPLE_PLANET_SEED, { preset = 'temperate', regionCount = 4, name = 'Nereid', biosphere = 'terran', climate = 'auto', reference = false, valley = null } = {}) {
+  if (reference) return createReferencePlanetBlueprint(seedValue, { preset, regionCount, name, biosphere, valley });
+  if (!Object.hasOwn(PLANET_PRESETS, preset)) throw new Error('Unbekannte Planetenvorlage.');
+  if (!Object.hasOwn(BIOSPHERES, biosphere) || (biosphere !== 'terran' && preset !== 'temperate')) throw new Error('Diese Biosphäre benötigt eine bewohnbare Welt.');
+  if (!Number.isInteger(regionCount) || regionCount < 3 || regionCount > 5) throw new Error('Ein Musterplanet hat drei bis fünf Regionen.');
+  const seed = worldSeed(seedValue), next = planetRandom(planetSubseed(seed, '8/planet'));
+  const geography = createNaturalGeography(planetSubseed(seed, '8/geography'), { preset, climate });
+  const locations = chooseNaturalLocations(geography, regionCount);
+  const regions = locations.map((p, i) => {
+    const id = `region-${i}`, a = samplePlanetSurface(geography, p.latitude + .1, p.longitude), b = samplePlanetSurface(geography, p.latitude, p.longitude + .1);
+    const climate = Object.fromEntries(['elevationM', 'temperatureC', 'moisture', 'volcanism', 'land', 'ridge'].map(k => [k, p[k]]));
+    return { id, name: names[i], module: p.module, climateBiome: p.climateBiome, seed: planetSubseed(seed, `8/${id}`), latitude: p.latitude, longitude: p.longitude, rotation: Math.atan2(a.land - p.land, (b.land - p.land) / Math.max(.1, Math.cos(p.latitude * Math.PI / 180))), explored: true, climate, areaKm2: 1200 + Math.floor(planetRandom(planetSubseed(seed, `8/${id}/area`))() * 2600) };
+  });
+  return { generatorVersion: PLANET_GENERATOR_VERSION, seed, name: String(name).slice(0, 40), preset, ...(biosphere !== 'terran' ? { biosphere } : {}), climateMode: climate, radiusKm: PLANET_PRESETS[preset].radiusKm * (.88 + next() * .24), axialTilt: .04 + next() * .35, geography, regions };
+}
+
+function makeNaturalTerrain(region) {
+  const n = planetRandom(planetSubseed(region.seed, 'shape'));
+  const p = { variant: Math.floor(n() * 3), phase: n() * Math.PI * 2, level: 7.8 + n() * 1.4, relief: .75 + n() * .65, wavelength: 95 + n() * 100, gradeX: (n() - .5) * .008, gradeZ: (n() - .5) * .008, shore: -63 - n() * 16, bend: 8 + n() * 17, riverX: -100 - n() * 24, riverWidth: 8 + n() * 8, waterLevel: 3 + n(), ridgeZ: 230 + n() * 95, ringRadius: 230 + n() * 80, lakes: [] };
+  if (region.preset === 'temperate' && (region.module === 'lake' || region.module === 'caldera' && region.climate.moisture > .43)) {
+    p.lakes.push({ x: -135 - n() * 28, z: -90 - n() * 60, rx: 68 + n() * 35, rz: 58 + n() * 45, level: p.waterLevel });
+    if (region.module === 'lake') for (let i = 0; i < 2 + p.variant; i++) p.lakes.push({ x: (i % 2 ? 1 : -1) * (180 + n() * 160), z: -240 - n() * 210, rx: 30 + n() * 48, rz: 24 + n() * 45, level: p.waterLevel });
+  }
+  return p;
 }
 
 export function createRegionBlueprint(planet, regionId) {
-  if (planet.generatorVersion !== PLANET_GENERATOR_VERSION) throw new Error('Diese Planetengenerator-Version wird nicht unterstützt.');
+  if (![7, PLANET_GENERATOR_VERSION].includes(planet.generatorVersion)) throw new Error('Diese Planetengenerator-Version wird nicht unterstützt.');
   const region = planet.regions.find(r => r.id === regionId);
   if (!region || !REGION_MODULES[region.module]) throw new Error('Unbekannte Region.');
   const module = REGION_MODULES[region.module];
@@ -68,8 +97,16 @@ export function createRegionBlueprint(planet, regionId) {
     const r = planetRandom(planetSubseed(region.seed, `crater/${i}`));
     return { x: (r() - .5) * 560, z: -130 - r() * 350, radius: 20 + r() * 48 };
   });
-  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, valley: region.valley, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
+  const result = { generatorVersion: planet.generatorVersion, seed: region.seed, regionId, preset: planet.preset, valley: region.valley ?? null, module: region.module, latitude: region.latitude, longitude: region.longitude, rotation: region.rotation, climate: region.climate, colony: planet.preset === 'temperate' ? createColonySite(region.module) : null, size: 192, phase, craters, rocks: [], resources: [] };
   if (planet.biosphere) result.biosphere = planet.biosphere;
+  if (planet.generatorVersion >= 8) {
+    result.climateBiome = region.climateBiome;
+    if (region.module !== 'regolith') result.terrain = makeNaturalTerrain(result);
+    result.colony = createNaturalColonySite(region.module, planetRandom(planetSubseed(region.seed, 'site')), (x, z) => {
+      const y = regionGroundHeight(result, x, z), slope = Math.hypot(regionHeight(result, x + 2, z) - regionHeight(result, x - 2, z), regionHeight(result, x, z + 2) - regionHeight(result, x, z - 2)) / 4;
+      return { height: y, water: regionWater(result, x, z, y), slope };
+    });
+  }
   if (valleyDefinition(result)) result.colony = valleySite(result);
   if (result.colony && result.module === 'coast') result.colony.roads[1][0][0] = Math.max(-56, Math.min(8, regionShore(result, 25) + 25));
   // Scattered outcrops follow the same broad geological field. A few modest
@@ -104,19 +141,30 @@ export function regionNoise(seed, x, z, channel = 0) {
 }
 
 export function regionShore(region, z) {
+  if (region.terrain) return naturalShore(region, z);
   return -58 + 24 * gaussian((z + 25) / 80) - 13 * gaussian((z + 180) / 60) + (regionNoise(region.seed, 0, z / 160, 9) - .5) * 22 + 3 * Math.sin(z * .014 + region.phase);
 }
 
 // The valley river and volcanic tarn are shared terrain/water/plant features.
 // Both remain beyond the colony's multi-cell building footprints.
 export function regionCreek(region, z) {
+  if (region.terrain) return naturalCreek(region, z);
   return valleyDefinition(region) ? valleyRiver(region, z) : null;
 }
 export function regionLake(region) {
+  if (region.terrain) return naturalLakes(region)[0] ?? null;
   return region.preset === 'temperate' && region.module === 'caldera' ? { x: -60, z: -153, rx: 68, rz: 46, level: 2.2 } : null;
+}
+export function regionLakes(region) { return region.terrain ? naturalLakes(region) : regionLake(region) ? [regionLake(region)] : []; }
+export function regionWater(region, x, z, height = regionGroundHeight(region, x, z)) {
+  if (region.module === 'coast' && height < .1) return true;
+  const c = regionCreek(region, z);
+  if (c && height < c.level + .12 && Math.abs(x - c.x) < c.width * 1.08) return true;
+  return regionLakes(region).some(l => Math.hypot((x - l.x) / l.rx, (z - l.z) / l.rz) < 1.25 && height < l.level + .08);
 }
 
 export function regionHeight(region, x, z) {
+  if (region.terrain) return naturalHeight(region, x, z);
   if (valleyDefinition(region)) return valleyHeight(region, x, z);
   const n = (scale, channel) => regionNoise(region.seed, x / scale, z / scale, channel) - .5;
   const broad = n(260, 1), rolling = n(110, 2), detail = n(36, 3);
@@ -202,7 +250,7 @@ export function regionSite(region, x, z) {
   const slope = Math.hypot(regionHeight(region, x + step, z) - regionHeight(region, x - step, z), regionHeight(region, x, z + step) - regionHeight(region, x, z - step)) / (step * 2);
   const creek = regionCreek(region, z);
   const lake = regionLake(region);
-  const water = (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width) || !!(lake && Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) < 1.25 && height < lake.level);
+  const water = region.terrain ? regionWater(region, x, z, height) : (REGION_MODULES[region.module].water && height < .1) || !!(creek && Math.abs(x - creek.x) < creek.width) || !!(lake && Math.hypot((x - lake.x) / lake.rx, (z - lake.z) / lake.rz) < 1.25 && height < lake.level);
   const deposits = region.resources.filter(d => Math.hypot(x - d.x, z - d.z) <= d.radius);
   // Measure against the generated shoreline, not the nominal coast module edge.
   let coastDistance = null;

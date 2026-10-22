@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Group, MeshStandardMaterial, ShaderLib } from 'three';
 import { blendBuildGrid } from '../src/planet-grid.js';
 import { blendHabitatGround } from '../src/planet-ground-material.js';
-import { createPlanetBlueprint, createRegionBlueprint } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint } from '../src/planet-blueprint.js';
 import { PlanetPreviewScene } from '../src/planet-preview-scene.js';
 const shader = () => ({ vertexShader: ShaderLib.standard.vertexShader, fragmentShader: ShaderLib.standard.fragmentShader, uniforms: {} });
 
@@ -18,7 +18,7 @@ test('the build overlay composes with living terrain and preserves shared shader
     assert.equal(s.uniforms.forestNormal.value, textures.forestNormal);
     assert.equal(s.uniforms.buildGridEnabled, state.enabled);
     assert.equal(s.uniforms.buildGridPixelRatio.value, 1.4);
-    assert.ok(material.customProgramCacheKey().includes('orbit-climate-ground-v5'));
+    assert.ok(material.customProgramCacheKey().includes('orbit-climate-ground-v6'));
   }
   assert.equal(material.depthTest, true); assert.equal(material.depthWrite, true); assert.equal(material.transparent, false);
   material.dispose();

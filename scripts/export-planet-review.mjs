@@ -3,7 +3,7 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { PlaneGeometry, BufferGeometry, Float32BufferAttribute, Vector3 } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight, regionGroundHeight, regionCreek, regionLake, ROCK_ASSETS, REGION_MODULES } from '../src/planet-blueprint.js';
+import { createPlanetBlueprint, createRegionBlueprint, regionTerrainPatches, regionHeight, regionGroundHeight, regionCreek, regionLake, regionLakes, ROCK_ASSETS, REGION_MODULES } from '../src/planet-blueprint.js';
 import { regionOverviewPose, constrainRegionCamera } from '../src/planet-camera.js';
 import { floraChunkKey, floraChunkCenter, floraLodLevel, TREE_CHUNK_SIZE, CANOPY_MODELS } from '../src/planet-flora.js';
 import { regionBiome, regionBiosphere } from '../src/planet-biomes.js';
@@ -59,6 +59,6 @@ for (const r of planet.regions.filter(r => !process.argv.includes('--valley-only
   const roads = site.roads.map(path => path.map(([x,z]) => [x, regionGroundHeight(region,x,z)+.05,z]));
   const pads = site.pads.map(([x,z,w,d]) => {const g=new PlaneGeometry(w,d,Math.ceil(w/2),Math.ceil(d/2));g.rotateX(-Math.PI/2);g.translate(x,0,z);const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,regionGroundHeight(region,p.getX(i),p.getZ(i))+.05);const result={positions:Array.from(p.array),indices:Array.from(g.index.array)};g.dispose();return result;});
   const horizonGeometry = regionHorizonGeometry(region), horizon = { positions: Array.from(horizonGeometry.attributes.position.array), indices: Array.from(horizonGeometry.index.array), colors: Array.from(horizonGeometry.attributes.color.array) }; horizonGeometry.dispose();
-  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, horizon, sky:regionSkyProfile(region), camera, target, fov:pose.fov, creek, lake:regionLake(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, floraAssets:FLORA_ASSETS, module:REGION_MODULES[region.module] }));
+  await writeFile(resolve(output, r.id + '.json'), JSON.stringify({ region, environment, biome, terrain, horizon, sky:regionSkyProfile(region), camera, target, fov:pose.fov, creek, lake:regionLake(region), lakes:regionLakes(region), roads, pads, rocks, rockModels, rockAssets:ROCK_ASSETS, floraAssets:FLORA_ASSETS, module:REGION_MODULES[region.module] }));
   console.log(r.id, biome.name, environment.trees.length, 'trees');
 }

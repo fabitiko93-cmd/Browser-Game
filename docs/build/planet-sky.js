@@ -1,13 +1,15 @@
 import { BoxGeometry, Mesh, ShaderMaterial, BackSide, Color, Vector3 } from 'three';
 import { PLANET_SKIES } from './planet-sky-data.js';
 import { REGION_MODULES } from './planet-blueprint.js';
-import { regionBiosphere } from './planet-biomes.js';
+import { regionBiosphere, regionBiome } from './planet-biomes.js';
 
 // Presentation only: fixed daytime weather, never a new geography/save recipe.
 export function regionSkyProfile(region) {
   if (region.preset === 'lunar' || region.module === 'regolith') return null;
   const earth = region.preset === 'temperate', biology = regionBiosphere(region);
-  const weather = earth ? region.module === 'caldera' || ((region.climate?.moisture ?? 0) > .88 && (region.climate?.temperatureC ?? 20) < 10) ? 'overcast' : 'fair' : 'dust';
+  const biome = regionBiome(region);
+  const cloudy = biome?.natural ? ['rainforest', 'wetland', 'ice'].includes(biome.id) || biome.moisture > .82 : region.module === 'caldera' || ((region.climate?.moisture ?? 0) > .88 && (region.climate?.temperatureC ?? 20) < 10);
+  const weather = earth ? cloudy ? 'overcast' : 'fair' : 'dust';
   const id = biology.alien ? `${region.biosphere}-${weather}` : weather, overcast = weather === 'overcast';
   const source = PLANET_SKIES[id], module = REGION_MODULES[region.module];
   const azimuth = -2.57 + (region.rotation ?? 0) * .2 + Math.sin((region.latitude ?? 0) * Math.PI / 180) * .15;
@@ -19,7 +21,7 @@ export function regionSkyProfile(region) {
     sunColor: region.biosphere === 'coral' ? '#ffe1b7' : region.biosphere === 'spore' ? '#e7f4e6' : earth ? '#fff3df' : '#ffe1b0', sunIntensity: overcast ? .8 : earth ? 2.6 : 2.3,
     ambientColor: biology.alien ? region.biosphere === 'spore' ? '#a9c6ce' : '#c8bfca' : overcast ? '#c7d3df' : earth ? '#b7d0e8' : '#c4ab94',
     ambientIntensity: overcast ? 1.45 : earth ? 1.05 : .85,
-    fogDensity: overcast ? .00125 : earth ? region.module === 'upland' ? .00085 : .00105 : .0015
+    fogDensity: biome?.natural && biome.id === 'rainforest' ? .0019 : biome?.natural && biome.id === 'wetland' ? .00165 : overcast ? .00125 : earth ? region.module === 'upland' ? .00085 : .00105 : .0015
   };
 }
 

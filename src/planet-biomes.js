@@ -1,3 +1,4 @@
+import { naturalBiome } from './planet-climate.js';
 const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 // Biology is independent of physical geography. Matching seeds retain the same
 // land, climate, rivers and construction terraces when comparing biospheres.
@@ -23,6 +24,14 @@ export const TEMPERATE_BIOMES = Object.freeze({
   caldera: { name: 'Vulkanisches Moosland', meadow: '#899759', moss: '#526e48', dry: '#9ba178', forest: .19, trees: ['aspen', 'aspen', 'pine'], treeScale: .48, grassHeight: .29, sky: '#9aaeb8', fog: '#c9d2d2', description: 'Ein kalter Kratersee zwischen dunklen Basaltrücken, hellen Moospolstern und einzelnen niedrigen Baumgruppen.' }
 });
 export function regionBiome(region) {
+  if (region.generatorVersion >= 8 || region.terrain || region.climateBiome) {
+    const base = naturalBiome(region);
+    if (!base) return null;
+    const biology = regionBiosphere(region);
+    if (!biology.alien) return base;
+    const cold = base.id === 'ice' || base.id === 'tundra';
+    return { ...base, alien: true, name: `${biology.name} · ${base.name}`, meadow: biology.meadow, moss: biology.moss, dry: base.id === 'desert' ? biology.dry : base.dry, gravel: biology.gravel, groundEmission: cold ? '#000000' : biology.groundEmission, water: biology.water, trees: base.trees.length ? biology.trees : [], forest: base.forest * biology.forest, treeScale: base.treeScale * biology.treeScale, canopySpacing: base.canopySpacing * 1.1, canopyDensity: biology.canopyDensity, grassHeight: base.grassHeight * 1.15 };
+  }
   if (region.preset !== 'temperate') return null;
   const base = TEMPERATE_BIOMES[region.module];
   if (!base) return null;

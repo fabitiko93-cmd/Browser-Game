@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../src/state.js';
-import { createPlanetBlueprint, createRegionBlueprint, regionSite, regionHeight, planetSubseed } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionSite, regionHeight, planetSubseed } from '../src/planet-blueprint.js';
 
 test('planet recipes are reproducible, serializable and independently seeded', () => {
   const a = createPlanetBlueprint('NEREID-3077'), b = createPlanetBlueprint('NEREID-3077');

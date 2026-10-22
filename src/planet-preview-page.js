@@ -2,6 +2,8 @@ import { regionBiome, BIOSPHERES } from './planet-biomes.js';
 import { VALLEY_VARIANTS, valleyDefinition } from './planet-valley.js';
 import { PlanetPreviewScene } from './planet-preview-scene.js';
 import { createPlanetBlueprint, createRegionBlueprint, PLANET_PRESETS, REGION_MODULES, SAMPLE_PLANET_SEED } from './planet-blueprint.js';
+import { CLIMATE_MODES, CLIMATE_BIOMES } from './planet-climate.js';
+import { PLANET_EXAMPLES } from './planet-examples.js';
 
 const $ = id => document.getElementById(id), app = document.querySelector('.planet-app');
 const parameters = new URLSearchParams(location.search), debug = parameters.get('debug') === '1';
@@ -11,6 +13,8 @@ let planet, region, selected, view, busy = true, request = 0, sourceName = param
 let mode = 'orbit', markerButtons = new Map(), selectedSite = null;
 let valleyChoice = VALLEY_VARIANTS.some(v => v.id === parameters.get('valley')) ? parameters.get('valley') : null;
 let biosphereChoice = Object.hasOwn(BIOSPHERES, parameters.get('biosphere')) ? parameters.get('biosphere') : 'terran', activeSeed = rawSeed;
+let climateChoice = Object.hasOwn(CLIMATE_MODES, parameters.get('climate')) ? parameters.get('climate') : 'auto';
+let referenceChoice = parameters.get('reference') === '1';
 
 function fail(error) {
   busy = false; $('loading').hidden = true; $('planet-error').hidden = false;
@@ -31,13 +35,14 @@ function drawMarkers() {
   }
 }
 function updateRegion() {
-  const valley = valleyDefinition({ ...selected, preset: planet.preset });
-  const biome = regionBiome({ preset: planet.preset, biosphere: planet.biosphere, module: selected.module, climate: selected.climate });
-  const config = biome?.alien ? biome : valley ?? biome ?? REGION_MODULES[selected.module];
+  const recipe = { ...selected, generatorVersion: planet.generatorVersion, preset: planet.preset, biosphere: planet.biosphere };
+  const valley = valleyDefinition(recipe), biome = regionBiome(recipe);
+  const config = planet.generatorVersion >= 8 ? biome ?? REGION_MODULES[selected.module] : biome?.alien ? biome : valley ?? biome ?? REGION_MODULES[selected.module];
   $('region-name').textContent = selected.name; $('region-kind').textContent = config.name;
   $('region-description').textContent = config.description;
   const coordinate = (value, positive, negative) => `${Math.abs(value).toLocaleString('de-DE', { maximumFractionDigits: 1 })}° ${value >= 0 ? positive : negative}`;
-  $('region-context').textContent = `${coordinate(selected.latitude, 'N', 'S')} · ${coordinate(selected.longitude, 'O', 'W')}${selected.climate ? ` · ${Math.round(selected.climate.elevationM).toLocaleString('de-DE')} m Höhe` : ''}`;
+  $('region-context').textContent = `${coordinate(selected.latitude, 'N', 'S')} · ${coordinate(selected.longitude, 'O', 'W')}${selected.climate ? ` · ${Math.round(selected.climate.temperatureC)} °C · ${Math.round(selected.climate.elevationM).toLocaleString('de-DE')} m` : ''}`;
+  $('region-landform').textContent = planet.generatorVersion >= 8 ? `${REGION_MODULES[selected.module].name}${selected.climate && planet.preset === 'temperate' ? ` · ${selected.climate.moisture < .3 ? 'trocken' : selected.climate.moisture > .7 ? 'feucht' : 'mäßig feucht'}` : ''}` : '';
   $('region-context').title = region?.colony?.description ?? '';
   $('region-status').textContent = mode === 'orbit' ? 'Erschlossen' : region?.colony?.name ?? 'Baugebiet · Ansicht';
   for (const button of $('regions').children) button.setAttribute('aria-pressed', String(button.dataset.region === selected.id));
@@ -68,25 +73,28 @@ async function selectRegion(id) {
 async function enterRegion(pose = null) {
   const currentRequest = ++request; mode = 'region'; app.dataset.mode = mode;
   $('markers').hidden = true; $('grid-toggle').hidden = false; $('region-enter').hidden = true; $('orbit-return').hidden = false;
-  selectedSite = null; $('site-info').hidden = true; region = createRegionBlueprint(planet, selected.id); updateRegion(); loading(true);
+  selectedSite = null; $('site-info').hidden = true; loading(true);
   try {
+    region = createRegionBlueprint(planet, selected.id); updateRegion();
     await view.showRegion(region); if (currentRequest !== request) return;
     if (pose) { view.camera.position.copy(pose.eye); view.controls.target.copy(pose.target); view.camera.fov = pose.fov; view.camera.updateProjectionMatrix(); view.controls.update(); view.keepCameraAboveGround(); view.dirty = true; }
-    loading(false); $('asset-state').textContent = regionBiome(region)?.alien ? 'ORBIT · Alien-Flora' : 'Poly Haven · EZ-Tree'; const url = new URL(location.href); url.searchParams.set('region', selected.id); if (region.valley) url.searchParams.set('valley', region.valley); history.replaceState(null, '', url);
+    loading(false); $('asset-state').textContent = 'Region bereit'; const url = new URL(location.href); url.searchParams.set('region', selected.id); if (region.valley) url.searchParams.set('valley', region.valley); else url.searchParams.delete('valley'); history.replaceState(null, '', url);
   }
   catch (error) { if (currentRequest === request) fail(error); }
 }
 function orbit() {
   request++; mode = 'orbit'; region = null; app.dataset.mode = mode;
   $('markers').hidden = false; $('grid-toggle').hidden = true; $('region-enter').hidden = false; $('orbit-return').hidden = true; $('site-info').hidden = true;
-  view.showOrbit(); view.focusRegion(selected); updateRegion(); loading(false); $('asset-state').textContent = planet.geography ? 'Seedbasierte Planetengeografie' : 'Solar System Scope';
+  view.showOrbit(); view.focusRegion(selected); updateRegion(); loading(false); $('asset-state').textContent = 'Planet bereit';
   const url = new URL(location.href); url.searchParams.delete('region'); history.replaceState(null, '', url);
 }
 async function generate(seed, preset, regionCount) {
   const currentRequest = ++request;
   activeSeed = seed;
   loading(true, 'Planet wird aufgebaut'); mode = 'orbit'; app.dataset.mode = mode;
-  planet = createPlanetBlueprint(seedValue(seed), { preset, regionCount, name: sourceName, valley: valleyChoice, biosphere: preset === 'temperate' ? biosphereChoice : 'terran' }); selected = planet.regions[0]; region = null;
+  try { planet = createPlanetBlueprint(seedValue(seed), { preset, regionCount, name: sourceName, valley: valleyChoice, biosphere: preset === 'temperate' ? biosphereChoice : 'terran', climate: climateChoice, reference: referenceChoice }); }
+  catch (error) { if (currentRequest === request) fail(error); return; }
+  selected = planet.regions[0]; region = null;
   $('planet-name').textContent = planet.name; document.title = `${planet.name} · ORBIT 3077`;
   $('planet-facts').replaceChildren();
   for (const text of [planet.biosphere ? BIOSPHERES[planet.biosphere].name : PLANET_PRESETS[preset].name, `Ø ${Math.round(planet.radiusKm * 2).toLocaleString('de-DE')} km`, `${planet.regions.length} Regionen`]) { const span = document.createElement('span'); span.textContent = text; $('planet-facts').append(span); }
@@ -96,16 +104,30 @@ async function generate(seed, preset, regionCount) {
     const pin = document.createElement('button'); pin.className = 'region-marker'; pin.setAttribute('aria-label', `${r.name} fokussieren`); const label = document.createElement('span'); label.textContent = r.name; pin.append(label); pin.addEventListener('click', () => selectRegion(r.id)); markerButtons.set(r.id, pin); $('markers').append(pin);
   }
   $('seed-input').value = String(seed); $('planet-preset').value = preset; $('region-count').value = String(regionCount);
+  $('planet-climate').value = climateChoice; $('planet-climate').disabled = preset !== 'temperate';
   $('markers').hidden = false; $('grid-toggle').hidden = true; $('region-enter').hidden = false; $('orbit-return').hidden = true; $('site-info').hidden = true;
   updateRegion();
   try {
     await view.setPlanet(planet); if (currentRequest !== request) return;
-    view.focusRegion(selected); loading(false); $('asset-state').textContent = planet.geography ? 'Seedbasierte Planetengeografie' : 'Solar System Scope';
-    const url = new URL(location.href); url.searchParams.set('seed', String(seed)); url.searchParams.set('preset', preset); url.searchParams.set('regions', String(regionCount)); url.searchParams.delete('region'); if (valleyChoice) url.searchParams.set('valley', valleyChoice); else url.searchParams.delete('valley'); if (planet.biosphere) url.searchParams.set('biosphere', planet.biosphere); else url.searchParams.delete('biosphere'); history.replaceState(null, '', url);
+    view.focusRegion(selected); loading(false); $('asset-state').textContent = 'Planet bereit';
+    const url = new URL(location.href); url.searchParams.set('seed', String(seed)); url.searchParams.set('preset', preset); url.searchParams.set('regions', String(regionCount)); url.searchParams.set('climate', climateChoice); if (referenceChoice) url.searchParams.set('reference', '1'); else url.searchParams.delete('reference'); url.searchParams.delete('region'); if (referenceChoice && valleyChoice) url.searchParams.set('valley', valleyChoice); else url.searchParams.delete('valley'); if (planet.biosphere) url.searchParams.set('biosphere', planet.biosphere); else url.searchParams.delete('biosphere'); history.replaceState(null, '', url);
   } catch (error) { if (currentRequest === request) fail(error); }
 }
 
 $('settings-open').addEventListener('click', () => $('settings-dialog').showModal());
+for (const [id, config] of Object.entries(CLIMATE_MODES)) { const option = document.createElement('option'); option.value = id; option.textContent = config.name; $('planet-climate').append(option); }
+$('planet-preset').addEventListener('change', () => { $('planet-climate').disabled = $('planet-preset').value !== 'temperate'; });
+for (const example of PLANET_EXAMPLES) {
+  const p = CLIMATE_BIOMES[example.biome], button = document.createElement('button'), title = document.createElement('strong'), note = document.createElement('span');
+  button.type = 'button'; button.className = 'landscape-example'; button.style.setProperty('--landscape-color', p.meadow); title.textContent = p.name; note.textContent = REGION_MODULES[example.module].name; button.append(title, note);
+  button.addEventListener('click', async () => {
+    if (busy) return; referenceChoice = false; climateChoice = example.climate; $('settings-dialog').close();
+    const expectedRequest = request + 1; await generate(String(example.seed), 'temperate', 5);
+    if (request !== expectedRequest || !$('planet-error').hidden) return;
+    selected = planet.regions.find(r => r.id === example.region); updateRegion(); await enterRegion();
+  });
+  $('examples-grid').append(button);
+}
 for (const [id, biology] of Object.entries(BIOSPHERES)) { const option = document.createElement('option'); option.value = id; option.textContent = biology.name; $('biosphere-select').append(option); }
 $('biosphere-select').addEventListener('change', async () => {
   if (busy || !view) return;
@@ -120,7 +142,7 @@ $('biosphere-select').addEventListener('change', async () => {
 for (const variant of VALLEY_VARIANTS) { const option = document.createElement('option'); option.value = variant.id; option.textContent = variant.name; $('valley-select').append(option); }
 $('valley-select').addEventListener('change', () => { if (busy) return; valleyChoice = $('valley-select').value; selected.valley = valleyChoice; void enterRegion(); });
 $('seed-random').addEventListener('click', () => { $('seed-input').value = String(crypto.getRandomValues(new Uint32Array(1))[0]); });
-$('seed-form').addEventListener('submit', e => { e.preventDefault(); const seed = $('seed-input').value.trim(); if (!seed) return; $('settings-dialog').close(); void generate(seed, $('planet-preset').value, Number($('region-count').value)); });
+$('seed-form').addEventListener('submit', e => { e.preventDefault(); const seed = $('seed-input').value.trim(); if (!seed) return; referenceChoice = false; climateChoice = $('planet-climate').value; $('settings-dialog').close(); void generate(seed, $('planet-preset').value, Number($('region-count').value)); });
 $('region-enter').addEventListener('click', () => { if (!busy) void enterRegion(); });
 $('orbit-return').addEventListener('click', () => { if (!busy) orbit(); });
 $('zoom-in').addEventListener('click', () => view?.zoom(.82)); $('zoom-out').addEventListener('click', () => view?.zoom(1.22));

@@ -1,0 +1,140 @@
+[
+  {
+    "id": "acacia",
+    "file": "climate-acacia.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        2904,
+        740,
+        196
+      ],
+      [
+        2904,
+        740,
+        196
+      ]
+    ],
+    "bytes": 738048,
+    "sha256": "8e9a7f0ad37d7e74627cc83df6c8217c85f04bfad6c12cb4cb7f0917fb67c282"
+  },
+  {
+    "id": "tropical",
+    "file": "climate-tropical.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        4932,
+        1320,
+        368
+      ],
+      [
+        4932,
+        1320,
+        368
+      ]
+    ],
+    "bytes": 1201376,
+    "sha256": "74cc5277ebf0e467ec79ba016b7adb9ebb19de6c32600ff626723a7b2888f9e0"
+  },
+  {
+    "id": "palm",
+    "file": "climate-palm.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        458,
+        148,
+        72
+      ],
+      [
+        458,
+        148,
+        72
+      ]
+    ],
+    "bytes": 83016,
+    "sha256": "32d9bf29cf6b88cc74f9022750d6be47ecc89b2d6aa484db14acff037bf1a4f6"
+  },
+  {
+    "id": "willow",
+    "file": "climate-willow.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        5160,
+        1020,
+        196
+      ],
+      [
+        5160,
+        1020,
+        196
+      ]
+    ],
+    "bytes": 1318804,
+    "sha256": "8172f58ddd06d6c0f2024a149fe579145cb0be8a488aee1ff59a37b8cad607df"
+  },
+  {
+    "id": "cactus",
+    "file": "climate-cactus.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        756,
+        500,
+        368
+      ],
+      [
+        1036,
+        680,
+        496
+      ]
+    ],
+    "bytes": 73360,
+    "sha256": "0934c2e26de51d98c4e29feca393af7907a8aacf1c3f0df2f1dd09c490c007db"
+  },
+  {
+    "id": "reed",
+    "file": "climate-reed.glb",
+    "author": "ORBIT",
+    "source": "scripts/prepare-planet-climate-flora.mjs",
+    "license": "Original project geometry",
+    "rootedHeightMetres": 1,
+    "variants": 2,
+    "trianglesPerVariantAndLod": [
+      [
+        1496,
+        736,
+        340
+      ],
+      [
+        1496,
+        736,
+        340
+      ]
+    ],
+    "bytes": 133392,
+    "sha256": "47f6f5db4af16c7dd064f09de63b96eb14d6bafce4ad987b016c47c797c86f08"
+  }
+]

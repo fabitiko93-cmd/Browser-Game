@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineLoop, Mesh, MeshBasicMaterial, PerspectiveCamera, PlaneGeometry, Raycaster, Vector2, Vector3 } from 'three';
-import { createPlanetBlueprint, createRegionBlueprint, regionBuildCell, regionGroundHeight, regionHeight, regionSite, regionTerrainPatches, REGION_BUILD_GRID } from '../src/planet-blueprint.js';
+import { createReferencePlanetBlueprint as createPlanetBlueprint, createRegionBlueprint, regionBuildCell, regionGroundHeight, regionHeight, regionSite, regionTerrainPatches, REGION_BUILD_GRID } from '../src/planet-blueprint.js';
 import { createRegionEnvironment } from '../src/planet-environment.js';
 import { constrainRegionCamera, stepRegionFocus } from '../src/planet-camera.js';
 import { fitRockToGround, rockFootprint } from '../src/planet-rocks.js';
